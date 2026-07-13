@@ -20,7 +20,7 @@ npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 496 KB / 131 KB gzipped
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
-cargo test        # (src-tauri) 22/22 tests pass
+cargo test        # (src-tauri) 27/27 tests pass
 ```
 
 Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
@@ -37,8 +37,9 @@ This is far along relative to PLAN.md's M0–M3 milestones. Rough map:
 - **Rust core** (`src-tauri/src/`): auth commands (loopback listener + keyring), window
   management commands (popout panels, always-on-top), SDE snapshot sync, offline cache
   (`cache.sqlite`-equivalent via `cache.rs`), and a full EVE log pipeline
-  (`eve_logs/{discovery,tailer,decoder,parser}.rs`) with byte-offset persistence, BOM-aware
-  decoding, and Gamelogs/Chatlogs separation. `lib.rs` wires all of it into the Tauri app.
+  (`eve_logs/{discovery,tailer,decoder,parser,offsets}.rs`) with cross-restart byte-offset
+  persistence (added this session — see "Fixed this session"), BOM-aware decoding, and
+  Gamelogs/Chatlogs separation. `lib.rs` wires all of it into the Tauri app.
 - **Auth**: PKCE flow (`lib/auth/{pkce,flow}.ts`) with deep-link + loopback fallback, token
   storage via `MemoryAccessTokenStore`/keyring bridge, server-URL switching.
 - **API client**: `lib/api/client.ts` wraps `openapi-fetch` against a real
@@ -282,10 +283,38 @@ PLAN.md §10.1) rather than continuing to peel off presentational leaves.
   existing tests already use). Added 3 tests: a newly-discovered file (simulating a fresh EVE
   session after relogin) starts from byte 0, not EOF; switching to a new session file tracks it
   independently without disturbing the previous file's offset; re-reading a file after growth
-  never replays a previously-emitted observation. `cargo test` is now 22/22 (was 19). This is
-  exactly the class of thing "just continue as defined in the plan" should surface — a specific,
-  named acceptance criterion that was quietly unverified — as opposed to the log-*parser*-template
-  gap (#2 below), which is correctly still blocked on needing real fixtures.
+  never replays a previously-emitted observation. This is exactly the class of thing "just
+  continue as defined in the plan" should surface — a specific, named acceptance criterion that
+  was quietly unverified — as opposed to the log-*parser*-template gap (#2 below), which is
+  correctly still blocked on needing real fixtures.
+- **Implemented EVE log offset persistence across app restarts** — PLAN.md §9.4 explicitly
+  requires persisting `{path fingerprint, session, byte offset, trailing partial line}` so "a
+  restart continues safely without replaying historical logs as live," and M1's own acceptance
+  criterion says "restart tests preserve offsets." Before this, `EveLogService::start()` always
+  called `TailState::existing(path)` (current EOF) for every previously-known gamelog file on
+  every single app start — meaning any jump observations written to a gamelog while the desktop
+  app was closed were silently skipped forever, not queued or backfilled, every time. Added
+  `src-tauri/src/eve_logs/offsets.rs`: a small `PersistedOffsets` map (gamelog path → last-read
+  byte offset) serialized to `eve_log_offsets.json` in the app-data directory, loaded once in
+  `start()` and written after every successful read in `track_and_read_gamelog()` (so even an
+  abrupt process kill loses at most the offset delta since the last read, not since the last
+  clean shutdown). Added `TailState::resume(path, offset)` (like `existing()`, but seeds the
+  offset from a caller-supplied value instead of current EOF, clamping to the file's current
+  length in case it shrank or was replaced since the offset was recorded) and `TailState::offset()`
+  to `tailer.rs`. `start()` now checks the persisted map per gamelog file and calls `resume()`
+  when an offset exists, falling back to the pre-existing `existing()`/EOF behavior for files it
+  has never seen before. **Deliberately scoped to gamelogs only** — chatlog offsets are still
+  reset to EOF on every restart, unchanged from before. That's intentional, not an oversight:
+  nothing parses chatlog *content* yet (gap #3 below), so there is nothing downstream that could
+  be missing an observation by not persisting a chatlog offset; adding that persistence now would
+  be speculative complexity with no consumer. Covered by tests in both new files: `offsets.rs`
+  tests the save/load round-trip and that a missing/corrupt file degrades to empty rather than
+  failing; `tailer.rs` gained `resume_continues_from_a_persisted_offset_instead_of_replaying_it`
+  and a clamp test; `mod.rs` gained an end-to-end test
+  (`a_restart_resumes_from_the_persisted_offset_instead_of_starting_at_eof`) that runs a full
+  "session 1 reads a line, session 2 is a fresh `ServiceState` simulating a restart, EVE wrote
+  another line while closed, session 2 must see exactly that one new line" scenario. `cargo test`
+  went from 19 (start of this session) to 27.
 
 ## Recommended order for the next session
 

@@ -1,5 +1,6 @@
 mod decoder;
 mod discovery;
+mod offsets;
 mod parser;
 mod tailer;
 
@@ -10,9 +11,10 @@ use std::sync::{Arc, Mutex};
 use chrono::Utc;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 use discovery::{default_logs_root, text_files, validate_logs_root};
+use offsets::{offsets_file_path, PersistedOffsets};
 use parser::EveLogObservation;
 use tailer::{is_chatlog, is_gamelog, normalized_path, TailState};
 
@@ -36,6 +38,10 @@ struct ServiceState {
     status: EveLogStatus,
     tails: HashMap<PathBuf, TailState>,
     chat_tails: HashMap<PathBuf, TailState>,
+    /// Where gamelog offsets are persisted for this run, so a later restart can resume instead
+    /// of starting fresh at EOF. `None` when running outside a real app-data directory (e.g. the
+    /// unit tests in this module), in which case persistence is silently skipped.
+    offsets_path: Option<PathBuf>,
 }
 
 #[derive(Default)]
@@ -63,8 +69,15 @@ impl EveLogService {
         let mut tails = HashMap::with_capacity(gamelog_files.len());
         let mut chat_tails = HashMap::with_capacity(chatlog_files.len());
 
+        let offsets_path = app.path().app_data_dir().ok().map(|dir| offsets_file_path(&dir));
+        let persisted = offsets_path.as_deref().map(offsets::load).unwrap_or_default();
+
         for path in &gamelog_files {
-            if let Ok(tail) = TailState::existing(path) {
+            let tail = match persisted.get(&normalized_path(path)) {
+                Some(offset) => TailState::resume(path, offset),
+                None => TailState::existing(path),
+            };
+            if let Ok(tail) = tail {
                 tails.insert(normalized_path(path), tail);
             }
         }
@@ -88,6 +101,7 @@ impl EveLogService {
             };
             state.tails = tails;
             state.chat_tails = chat_tails;
+            state.offsets_path = offsets_path;
         }
 
         let callback_state = Arc::clone(&self.state);
@@ -212,7 +226,7 @@ fn track_and_read_gamelog(state: &Arc<Mutex<ServiceState>>, path: &Path) -> Vec<
         }
     }
 
-    match state
+    let observations = match state
         .tails
         .get_mut(&normalized)
         .expect("tail was inserted")
@@ -223,7 +237,27 @@ fn track_and_read_gamelog(state: &Arc<Mutex<ServiceState>>, path: &Path) -> Vec<
             state.status.read_errors += 1;
             Vec::new()
         }
+    };
+
+    persist_gamelog_offsets(&state);
+    observations
+}
+
+/// Writes every currently-tracked gamelog's offset to disk so a restart can resume from where
+/// this run left off. A failure here (disk full, permissions) is not fatal to the watcher — the
+/// worst case on the next restart is falling back to EOF-start for the affected file, which is
+/// the pre-existing, safe behavior.
+fn persist_gamelog_offsets(state: &ServiceState) {
+    let Some(offsets_path) = state.offsets_path.as_deref() else {
+        return;
+    };
+
+    let mut persisted = PersistedOffsets::default();
+    for (path, tail) in &state.tails {
+        persisted.set(path, tail.offset());
     }
+
+    let _ = offsets::save(offsets_path, &persisted);
 }
 
 fn increment_read_error(state: &Arc<Mutex<ServiceState>>) {
@@ -299,5 +333,41 @@ mod tests {
         assert_eq!(grown.len(), 1);
         assert_eq!(grown[0].from_system, "Beta");
         assert_eq!(grown[0].to_system, "Charlie");
+    }
+
+    #[test]
+    fn a_restart_resumes_from_the_persisted_offset_instead_of_starting_at_eof() {
+        let mut file = NamedTempFile::new().expect("temp file");
+        writeln!(file, "[ 2026.07.13 10:00:00 ] (None) Jumping from Alpha to Beta").expect("write first");
+
+        let directory = tempfile::tempdir().expect("temp dir");
+        let offsets_path = offsets_file_path(directory.path());
+
+        // "Session 1": the app is running with offset persistence configured, as start() sets up.
+        let state: Arc<Mutex<ServiceState>> = Arc::new(Mutex::new(ServiceState {
+            offsets_path: Some(offsets_path.clone()),
+            ..ServiceState::default()
+        }));
+        let first = track_and_read_gamelog(&state, file.path());
+        assert_eq!(first.len(), 1);
+
+        // The app closes. EVE keeps writing to the log while the desktop app is not running.
+        writeln!(file, "[ 2026.07.13 10:05:00 ] (None) Jumping from Beta to Charlie").expect("write while closed");
+
+        // "Session 2": a fresh restart loads the persisted offset and resumes from it - not EOF
+        // (which would silently skip the line above) and not offset 0 (which would replay the
+        // first line as if it just happened).
+        let persisted = offsets::load(&offsets_path);
+        let resume_offset = persisted
+            .get(&normalized_path(file.path()))
+            .expect("offset should have been persisted after the first read");
+        let mut resumed_tail = TailState::resume(file.path(), resume_offset).expect("resume");
+        let observations = resumed_tail
+            .read_observations(file.path())
+            .expect("read after resume");
+
+        assert_eq!(observations.len(), 1);
+        assert_eq!(observations[0].from_system, "Beta");
+        assert_eq!(observations[0].to_system, "Charlie");
     }
 }

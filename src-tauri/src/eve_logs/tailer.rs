@@ -26,6 +26,21 @@ impl TailState {
         Self::new(path)
     }
 
+    /// Resumes tracking a file from a previously persisted byte offset instead of the current
+    /// end-of-file. Clamps to the file's current length so a file that shrank or was replaced
+    /// since the offset was recorded degrades safely to re-reading from wherever it now ends,
+    /// rather than seeking past the end of a shorter file.
+    pub fn resume(path: &Path, offset: u64) -> Result<Self, String> {
+        let mut state = Self::new(path)?;
+        let length = path.metadata().map_err(redacted_io_error)?.len();
+        state.offset = offset.min(length);
+        Ok(state)
+    }
+
+    pub fn offset(&self) -> u64 {
+        self.offset
+    }
+
     fn new(path: &Path) -> Result<Self, String> {
         let mut file = File::open(path).map_err(redacted_io_error)?;
         let mut prefix = [0_u8; 3];
@@ -174,5 +189,32 @@ mod tests {
         assert_eq!(lines.len(), 1);
         assert_eq!(lines[0].0, "new sensitive message");
         assert_eq!(lines[0].1.len(), 64);
+    }
+
+    #[test]
+    fn resume_continues_from_a_persisted_offset_instead_of_replaying_it() {
+        let mut file = NamedTempFile::new().expect("temporary file");
+        writeln!(file, "[ 2026.07.12 19:00:00 ] (None) Jumping from Old to History").expect("write history");
+        let persisted_offset = file.path().metadata().expect("metadata").len();
+
+        writeln!(file, "[ 2026.07.12 19:01:00 ] (None) Jumping from Jita to Perimeter").expect("write after restart");
+
+        let mut state = TailState::resume(file.path(), persisted_offset).expect("resumed tail");
+        let observations = state.read_observations(file.path()).expect("read after resume");
+
+        assert_eq!(observations.len(), 1);
+        assert_eq!(observations[0].from_system, "Jita");
+        assert_eq!(observations[0].to_system, "Perimeter");
+    }
+
+    #[test]
+    fn resume_clamps_an_offset_past_the_current_file_length() {
+        let mut file = NamedTempFile::new().expect("temporary file");
+        writeln!(file, "[ 2026.07.12 19:00:00 ] (None) Jumping from Old to History").expect("write");
+        let real_length = file.path().metadata().expect("metadata").len();
+
+        let state = TailState::resume(file.path(), real_length + 10_000).expect("resumed tail");
+
+        assert_eq!(state.offset(), real_length);
     }
 }

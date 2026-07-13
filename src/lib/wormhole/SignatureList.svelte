@@ -1,15 +1,19 @@
 <script lang="ts">
-  import type { ChainSignature } from './types';
+  import type { ChainSignature, SignatureUpdate } from './types';
 
   interface Props {
     signatures: ChainSignature[];
     onDelete: (id: number) => void;
     onDeleteAll: () => void;
+    onEdit: (id: number, update: SignatureUpdate) => void;
   }
 
-  let { signatures, onDelete, onDeleteAll }: Props = $props();
+  let { signatures, onDelete, onDeleteAll, onEdit }: Props = $props();
 
   let confirmingDeleteAll = $state(false);
+  let editingId = $state<number | null>(null);
+  let editSignatureId = $state('');
+  let editRawTypeName = $state('');
 
   function handleDeleteAllClick(): void {
     if (confirmingDeleteAll) {
@@ -18,6 +22,22 @@
     } else {
       confirmingDeleteAll = true;
     }
+  }
+
+  function startEdit(signature: ChainSignature): void {
+    editingId = signature.id;
+    editSignatureId = signature.signatureId ?? '';
+    editRawTypeName = signature.rawTypeName ?? '';
+  }
+
+  function saveEdit(id: number): void {
+    onEdit(id, {
+      signatureId: editSignatureId || null,
+      signatureTypeId: null,
+      signatureCategoryId: null,
+      rawTypeName: editRawTypeName || null,
+    });
+    editingId = null;
   }
 </script>
 
@@ -36,10 +56,30 @@
   </div>
   <div class="mt-2 flex flex-col gap-1">
     {#each signatures as signature}
-      <div class="flex items-center justify-between rounded bg-slate-900/70 px-2 py-1 text-xs">
-        <span>{signature.signatureId ?? 'unknown id'} · {signature.rawTypeName ?? 'unresolved'}</span>
-        <button class="text-amber-200" onclick={() => onDelete(signature.id)}>Delete</button>
-      </div>
+      {#if editingId === signature.id}
+        <div class="flex items-center gap-1 rounded bg-slate-900/70 px-2 py-1 text-xs">
+          <input
+            class="w-16 rounded border border-slate-700 bg-slate-950 px-1 py-0.5"
+            placeholder="ABC-123"
+            bind:value={editSignatureId}
+          />
+          <input
+            class="min-w-0 flex-1 rounded border border-slate-700 bg-slate-950 px-1 py-0.5"
+            placeholder="type name"
+            bind:value={editRawTypeName}
+          />
+          <button class="text-emerald-300" onclick={() => saveEdit(signature.id)}>Save</button>
+          <button class="text-slate-400" onclick={() => (editingId = null)}>Cancel</button>
+        </div>
+      {:else}
+        <div class="flex items-center justify-between rounded bg-slate-900/70 px-2 py-1 text-xs">
+          <span>{signature.signatureId ?? 'unknown id'} · {signature.rawTypeName ?? 'unresolved'}</span>
+          <span class="flex gap-2">
+            <button class="text-cyan-300" onclick={() => startEdit(signature)}>Edit</button>
+            <button class="text-amber-200" onclick={() => onDelete(signature.id)}>Delete</button>
+          </span>
+        </div>
+      {/if}
     {/each}
     {#if signatures.length === 0}<p class="text-xs text-slate-500">No signatures scanned for this system.</p>{/if}
   </div>

@@ -19,12 +19,12 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 ## Verified working right now
 
 ```
-npm test         # 51/51 tests pass (29 files)
+npm test         # 53/53 tests pass (30 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 496 KB / 131 KB gzipped
-cargo check       # (src-tauri) clean
-cargo clippy      # (src-tauri) clean, no warnings
-cargo test        # (src-tauri) 27/27 tests pass
+npm run build    # vite build succeeds; main JS bundle 516 KB / 136 KB gzipped
+cargo check       # (src-tauri) clean, not re-run this pass (no Rust files touched)
+cargo clippy      # (src-tauri) clean, no warnings, not re-run this pass (no Rust files touched)
+cargo test        # (src-tauri) 27/27 tests pass, not re-run this pass (no Rust files touched)
 ```
 
 Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
@@ -228,62 +228,85 @@ way the display blocks did. Gap #1's refactor is still the natural moment to als
 ownership* per-module (each module owning its own `$state`, exposed through `ModuleCtx` per
 PLAN.md §10.1) rather than continuing to peel off presentational leaves.
 
-### 6. M-maps "Access" (ACL) settings: blocked by an undocumented backend contract
+### 6. (Resolved) M-maps "General"/"Access"/Home/Rally — was never actually blocked, two research mistakes corrected
 
-**Correction to this entry's original version**: it previously also listed Home System and Rally
-Point as blocked, on the claim that grepping the schema for `home_system`/`rally_point` found
-"zero matches anywhere in a map's GET response." That was wrong — a narrow grep missed it. The
-map show response (`getApiV1MapsSlug`, ~line 2670 of `schema.d.ts`) does document
-`home_solarsystem_id`/`rally_solarsystem_id` on the map object; the example value
-(`"home_solarsystem_id": 30000142`) is Jita's real EVE solar system ID, confirming both read-side
-fields are raw solarsystem ids — **not** the same id space as the home-system *write* endpoint,
-which takes `map_solarsystem_id` (a map_solarsystem row id, different from the raw solarsystem
-id the read side reports). That asymmetry is real and both sides are now implemented correctly
-against it — see "Fixed this session." Leaving this note here rather than deleting it silently:
-the original claim was a real research mistake, not a doc-only nit, and it's worth remembering
-that a narrow/quick schema grep can miss a field that a fuller read of the relevant response
-object would have found — check the whole object, not just a grep for the exact field name you
-expect.
+This gap went through two wrong claims before landing on the truth, both worth keeping on record
+rather than quietly deleting once fixed:
 
-Access (ACL) remains genuinely blocked, unchanged from the original finding: PLAN.md §11's
-M-maps module calls for an Access ACL tab (characters/corps/alliances with expiry).
-`GET /api/v1/maps/{map_slug}/access` is present in the schema but its 200-response body is
-**entirely undocumented** — the operation's `responses` only documents the 401 error case, not
-what a successful access-list response contains. `POST` (grant access) has a fully documented
-request body (`entity_id`, `entity_type: character|corporation|alliance`, `permission`,
-`expires_at`), but there is no companion `DELETE` in the schema at all — visible routes cover
-view + grant, not revoke. Building an Access UI now would mean guessing the list-item shape.
+1. **First version** claimed Home System and Rally Point were blocked because grepping the schema
+   for `home_system`/`rally_point` found "zero matches anywhere in a map's GET response." Wrong —
+   a narrow grep missed it. The map show response (`getApiV1MapsSlug`, ~line 2670 of
+   `schema.d.ts`) documents `home_solarsystem_id`/`rally_solarsystem_id` on the map object; the
+   example value (`"home_solarsystem_id": 30000142`) is Jita's real EVE solar system ID, and the
+   home-system *write* endpoint takes a *different* id space (`map_solarsystem_id`, a
+   map_solarsystem row id) than what the read side reports back — a real asymmetry, now
+   implemented correctly against it. Fixed in an earlier commit this session.
+2. **Second version** (after fixing the above) claimed the Access ACL was still blocked because
+   `GET /api/v1/maps/{map_slug}/access`'s 200-response was undocumented in `schema.d.ts` (only
+   the 401 case was) and there was no `DELETE` route for revoking access. Also wrong, and fixed
+   by doing exactly what PLAN.md's own Appendix B says to do when the schema is ambiguous: **read
+   the web app's Vue/Laravel source** (`C:\Users\Arawn\FZ\EveMerc`, read-only — the actual backend
+   repo, not modified) instead of guessing from the incomplete OpenAPI export.
+   `app/Http/Controllers/MapAccessController.php`'s `show()` method branches on
+   `$request->expectsJson()` and returns the *exact* JSON envelope directly in source:
+   `{ data: { entities: [...candidates], entities_with_access: [...MapAccessEntityResource] } }`
+   (snake_case `entities_with_access`, unlike everything else this client normalizes to
+   camelCase — verified from the controller, not assumed). `MapAccessEntityResource.php` gives
+   the exact entry shape (`id`, `name`, `type`, `permission`, `is_owner`, `expires_at`), and
+   `Permission.php` confirms the enum (`viewer`/`member`/`manager`). There is no separate revoke
+   endpoint because there doesn't need to be one — the same `POST` with `permission: null` on an
+   already-granted entity revokes it, which is exactly what the web app's own `toggleAccess()`
+   does (`$event === 'none' ? null : ...`).
 
-This is one-way blocked by the *documentation*, not the *feature* — if `npm run sync:api` is
-re-run later against a backend where Scribe has fully documented the access-list response (and a
-revoke endpoint exists), building this becomes exactly as straightforward as rename/delete
-was this session: check the schema, write a thin wrapper in `lib/maps/settings.ts`, wire it into
-`MapRoutingPanel.svelte` (or a dedicated component, if the panel is getting overloaded — see the
-naming note in "Fixed this session"). Don't build a placeholder/guessed version in the meantime.
+**Lesson for next time, stated plainly**: when `schema.d.ts` doesn't fully document a response,
+that is a signal to go read the *actual backend source* (this repo's PLAN.md Appendix B already
+says this — "read the Vue source... never guess" — it just wasn't followed carefully enough the
+first two times through this specific gap). An incomplete Scribe export is not the same as an
+undocumented API; the ground truth is always the controller/resource source, which is right there
+in the sibling repo. Don't declare something "blocked by the backend" without checking that repo
+first when it's reachable. See "Fixed this session" for the resulting `lib/maps/access.ts` +
+`MapAccessPanel.svelte` implementation.
 
-### 7. Signature *editing* is blocked the same way; `map-route-solarsystems` (the "Routes" panel) was never built at all
+### 7. (Partially resolved) Signature *editing* was a third wrong "blocked" claim; `map-route-solarsystems` genuinely is blocked
 
 Two more gaps found by the same "grep the schema for endpoints with no client caller" method that
 found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
 
-- **`PUT /api/v1/signatures/{id}`** (the only signature-update endpoint) has `requestBody?:
-  never` in the schema — Scribe found no documented request fields at all. There is no way to
-  know what an "edit signature" UI would even send. Individual delete
-  (`DELETE /api/v1/signatures/{id}`) and bulk delete
-  (`DELETE /api/v1/map-solarsystems/{mapSolarsystem_id}/signatures`) *are* fully documented and
-  are now implemented (see "Fixed this session") — only the update path is blocked, and for the
-  same reason as gap #6: an empty/undocumented request body, not unwillingness to build it.
-- **`map-route-solarsystems` (`POST`/`PUT`/`DELETE /api/v1/map-route-solarsystems[/{id}]`) has no
-  client code anywhere** — not blocked, just never built. PLAN.md's M-navigation module calls for
-  a "Routes" panel: "map-route-solarsystems list with live route lengths + quick-select buttons."
-  This is a distinct backend concept from the `ignore-systems`/`waypoints` functionality that
-  *is* implemented (`lib/routing/api.ts`, wired into `FleetCommandActions.svelte`) — it looks
-  like a way to save/name specific routes for repeated one-click use, not just plan-and-send a
-  route once. Did not build this: unlike connection/signature editing, which slot into existing
-  UI (the chain map, the selected-system panel), a "Routes" panel is a new, standalone piece of
-  UI with its own list/CRUD/quick-select interaction design, and PLAN.md doesn't specify enough
-  about the resource's fields (query the schema at `map-route-solarsystems` operations before
-  starting) to build it blind. Left as a scoped, well-defined next task rather than guessed at.
+- **`PUT /api/v1/signatures/{id}`** — this was the *third* time this session a `requestBody?:
+  never`/undocumented-in-schema.d.ts endpoint got wrongly declared "blocked" without checking the
+  backend source first (same mistake as gap #6's two rounds). Reading
+  `app/Http/Controllers/SignatureController.php` (`update()` takes a real, validated
+  `SignatureData $signatureData` parameter) and `app/Data/SignatureData.php` directly in the
+  backend repo (read-only, not modified) shows the endpoint genuinely accepts a partial body:
+  `signature_id`, `signature_type_id`, `signature_category_id`, `map_connection_id`, `mass_status`
+  (`fresh|reduced|critical|unknown`), `ship_size` (`frigate|medium|large`), `lifetime`
+  (`healthy|eol|critical`), `lifetime_updated_at`, `raw_type_name` — all `sometimes`/nullable, so
+  a partial-update PUT is supported. **Now implemented** — see "Fixed this session". Since
+  `schema.d.ts` types this operation's `requestBody`/`responses` as `never` (not just missing
+  fields, the whole shape), `wormhole/api.ts`'s new `updateSignature()` bypasses openapi-fetch's
+  generated types for this one call with an explicit `as unknown as` cast to a hand-written body
+  type, documented inline with why. Individual delete (`DELETE /api/v1/signatures/{id}`) and bulk
+  delete (`DELETE /api/v1/map-solarsystems/{mapSolarsystem_id}/signatures`) were already fully
+  documented and implemented in an earlier pass this session.
+- **`map-route-solarsystems` is definitively blocked, not just "never built" — re-verified against
+  the backend source, not just the schema, this time.** Read
+  `app/Http/Controllers/MapRouteSolarsystemController.php` directly: it only has `store`,
+  `update`, `destroy` methods — no `index`/`show`. `routes/api.php` confirms this at the route
+  level: `Route::apiResource('map-route-solarsystems', MapRouteSolarsystemController::class)
+  ->only(['store', 'update', 'destroy'])` — the read routes were never registered at all, this
+  isn't a Scribe documentation gap like gap #6 and the signature-editing claim above.
+  `POST`/`PUT /api/v1/map-route-solarsystems[/{id}]` both have
+  fully documented request bodies (`map_id`, `solarsystem_id`, `is_pinned?` on create; `is_pinned?`
+  on update) — but there is **no `GET` endpoint for this resource anywhere**, and unlike
+  connections/signatures/saved-locations, the map show response does not embed a
+  `map_route_solarsystems` array either (grepped the whole schema for `map_route_solarsystems`/
+  `route_solarsystems` — zero matches). PLAN.md's M-navigation "Routes" panel calls for exactly
+  this: "map-route-solarsystems list with live route lengths + quick-select buttons" — a *list*
+  is the entire point of the panel, and there is no documented way to fetch one. You could build
+  and call `POST`/`PUT`/`DELETE` blind (create a route, immediately forget its id, never see it
+  again), but that's not a usable feature, it's a write-only API call with no product value.
+  Genuinely blocked on a missing read endpoint, not a design/scope question — don't attempt a
+  partial version of this.
 
 ## Fixed this session
 
@@ -433,6 +456,25 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   wrong if built by symmetry with rally point instead of reading the schema's example values.
   Gap #6 corrected to reflect this rather than silently deleted, since the original mistake (a
   narrow grep missing a documented field) is itself worth remembering for next time.
+- **Implemented Map Access ACL** (PLAN.md §11 M-maps "Access" tab: grant/revoke/change permission
+  for characters/corporations/alliances). New `lib/maps/access.ts` (`fetchMapAccess`/
+  `setMapAccess`/`normalizeMapAccess`, with `access.test.ts` covering the normalization
+  round-trip and malformed-payload fallback) and `MapAccessPanel.svelte` (renders current access
+  entries with an owner badge or a permission `<select>` including "Revoked", plus a "Grant…"
+  section for candidates with no access yet). Wired into `App.svelte`: loaded alongside
+  `mapRoutingSettings` when `canManageAccess` is true, reset on map delete/logout like the other
+  map-scoped state. See gap #6 above for the full story of how this was nearly declared blocked a
+  second time and the methodology fix that caught it.
+- **Implemented signature editing** (PLAN.md §11 M-signatures). `wormhole/api.ts` gained
+  `updateSignature()` against `PUT /api/v1/signatures/{id}`, sending `signature_id`,
+  `signature_type_id`, `signature_category_id`, `raw_type_name`. `SignatureList.svelte` gained an
+  inline per-row "Edit" affordance (two text inputs for signature id / type name + Save/Cancel,
+  matching the existing delete/clear-all button style) alongside the existing delete/bulk-delete
+  controls. See gap #7 above for why this required bypassing the generated `schema.d.ts` typing
+  (it marks this operation's `requestBody`/`responses` as `never`) with an explicit, documented
+  cast to a hand-written body type — the same "Scribe under-documented it" pattern already found
+  twice for gap #6, now confirmed a third time by reading `SignatureController.php`/
+  `SignatureData.php` directly.
 
 ## Recommended order for the next session
 

@@ -1,5 +1,5 @@
 import type { EveMercApi } from '../api/client'
-import type { ChainConnectionUpdate, ChainSnapshot, ParsedSignature } from './types'
+import type { ChainConnectionUpdate, ChainSnapshot, ParsedSignature, SignatureUpdate } from './types'
 import type { SolarSystemDetails } from '../sde/bridge'
 
 export async function fetchChainSnapshot(api: EveMercApi, mapSlug: string): Promise<ChainSnapshot> {
@@ -137,6 +137,40 @@ export async function setRallyPoint(api: EveMercApi, mapSlug: string, solarsyste
     body: { solarsystem_id: solarsystemId },
   })
   if (error) throw new Error('Could not update the rally point.')
+}
+
+/**
+ * Updates a signature's identifier/type/category/raw name. Verified against the backend's actual
+ * SignatureController@update + SignatureData source (not guessed) - schema.d.ts marks this
+ * operation's requestBody and responses as `never` because Scribe didn't document it, even though
+ * the endpoint genuinely accepts a partial body of these fields (same under-documentation pattern
+ * already found for home/rally and Access ACL). The generated `never` typing is bypassed here since
+ * it doesn't reflect the real contract.
+ */
+export async function updateSignature(api: EveMercApi, signatureId: number, update: SignatureUpdate): Promise<void> {
+  const put = api.PUT as unknown as (
+    path: '/api/v1/signatures/{id}',
+    init: {
+      params: { path: { id: number } }
+      body: {
+        signature_id: string | null
+        signature_type_id: number | null
+        signature_category_id: number | null
+        raw_type_name: string | null
+      }
+    },
+  ) => Promise<{ error?: unknown }>
+
+  const { error } = await put('/api/v1/signatures/{id}', {
+    params: { path: { id: signatureId } },
+    body: {
+      signature_id: update.signatureId,
+      signature_type_id: update.signatureTypeId,
+      signature_category_id: update.signatureCategoryId,
+      raw_type_name: update.rawTypeName,
+    },
+  })
+  if (error) throw new Error('Could not update the signature.')
 }
 
 export async function deleteSignature(api: EveMercApi, signatureId: number): Promise<void> {

@@ -22,8 +22,8 @@
   import { fleetAlerts } from './lib/fleet/alerts';
   import FleetAlertsPanel from './lib/fleet/FleetAlertsPanel.svelte';
   import FleetCommandActions from './lib/fleet/FleetCommandActions.svelte';
-  import { createChainConnection, createChainSystem, deleteAllSignatures, deleteChainConnection, deleteMapLocation, deleteSignature, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, setHomeSystem, setRallyPoint, trackTransition, updateChainConnection, type MapStatistics } from './lib/wormhole/api';
-  import type { ChainConnectionUpdate } from './lib/wormhole/types';
+  import { createChainConnection, createChainSystem, deleteAllSignatures, deleteChainConnection, deleteMapLocation, deleteSignature, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, setHomeSystem, setRallyPoint, trackTransition, updateChainConnection, updateSignature, type MapStatistics } from './lib/wormhole/api';
+  import type { ChainConnectionUpdate, SignatureUpdate } from './lib/wormhole/types';
   import ConnectionEditor from './lib/wormhole/ConnectionEditor.svelte';
   import SignatureList from './lib/wormhole/SignatureList.svelte';
   import HomeRallyControls from './lib/wormhole/HomeRallyControls.svelte';
@@ -51,6 +51,8 @@
   import FleetCommanders from './lib/fleet/FleetCommanders.svelte';
   import { addIgnoredSystem, fetchIgnoredSystems, parseRouteSystemIds, removeIgnoredSystem, sendRouteWaypoints } from './lib/routing/api';
   import { deleteMap, fetchMapRoutingSettings, generateMapShareToken, renameMap, revokeMapShareToken, toggleMapPublic, updateMapRoutingSettings, type MapRoutingSettings } from './lib/maps/settings';
+  import { fetchMapAccess, setMapAccess, type EntityType, type MapAccessList, type MapPermission } from './lib/maps/access';
+  import MapAccessPanel from './lib/maps/MapAccessPanel.svelte';
   import MapRoutingPanel from './lib/maps/MapRoutingPanel.svelte';
   import {
     onEveLogObservation,
@@ -122,6 +124,8 @@
   let routeSystemInput = $state('');
   let mapRoutingSettings = $state<MapRoutingSettings | null>(null);
   let mapSettingsMessage = $state<string | null>(null);
+  let mapAccess = $state<MapAccessList | null>(null);
+  let mapAccessMessage = $state<string | null>(null);
   let realtimeMapId: number | null = null;
   let disconnectRealtime: () => void = () => {};
   let chainRefreshTimer: number | null = null;
@@ -338,6 +342,17 @@
     }
   }
 
+  async function setSelectedMapAccess(entityId: number, entityType: EntityType, permission: MapPermission | null, expiresAt: string | null): Promise<void> {
+    if (!selectedMapSlug) return;
+    try {
+      await setMapAccess(api, selectedMapSlug, entityId, entityType, permission, expiresAt);
+      mapAccess = await fetchMapAccess(api, selectedMapSlug);
+      mapAccessMessage = permission ? 'Access updated.' : 'Access revoked.';
+    } catch (error) {
+      mapAccessMessage = error instanceof Error ? error.message : String(error);
+    }
+  }
+
   async function deleteCurrentMap(): Promise<void> {
     if (!selectedMapSlug) return;
     const deletedSlug = selectedMapSlug;
@@ -353,6 +368,7 @@
       selectedChainSystemId = null;
       selectedConnectionId = null;
       mapRoutingSettings = null;
+      mapAccess = null;
       showingCachedFleet = false;
       realtimeMapId = null;
       disconnectRealtime();
@@ -524,6 +540,16 @@
     }
   }
 
+  async function editSelectedSignature(signatureId: number, update: SignatureUpdate): Promise<void> {
+    try {
+      chainError = null;
+      await updateSignature(api, signatureId, update);
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
   async function updateHomeSystem(mapSolarsystemId: number | null): Promise<void> {
     if (!selectedMapSlug) return;
     try {
@@ -621,6 +647,7 @@
       fleetKills = [];
       ignoredSystemIds = [];
       mapRoutingSettings = null;
+      mapAccess = null;
       mapStatistics = null;
       accountCharacters = [];
       authState = { phase: 'idle' };
@@ -666,6 +693,7 @@
       }
       if (selectedMapSlug) {
         mapRoutingSettings = await fetchMapRoutingSettings(api, selectedMapSlug);
+        mapAccess = mapRoutingSettings.canManageAccess ? await fetchMapAccess(api, selectedMapSlug).catch(() => null) : null;
         const activeMap = maps.find((map) => map.slug === selectedMapSlug);
         if (activeMap?.defaultRegionId) {
           regionTopology = await getRegionTopology(activeMap.defaultRegionId);
@@ -1177,6 +1205,10 @@
           />
         {/if}
 
+        {#if mapAccess}
+          <MapAccessPanel access={mapAccess} message={mapAccessMessage} onSetAccess={setSelectedMapAccess} />
+        {/if}
+
         {#if panelVisible(activeLayout, 'telemetry')}
           <TelemetryStatus
             {logStatus}
@@ -1266,6 +1298,7 @@
                 signatures={selectedSignatureSystem.signatures}
                 onDelete={deleteSelectedSignature}
                 onDeleteAll={deleteAllSelectedSignatures}
+                onEdit={editSelectedSignature}
               />
               <HomeRallyControls
                 isHome={selectedSignatureSystem.solarsystemId === chainSnapshot.homeSolarsystemId}

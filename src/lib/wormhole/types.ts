@@ -35,6 +35,13 @@ export interface ChainConnectionUpdate {
   shipSize: 'frigate' | 'medium' | 'large' | null
 }
 
+export interface SignatureUpdate {
+  signatureId: string | null
+  signatureTypeId: number | null
+  signatureCategoryId: number | null
+  rawTypeName: string | null
+}
+
 export interface ChainSnapshot {
   mapId: number
   mapSlug: string

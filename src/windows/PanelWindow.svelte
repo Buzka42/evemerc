@@ -7,7 +7,7 @@
   import { onPanelState, requestPanelState, type PanelWindowState } from '../lib/layout/panelBridge';
   import type { PanelId } from '../lib/layout/profiles';
   import { setPanelAlwaysOnTop } from '../lib/layout/windows';
-  import { getEveLogStatus, onEveLogObservation, type EveLogObservation, type EveLogStatus } from '../lib/telemetry/eveLogs';
+  import { describeObservation, getEveLogStatus, onEveLogObservation, type EveLogObservation, type EveLogStatus } from '../lib/telemetry/eveLogs';
 
   interface Props {
     panelId: PanelId;
@@ -114,8 +114,8 @@
     {:else}<p class="text-sm text-slate-500">Discovering the EVE logs folder…</p>{/if}
     {#if lastObservation}
       <div class="mt-3 rounded-md border border-cyan-300/15 bg-cyan-950/20 p-3 text-xs">
-        <p class="text-cyan-200">Jump observed</p>
-        <p class="mt-1 text-slate-300">{lastObservation.fromSystem} → {lastObservation.toSystem}</p>
+        <p class="text-cyan-200">{lastObservation.kind.replace('_', ' ')}</p>
+        <p class="mt-1 text-slate-300">{describeObservation(lastObservation)}</p>
       </div>
     {/if}
     <p class="mt-3 text-[10px] text-slate-600">Read-only — change the EVE logs folder from the main window.</p>

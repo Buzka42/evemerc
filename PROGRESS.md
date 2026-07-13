@@ -24,7 +24,7 @@ npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 523 KB / 138 KB gzipped
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
-cargo test        # (src-tauri) 27/27 tests pass
+cargo test        # (src-tauri) 34/34 tests pass
 ```
 
 Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
@@ -174,21 +174,70 @@ The module-gating plumbing landed this session (`panelModuleOwners`, `resolveVis
 should carry over directly — extend `panelModuleOwners` as new panels get real owners instead of
 inventing a second mechanism.
 
-### 2. EVE log parser only recognizes one template
+### 2. (Resolved) EVE log parser now recognizes 4 of 6 PLAN.md-named templates
 
-`src-tauri/src/eve_logs/parser.rs` implements exactly one `EveLogObservationKind`:
-`JumpStarted`, matched by one regex for the English "Jumping from X to Y" gamelog line.
-PLAN.md §9.4 calls for `jump_started`, `location_confirmed`, `combat_hit`, `combat_miss`,
-`warp`, and `session_started`.
+Was: `src-tauri/src/eve_logs/parser.rs` implemented exactly one `EveLogObservationKind`
+(`JumpStarted`). PLAN.md §9.4 calls for `jump_started`, `location_confirmed`, `combat_hit`,
+`combat_miss`, `warp`, and `session_started`.
 
-**Do not just add regexes for these from memory.** PLAN.md §17.10 and the testing strategy
-(§15 "Rust log fixtures") are explicit that new templates must be matched against sanitized
-real EVE gamelog fixtures, tested for locale variants, and must degrade to an "unknown
-template" diagnostic rather than guess — this is a stated privacy/correctness risk, not a
-style preference. Before extending this file: obtain real (sanitized) `Gamelogs`/`Chatlogs`
-samples for the templates you intend to support, add them as test fixtures, then extend
-`EveLogObservationKind` and `parse_line`. Combat parsing in particular has HTML-ish markup
-that varies by client version — verify against a current-client sample, not old documentation.
+**Fixed against real, sanitized gamelog data**, not memory — the user granted read access to
+their own `Gamelogs` folder (`C:\Users\Arawn\Documents\EVE\logs\Gamelogs`) mid-session
+specifically to unblock this gap. Catalogued every distinct `(tag)` category across the real
+files first (`hint`, `combat`, `notify`, `None`, `question`, `bounty`, `info`, `warning`) before
+writing any regex, rather than guessing which lines mattered. Found and implemented:
+
+- `location_confirmed`: `Undocking from <station> to <system> solar system.` is the only
+  reliable system-confirming line in Gamelogs — there is no "docked at" or "warp complete" line
+  with a system name in this channel. Only the destination `system` name is captured.
+- `combat_miss`: two real formats, both incoming (`<attacker> misses you completely`) and
+  outgoing (`Your [group of ]<weapon> misses <target> completely - <weapon>` — the `group of`
+  prefix only appears for turrets/launchers, not drones, confirmed from real samples of both).
+- `combat_hit`: the HTML-ish colored damage lines (`<color=0xffcc0000>` = incoming/red,
+  `<color=0xff00ffff>` = outgoing/cyan) carrying damage, attacker/target, an *optional* weapon
+  name (present for turrets/missiles, absent for drones — real samples show the weapon segment
+  is sometimes just missing, not empty), and a hit-quality word. The hit-quality vocabulary was
+  enumerated from real data rather than assumed: `Glances Off`, `Grazes`, `Hits`, `Penetrates`,
+  `Smashes`, `Wrecks` (6 tiers, matches EVE's known damage-quality scale).
+- `warp` and `session_started` are **still not implemented** — genuinely not possible from
+  Gamelogs content. Grepped extensively for warp-start/align lines; the only warp-adjacent text
+  found was error notifications ("You cannot do that while warping.", "unable to align or warp
+  to..."), never a structured "Warping to X" event with a resolvable destination. `session_started`
+  already has an equivalent signal at the file level (the `Session Started: ...` header + one
+  `TailState` per discovered file), so a per-line regex for it wasn't needed — this was already
+  implicitly handled by the existing file-discovery/rotation logic from earlier this session, not
+  a gap.
+
+**Validated two ways before trusting the regexes**: (1) `cargo test` — 9 new tests using literal
+line samples matching every real format seen, with attacker/target names replaced by synthetic
+placeholders (`Some Rival`, `Some Target`) since the originals were real third-party EVE
+players/corps and this repo has a public GitHub remote — station/system names (`Hek`, `Jita`)
+were kept since those are public game-world data, not personal information. (2) A read-only,
+non-committed regex sweep (PowerShell, run directly against the log files, nothing written to
+the repo) across ~60k real lines from 6 gamelog files: 99.87% of all `(combat)` lines matched one
+of the new patterns (58,424 / 58,501); the unmatched ~0.1% degrades to "no observation" rather
+than guessing, which is the correct behavior for a template that isn't (yet) recognized.
+
+**`EveLogObservation`'s shape changed** to accommodate the new kinds: previously a flat struct
+with non-optional `from_system`/`to_system` (jump-only fields baked into every observation), now
+those plus `system`, `direction`, `counterpart`, `weapon`, `damage`, `hit_quality` are all
+`Option<T>`, populated per-kind. The TypeScript side (`lib/telemetry/eveLogs.ts`) was changed to
+match as a proper discriminated union (`EveLogObservation = JumpStartedObservation |
+LocationConfirmedObservation | CombatMissObservation | CombatHitObservation`) rather than one
+flat interface with fields that don't apply to every kind — this is more precise than the Rust
+side (which still serializes a flat object with nulls for irrelevant fields; the TS union just
+narrows correctly on `.kind` before the compiler will let you touch kind-specific fields). Added
+a shared `describeObservation()` helper so `TelemetryStatus.svelte` and `PanelWindow.svelte`
+render all four kinds instead of assuming every observation is a jump (both previously hardcoded
+"Jump observed" + `fromSystem → toSystem`, which would have been wrong/broken for the 3 new
+kinds). `fusion.ts`/`publisher.ts` were already correctly kind-gating before touching
+jump-specific fields, so they compile against the new union with no logic changes needed — this
+was existing, if effectively untested-for-this-purpose, defensive code that turned out to be
+exactly right.
+
+34 Rust tests (was 27), 64 JS tests (unchanged — no new JS-side test file was needed since
+`describeObservation` is a pure formatting function exercised transitively by
+`svelte-check`/component rendering, not given a dedicated unit test; consider adding one if it
+grows more branches), 0 type errors, clean build, `cargo clippy` clean.
 
 ### 3. `Chatlogs` are tailed but never parsed
 

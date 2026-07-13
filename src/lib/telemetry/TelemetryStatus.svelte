@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { EveLogObservation, EveLogStatus } from './eveLogs';
+  import { describeObservation, type EveLogObservation, type EveLogStatus } from './eveLogs';
 
   interface Props {
     logStatus: EveLogStatus | null;
@@ -37,9 +37,8 @@
 
   {#if lastObservation}
     <div class="mt-3 rounded-md border border-cyan-300/15 bg-cyan-950/20 p-3 text-xs">
-      <p class="text-cyan-200">Jump observed</p>
-      <p class="mt-1 text-slate-300">{lastObservation.fromSystem} → {lastObservation.toSystem}</p>
-      <p class="mt-1 text-slate-500">Awaiting SDE resolution and ESI confirmation</p>
+      <p class="text-cyan-200">{lastObservation.kind.replace('_', ' ')}</p>
+      <p class="mt-1 text-slate-300">{describeObservation(lastObservation)}</p>
     </div>
   {/if}
 

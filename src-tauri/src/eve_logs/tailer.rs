@@ -173,8 +173,8 @@ mod tests {
         writeln!(file, " to Perimeter").expect("finish line");
         let observations = state.read_observations(file.path()).expect("complete read");
         assert_eq!(observations.len(), 1);
-        assert_eq!(observations[0].from_system, "Jita");
-        assert_eq!(observations[0].to_system, "Perimeter");
+        assert_eq!(observations[0].from_system.as_deref(), Some("Jita"));
+        assert_eq!(observations[0].to_system.as_deref(), Some("Perimeter"));
     }
 
     #[test]
@@ -203,8 +203,8 @@ mod tests {
         let observations = state.read_observations(file.path()).expect("read after resume");
 
         assert_eq!(observations.len(), 1);
-        assert_eq!(observations[0].from_system, "Jita");
-        assert_eq!(observations[0].to_system, "Perimeter");
+        assert_eq!(observations[0].from_system.as_deref(), Some("Jita"));
+        assert_eq!(observations[0].to_system.as_deref(), Some("Perimeter"));
     }
 
     #[test]

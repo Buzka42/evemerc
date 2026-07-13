@@ -283,8 +283,8 @@ mod tests {
         let observations = track_and_read_gamelog(&state, file.path());
 
         assert_eq!(observations.len(), 1);
-        assert_eq!(observations[0].from_system, "Alpha");
-        assert_eq!(observations[0].to_system, "Beta");
+        assert_eq!(observations[0].from_system.as_deref(), Some("Alpha"));
+        assert_eq!(observations[0].to_system.as_deref(), Some("Beta"));
     }
 
     #[test]
@@ -303,8 +303,8 @@ mod tests {
 
         let second = track_and_read_gamelog(&state, file_b.path());
         assert_eq!(second.len(), 1);
-        assert_eq!(second[0].from_system, "Gamma");
-        assert_eq!(second[0].to_system, "Delta");
+        assert_eq!(second[0].from_system.as_deref(), Some("Gamma"));
+        assert_eq!(second[0].to_system.as_deref(), Some("Delta"));
 
         // The previous file's tail is untouched by the switch: replaying it with no new bytes
         // appended yields nothing.
@@ -331,8 +331,8 @@ mod tests {
         writeln!(file, "[ 2026.07.13 10:01:00 ] (None) Jumping from Beta to Charlie").expect("write second");
         let grown = track_and_read_gamelog(&state, file.path());
         assert_eq!(grown.len(), 1);
-        assert_eq!(grown[0].from_system, "Beta");
-        assert_eq!(grown[0].to_system, "Charlie");
+        assert_eq!(grown[0].from_system.as_deref(), Some("Beta"));
+        assert_eq!(grown[0].to_system.as_deref(), Some("Charlie"));
     }
 
     #[test]
@@ -367,7 +367,7 @@ mod tests {
             .expect("read after resume");
 
         assert_eq!(observations.len(), 1);
-        assert_eq!(observations[0].from_system, "Beta");
-        assert_eq!(observations[0].to_system, "Charlie");
+        assert_eq!(observations[0].from_system.as_deref(), Some("Beta"));
+        assert_eq!(observations[0].to_system.as_deref(), Some("Charlie"));
     }
 }

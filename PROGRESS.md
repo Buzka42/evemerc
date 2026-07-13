@@ -16,6 +16,29 @@ connection editing/delete, signature delete/bulk-delete, an EOL-detection bug fi
 diffing the vendored OpenAPI schema against what actually has client code calling it — see
 "Fixed this session" below for the full list.
 
+## Release readiness (2026-07-13)
+
+**Shippable now.** `npm run tauri build` was actually exercised for the first time this session
+(previously only `vite build` had been verified — PROGRESS.md used to explicitly flag the real
+Tauri build as unverified) and produces a working installer:
+`EVEMerc Desktop_0.1.0_x64-setup.exe` in `src-tauri/target/release/bundle/nsis/` (debug build
+confirmed first at `.../target/debug/bundle/nsis/`, then a real optimized release build). Both
+`--debug` and release builds completed cleanly; the only warning
+("`__TAURI_BUNDLE_TYPE` variable not found in binary") is inert NSIS-bundler boilerplate — this
+app has no `tauri-plugin-updater` dependency, so the warning doesn't apply to anything actually
+in use.
+
+Two known gaps are intentionally shipping unresolved, tracked (not silently dropped) in gaps #4
+and #7 below and in the README's "Known limitations" section:
+1. **Ship history** — no backend read endpoint exists.
+2. **Routes / Route Finder** — no backend read endpoint exists for `map-route-solarsystems`.
+
+Both are additionally blocked right now by the backend repo's own state (250 uncommitted files
+on `main`, including ship-history files marked deleted) — see gap #4's update for the full
+finding. The user explicitly decided to ship without these rather than wait, so don't treat them
+as release blockers in future sessions unless told otherwise; just keep them documented until the
+backend side is resolved.
+
 ## Verified working right now
 
 ```

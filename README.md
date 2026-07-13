@@ -28,7 +28,18 @@ The first authenticated start downloads the current static-data snapshot. Fleet 
 
 The app discovers `%USERPROFILE%\Documents\EVE\logs` by default and tails both `Gamelogs` and `Chatlogs`. Existing files begin at EOF, so historical sessions are not replayed as live intel. A different logs root can be selected from the Operations panel.
 
-Raw chat and combat lines remain local. Only normalized location observations required by enabled features are sent to the configured EVEMerc server.
+`Gamelogs` are parsed locally into jump, docking, and combat observations, shown in the app's System Intel and Telemetry panels. `Chatlogs` are only tailed and counted by default — chat content is never read unless you explicitly add a channel to the **Intel Channels** allowlist in Operations settings, meant for structured alliance/corp intel-reporting channels (e.g. `gem.imperium`), not casual conversation.
+
+Everything above stays local to the app. Only jump observations from characters using enabled tracking features are sent to the configured EVEMerc server — docking, combat data, and intel-channel chat are never transmitted anywhere.
+
+## Known limitations
+
+Two features are intentionally unavailable in this release because the backend doesn't expose the endpoints they need yet — see [PROGRESS.md](PROGRESS.md) gaps #4 and #7 for the full detail and current status:
+
+- **Ship history** (M-tracking) — no backend read endpoint exists.
+- **Routes / Route Finder** (M-navigation) — no backend read endpoint exists for `map-route-solarsystems`; create/update/delete exist but there's no way to list what's been created.
+
+Both are tracked, not forgotten — they'll ship once the corresponding backend work lands.
 
 ## Build an installer
 

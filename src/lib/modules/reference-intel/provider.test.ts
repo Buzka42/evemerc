@@ -9,7 +9,7 @@ describe('reference intel provider', () => {
       region_id: 10000002,
       region_name: 'The Forge',
       systems: [
-        { id: 30000142, kill_stats: { ship_kills: 8, pod_kills: 2 } },
+        { id: 30000142, kill_stats: { ship_kills: 8, pod_kills: 2, npc_kills: 5 } },
         { id: 30000144, kill_stats: null },
       ],
       connections: [],
@@ -22,5 +22,7 @@ describe('reference intel provider', () => {
     expect(layer.layerId).toBe('kill-activity')
     expect(layer.indicators[30000142]?.label).toBe('10 player kills / 24h')
     expect(layer.indicators[30000144]).toBeUndefined()
+    expect(layer.killCounts?.[30000142]).toEqual({ shipKills: 8, npcKills: 5 })
+    expect(layer.killCounts?.[30000144]).toBeUndefined()
   })
 })

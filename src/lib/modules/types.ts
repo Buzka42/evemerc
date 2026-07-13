@@ -32,6 +32,8 @@ export interface RegionalLayerData {
   indicators: Record<number, { intensity: number; label: string; color: string }>;
   /** A distinct visual channel (a colored ring around the system dot) for ownership-style overlays that shouldn't compete with `indicators`' intensity glow. */
   rings?: Record<number, { label: string; color: string }>;
+  /** Raw ship/NPC kill counts for the tactical-HUD numeric badges next to a system node, distinct from `indicators`' aggregated intensity glow. */
+  killCounts?: Record<number, { shipKills: number; npcKills: number }>;
 }
 
 export interface FleetWidgetDefinition {

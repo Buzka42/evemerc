@@ -12,6 +12,7 @@ export interface RegionalMapModel {
   pilotCounts: Map<number, number>
   intelIndicators: Map<number, { intensity: number; label: string; color: string }>
   sovereignty: Map<number, { label: string; color: string }>
+  killCounts: Map<number, { shipKills: number; npcKills: number }>
 }
 
 export function buildRegionalMapModel(
@@ -41,6 +42,7 @@ export function buildRegionalMapModel(
 
   const intelIndicators = new Map<number, { intensity: number; label: string; color: string }>()
   const sovereignty = new Map<number, { label: string; color: string }>()
+  const killCounts = new Map<number, { shipKills: number; npcKills: number }>()
   for (const layer of layers) {
     for (const [systemId, indicator] of Object.entries(layer.indicators)) {
       intelIndicators.set(Number(systemId), indicator)
@@ -48,7 +50,10 @@ export function buildRegionalMapModel(
     for (const [systemId, ring] of Object.entries(layer.rings ?? {})) {
       sovereignty.set(Number(systemId), ring)
     }
+    for (const [systemId, counts] of Object.entries(layer.killCounts ?? {})) {
+      killCounts.set(Number(systemId), counts)
+    }
   }
 
-  return { positions, pilotCounts, intelIndicators, sovereignty }
+  return { positions, pilotCounts, intelIndicators, sovereignty, killCounts }
 }

@@ -25,6 +25,14 @@ describe('regional map layers', () => {
     const model = buildRegionalMapModel(topology, [], [{ layerId: 'kill-activity', indicators: {} }])
     expect(model.sovereignty.size).toBe(0)
   })
+
+  it('merges kill counts as a channel separate from the intensity glow', () => {
+    const layers: RegionalLayerData[] = [
+      { layerId: 'kill-activity', indicators: {}, killCounts: { 30000142: { shipKills: 4, npcKills: 12 } } },
+    ]
+    const model = buildRegionalMapModel(topology, [], layers)
+    expect(model.killCounts.get(30000142)).toEqual({ shipKills: 4, npcKills: 12 })
+  })
 })
 
 describe('regional map performance', () => {

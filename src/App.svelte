@@ -1301,6 +1301,7 @@
                 members={fleetSnapshot.members}
                 highlightedSystemId={objectiveSystemId}
                 layers={regionalLayers}
+                regionName={regions.find((region) => region.id === selectedRegionId)?.name ?? null}
                 onSelectSystem={selectRegionalSystem}
               />
             {/if}

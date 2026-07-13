@@ -70,6 +70,7 @@
   import TelemetryStatus from './lib/telemetry/TelemetryStatus.svelte';
   import IntelChannelFeed from './lib/intel/IntelChannelFeed.svelte';
   import ToastHost from './lib/ui/ToastHost.svelte';
+  import ConnectionIndicator from './lib/realtime/ConnectionIndicator.svelte';
   import { pushToast } from './lib/ui/toast.svelte';
 
   const foundations = [
@@ -1293,7 +1294,7 @@
               <span>{fleetSnapshot.members.length} pilots · revision {fleetSnapshot.revision}</span>
               <div class="flex items-center gap-3">
                 {#if showingCachedFleet}<span class="text-amber-300">cached</span>{/if}
-                <span class:text-emerald-300={connectionState === 'connected'} class="text-slate-500">{connectionState}</span>
+                <ConnectionIndicator state={connectionState} />
                 <span class:text-amber-300={fleetSnapshot.freshness.isStale} class="text-emerald-300">
                   {fleetSnapshot.freshness.isStale ? 'STALE' : `${fleetSnapshot.freshness.ageSeconds ?? 0}s old`}
                 </span>

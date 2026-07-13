@@ -5,7 +5,7 @@ import type { AccessTokenStore } from '../api/client'
 export class KeyringAccessTokenStore implements AccessTokenStore {
   private browserFallback: string | null = null
 
-  constructor(private readonly serverOrigin = 'https://wormhole.systems') {}
+  constructor(private readonly serverOrigin = 'https://evemerc.test') {}
 
   async get(): Promise<string | null> {
     if (!isTauri()) {

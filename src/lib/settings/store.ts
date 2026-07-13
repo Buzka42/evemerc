@@ -3,7 +3,7 @@ import { LazyStore } from '@tauri-apps/plugin-store'
 import { normalizeServerUrl } from '../auth/pkce'
 
 const settingsStore = new LazyStore('settings.json', { autoSave: 200, defaults: {} })
-const defaultServerUrl = 'https://wormhole.systems'
+const defaultServerUrl = 'https://evemerc.test'
 
 export interface DesktopSettings {
   serverUrl: string

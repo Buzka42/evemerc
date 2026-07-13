@@ -87,7 +87,7 @@
   let regionTopology = $state<RegionTopology | null>(null);
   let regions = $state<RegionChoice[]>([]);
   let selectedRegionId = $state<number | null>(null);
-  let serverUrl = $state('https://wormhole.systems');
+  let serverUrl = $state('https://evemerc.test');
   let settings = $state<DesktopSettings | null>(null);
   let waypointSystemId = $state('');
   let commandMessage = $state<string | null>(null);
@@ -146,8 +146,8 @@
   let dockHost: HTMLElement;
   let dockSource: HTMLElement;
   let dockWorkspace: DockWorkspace | null = null;
-  let tokenStore = new KeyringAccessTokenStore('https://wormhole.systems');
-  let api = createEveMercApi({ baseUrl: 'https://wormhole.systems', tokenStore });
+  let tokenStore = new KeyringAccessTokenStore('https://evemerc.test');
+  let api = createEveMercApi({ baseUrl: 'https://evemerc.test', tokenStore });
   let authFlow = createAuthFlow();
   const moduleRegistry = createModuleRegistry();
 

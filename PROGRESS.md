@@ -18,15 +18,19 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 
 ## Release readiness (2026-07-13)
 
-**Shippable now.** `npm run tauri build` was actually exercised for the first time this session
-(previously only `vite build` had been verified — PROGRESS.md used to explicitly flag the real
-Tauri build as unverified) and produces a working installer:
-`EVEMerc Desktop_0.1.0_x64-setup.exe` in `src-tauri/target/release/bundle/nsis/` (debug build
-confirmed first at `.../target/debug/bundle/nsis/`, then a real optimized release build). Both
-`--debug` and release builds completed cleanly; the only warning
-("`__TAURI_BUNDLE_TYPE` variable not found in binary") is inert NSIS-bundler boilerplate — this
-app has no `tauri-plugin-updater` dependency, so the warning doesn't apply to anything actually
-in use.
+**Shippable now — but read this first.** `npm run tauri build` produces a working installer
+(`EVEMerc Desktop_0.1.0_x64-setup.exe` in `src-tauri/target/release/bundle/nsis/`; the only
+warning, `__TAURI_BUNDLE_TYPE` not found, is inert NSIS-bundler boilerplate irrelevant to this app
+since there's no `tauri-plugin-updater` dependency). **However**, the first time this claim was
+written, it was based only on `npm run check`/`npm test`/`vite build`/the Tauri packaging step
+succeeding — none of which exercise the actual rendered UI. The user then ran the real app and
+found it immediately: the dock layout rendered as completely broken, overlapping, illegible
+panels (missing `dockview-core` CSS import — see "Fixed this session"), and login was silently
+broken (defaulted to a third party's live server, `wormhole.systems`, instead of this project's
+own backend). Both are now fixed and the layout was re-verified in an actual browser preview, not
+just re-run test suites — but the lesson stands: **`vite build` succeeding is necessary, not
+sufficient, for "the UI actually works."** Before declaring anything shippable again, load the
+real running app (browser preview or `tauri dev`) and look at it.
 
 Two known gaps are intentionally shipping unresolved, tracked (not silently dropped) in gaps #4
 and #7 below and in the README's "Known limitations" section:
@@ -465,6 +469,35 @@ the backend repo isn't in a state it's safe to add one into.
 
 ## Fixed this session
 
+- **Two significant, user-reported bugs closed** after the user actually ran the built app and
+  screenshotted it (the first time this session anything got real visual/runtime verification
+  rather than just `npm run check`/`npm test`/`vite build`, which — as flagged repeatedly
+  throughout this document — cannot catch either of these):
+  1. **The entire dock layout rendered as overlapping, unstyled, unreadable panels.** Root cause:
+     `dockview-core`'s required stylesheet (`dockview-core/dist/styles/dockview.css`) was never
+     imported anywhere — `dock.ts` imports the JS API but nothing ever pulled in the CSS that
+     gives panels their absolute positioning, borders, and tab bar. Fixed with one line in
+     `app.css` (`@import 'dockview-core/dist/styles/dockview.css';`). Verified with the actual
+     browser preview tool (not just build/test output) — before: panel text overlapping
+     illegibly, as in the user's screenshot; after: properly bordered, tabbed panels rendering
+     side by side exactly as designed. This should have been caught in a real-browser check
+     before now; noting it as a lesson for any future session touching layout code — `vite build`
+     succeeding proves the code compiles, not that dockview's runtime dependencies are satisfied.
+  2. **The app defaulted to `https://wormhole.systems`** — a live, unrelated third-party
+     community tool's production server, not this project's own backend — as the default API
+     base URL, token-store origin, and initial `serverUrl`/`api` state in four places
+     (`lib/settings/store.ts`, `lib/auth/tokenStore.ts`, and two spots in `App.svelte`). This
+     meant a fresh install would silently try to authenticate against someone else's live
+     service and fail, with no obvious explanation to the user. The user confirmed this was
+     leftover from early scaffolding, not intentional. Fixed to `https://evemerc.test`, matching
+     the backend repo's own `.env.example` (`APP_URL=https://evemerc.test`) — the user's choice,
+     since that's their local dev domain; this is not a real production URL, so anyone deploying
+     this for real users still needs to point `serverUrl` at their actual deployed backend via the
+     in-app settings, same as before. Left the ~9 test files that use `wormhole.systems` as an
+     arbitrary mock base URL alone — those are cosmetic placeholders unrelated to the real
+     default, not worth the diff noise.
+  64/64 JS tests, 0 type errors, clean build; re-verified in a real browser preview after the CSS
+  fix, not just re-run test suites.
 - `App.svelte` `selectLayout()` called `dockWorkspace?.applyProfile(profile)` twice in a row
   (harmless but dead duplicate call) — removed the duplicate.
 - Dock panel visibility now respects module enablement, not just profile visibility (see gap #1

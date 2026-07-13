@@ -623,7 +623,6 @@
       activeLayout = profile;
       window.localStorage.setItem('evemerc.active-layout', profile.id);
       dockWorkspace?.applyProfile(profile);
-      dockWorkspace?.applyProfile(profile);
     }
   }
 

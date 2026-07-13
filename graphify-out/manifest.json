@@ -1,0 +1,470 @@
+{
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\svelte.config.js": {
+    "mtime": 1783887450.9099717,
+    "hash": "352e2f15b96c7fe9166d6166535069b6"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\vite.config.ts": {
+    "mtime": 1783887365.162892,
+    "hash": "7ca1cb68e83da6ec2d4c5d203749fb2c"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\scripts\\sync-api.ts": {
+    "mtime": 1783889405.2173553,
+    "hash": "e6c919bbea2fad0a183b5e0d5a018d28"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\App.svelte": {
+    "mtime": 1783901476.6533084,
+    "hash": "2271d3c27189f90af7f6f07ed094bc1d"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\main.ts": {
+    "mtime": 1783897447.369183,
+    "hash": "191f33b8ed22287015293f3db9b17e4d"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\account\\api.test.ts": {
+    "mtime": 1783900978.5924418,
+    "hash": "4f2f8d1eba07cce0e9bcbbdceeb410e3"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\account\\api.ts": {
+    "mtime": 1783900978.591482,
+    "hash": "390407bb8c158c4b9acdcc97530b4750"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\api\\client.test.ts": {
+    "mtime": 1783889734.7407408,
+    "hash": "2dab88b0cd4d3c8a6b6d739739557e6e"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\api\\client.ts": {
+    "mtime": 1783889734.7407408,
+    "hash": "3a16e65bc642b8413a7ec5221d1fe9cc"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\api\\schema.d.ts": {
+    "mtime": 1783901845.8028233,
+    "hash": "0cb15672493baf5cdb4405cbf336c1da"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\audits\\api.test.ts": {
+    "mtime": 1783901014.4276645,
+    "hash": "34a7dc85180b1fde722b86edbd806b93"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\audits\\api.ts": {
+    "mtime": 1783901133.5116084,
+    "hash": "ef7ece53037ed10b5462f40388e6e38d"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\auth\\flow.test.ts": {
+    "mtime": 1783890199.6407616,
+    "hash": "aee8783f2bb67bb9e1740775ccf38f94"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\auth\\flow.ts": {
+    "mtime": 1783892531.262267,
+    "hash": "ee66abf146160854913888e78aa9574a"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\auth\\pkce.test.ts": {
+    "mtime": 1783889862.3557088,
+    "hash": "50c7acbe4a35dea2a95f138dffc5758e"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\auth\\pkce.ts": {
+    "mtime": 1783889862.3557088,
+    "hash": "070835c311fa67e29ba0ee638f732533"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\cache\\bridge.ts": {
+    "mtime": 1783891535.5329556,
+    "hash": "a3271195f398ecf562aef57b1642c063"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\commands\\palette.test.ts": {
+    "mtime": 1783898112.093799,
+    "hash": "7adf3f7194a790880b1446085cbd30c8"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\commands\\palette.ts": {
+    "mtime": 1783898112.093799,
+    "hash": "1ddc51835a63e2cbd6d9d6f777dc780a"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\actions.test.ts": {
+    "mtime": 1783893922.9666421,
+    "hash": "b24a1eecf06cfb942b06effac30cac39"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\actions.ts": {
+    "mtime": 1783894482.0796518,
+    "hash": "20241bd3608cf5de55161bfbea2c3803"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\alerts.test.ts": {
+    "mtime": 1783894390.082672,
+    "hash": "10491f5caf0aea43119514f4ffa9f222"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\alerts.ts": {
+    "mtime": 1783894390.081694,
+    "hash": "7619113e98939843e0448bda56dccb80"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\freshness.test.ts": {
+    "mtime": 1783892403.1628203,
+    "hash": "eeeaf0b62433d9cb486e3158b41a61fd"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\freshness.ts": {
+    "mtime": 1783892403.1628203,
+    "hash": "2b5bcce8b2cc136984c5cb454a15c266"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\localJump.test.ts": {
+    "mtime": 1783892454.747609,
+    "hash": "805b38508f99c18b38052c7c654a7f2a"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\localJump.ts": {
+    "mtime": 1783892653.4179087,
+    "hash": "81c73d7f08934bbe1d8c548a44008f80"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\status.test.ts": {
+    "mtime": 1783890352.215439,
+    "hash": "4c9f9db50c9a436ad0750715d562afd4"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\fleet\\status.ts": {
+    "mtime": 1783894390.081694,
+    "hash": "1b440eea86ce9f3a82aa0c431192c3ee"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\intel\\killfeed.test.ts": {
+    "mtime": 1783901270.2923064,
+    "hash": "1bba22f1eb6263c2975daa33e06f5a1e"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\intel\\killfeed.ts": {
+    "mtime": 1783901270.2923064,
+    "hash": "048313c350b3c2aec0a781240bddfc07"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\intel\\system.test.ts": {
+    "mtime": 1783899243.5245068,
+    "hash": "d0db180c51c46dac84eb4f8988c2da81"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\intel\\system.ts": {
+    "mtime": 1783899280.106637,
+    "hash": "03f40bde33f278d113231d2270205bbd"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\layout\\dock.ts": {
+    "mtime": 1783898920.0917292,
+    "hash": "37b3996de95f3518fd467ead595bb4e3"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\layout\\panelBridge.ts": {
+    "mtime": 1783897408.7585676,
+    "hash": "71c3bbf3dfcc6d01d09d1e9a920904dd"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\layout\\profiles.test.ts": {
+    "mtime": 1783897131.5165298,
+    "hash": "56edda0a4d0c8ba5c631f5ea0aee47d8"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\layout\\profiles.ts": {
+    "mtime": 1783897131.5155287,
+    "hash": "0c41d8bc7acb28ce30d2fedc362c1c30"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\layout\\windows.ts": {
+    "mtime": 1783899556.9411342,
+    "hash": "783fa9505784956d784901f0b74cae25"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\maps\\choices.ts": {
+    "mtime": 1783891041.190542,
+    "hash": "d7c8d6971565fbf57ca1acabef013977"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\maps\\settings.test.ts": {
+    "mtime": 1783901476.652308,
+    "hash": "7150a4c55af41fb69573ce5ff95493c2"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\maps\\settings.ts": {
+    "mtime": 1783901476.6513093,
+    "hash": "3b3d2f3b9d59b11e706253120353d2bd"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\index.test.ts": {
+    "mtime": 1783888939.0356755,
+    "hash": "371584602c1406628d27ee98c56d510b"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\index.ts": {
+    "mtime": 1783894293.0469072,
+    "hash": "c0753ed1bcbc40976c0bb982405c97c1"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\registry.test.ts": {
+    "mtime": 1783894335.6377826,
+    "hash": "af20f1845821635b11ff4f23c05ee47c"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\registry.ts": {
+    "mtime": 1783888984.580212,
+    "hash": "1085a7f662dec02b0b680f7a1d4f686e"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\types.ts": {
+    "mtime": 1783894293.0429058,
+    "hash": "68fde9c6c7177cbc497746776241758b"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\fleet\\index.ts": {
+    "mtime": 1783888939.0326748,
+    "hash": "fc8833bbdc0e52ca5a1147e3e283b963"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\local-telemetry\\index.ts": {
+    "mtime": 1783888939.0336742,
+    "hash": "f4e03329c2e1dacea9901ffafa281930"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\reference-intel\\index.ts": {
+    "mtime": 1783894293.0449066,
+    "hash": "352762b459880a0d4fb35b668a4d8161"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\reference-intel\\provider.test.ts": {
+    "mtime": 1783894524.1033866,
+    "hash": "78849ee91bd4e6ae355dfba41e4496ce"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\reference-intel\\provider.ts": {
+    "mtime": 1783894335.6357806,
+    "hash": "e5d23ad2f903e6b77577f27f3406f1e3"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\regional\\index.ts": {
+    "mtime": 1783888939.0326748,
+    "hash": "53aa0065f1130e4f206adecc862bcb02"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\modules\\wormhole-map\\index.ts": {
+    "mtime": 1783888939.0346758,
+    "hash": "3ae2704850ed3479696e6501748a9b10"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\realtime\\echo.ts": {
+    "mtime": 1783898415.0599644,
+    "hash": "51c71d32b77f433f3e1671aebf3b9833"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\realtime\\fleetEvents.test.ts": {
+    "mtime": 1783891372.059716,
+    "hash": "44d65f49a3b37c90f4ad644c1f6f1918"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\realtime\\fleetEvents.ts": {
+    "mtime": 1783893999.6215906,
+    "hash": "a283dedcccff145f61c710406cde2b48"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\realtime\\serverStatus.test.ts": {
+    "mtime": 1783898357.486453,
+    "hash": "bf066d9331f2176d0b61c3c15f59b299"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\realtime\\serverStatus.ts": {
+    "mtime": 1783898357.4854522,
+    "hash": "f61f48faa10edb55060558469acfb03d"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\regional\\model.test.ts": {
+    "mtime": 1783899437.4838367,
+    "hash": "98b860b592c2cd7a14da8233261d13ab"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\regional\\model.ts": {
+    "mtime": 1783899427.1272547,
+    "hash": "13242a6da1f82ffd611fc5c41228b1b2"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\regional\\RegionMap.svelte": {
+    "mtime": 1783899427.1282556,
+    "hash": "66fd24183db9e310f0f1a490bcc7e996"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\release\\check.test.ts": {
+    "mtime": 1783898192.8595126,
+    "hash": "44e3a5ea5258e74ff785e4855981bf10"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\release\\check.ts": {
+    "mtime": 1783898192.858477,
+    "hash": "17e083c6eb59e3514a8381a6594ff27e"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\routing\\api.test.ts": {
+    "mtime": 1783901344.7390866,
+    "hash": "5dc05cd7fce46319188c6c8920673d58"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\routing\\api.ts": {
+    "mtime": 1783901366.0987403,
+    "hash": "d9ef701438f649ce9c3b177699060440"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\sde\\bridge.ts": {
+    "mtime": 1783900767.2953808,
+    "hash": "f8edf146d56a8794ec95768797df49eb"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\settings\\store.ts": {
+    "mtime": 1783899585.0968676,
+    "hash": "898412aaa9a8741454e68dbff98fc4b7"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\telemetry\\eveLogs.test.ts": {
+    "mtime": 1783888237.19969,
+    "hash": "0dc87f1ff4debca0833cdcfe9652848a"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\telemetry\\eveLogs.ts": {
+    "mtime": 1783892322.680206,
+    "hash": "8ef00bda63159121b2e39e2180cca440"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\telemetry\\fusion.test.ts": {
+    "mtime": 1783889097.221165,
+    "hash": "4a7d52e5c306c9f35ddc673e3deea89a"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\telemetry\\fusion.ts": {
+    "mtime": 1783889103.2866702,
+    "hash": "cfff435eb40a882056ffc242b22eed88"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\telemetry\\observations.ts": {
+    "mtime": 1783889097.220164,
+    "hash": "cd0a190ae482e8ec99281bca92fa47fd"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\telemetry\\publisher.test.ts": {
+    "mtime": 1783892454.7496169,
+    "hash": "f68998da9384beead9005ac441cac6e5"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\telemetry\\publisher.ts": {
+    "mtime": 1783892454.748608,
+    "hash": "84a44478342e3337a86df8eb5ae51ccd"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\wormhole\\api.test.ts": {
+    "mtime": 1783895610.1625504,
+    "hash": "f8ff452d7bc7880b5d6749df3cd41e49"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\wormhole\\api.ts": {
+    "mtime": 1783900831.450772,
+    "hash": "e0f1a911bd650659be32155f237aadec"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\wormhole\\signatureParser.test.ts": {
+    "mtime": 1783895265.8483326,
+    "hash": "0673f2037d1c27dcfa37d8211f21534c"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\wormhole\\signatureParser.ts": {
+    "mtime": 1783895265.8483326,
+    "hash": "de14de5747f16514f0c5983b725bd4dd"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\wormhole\\types.ts": {
+    "mtime": 1783900767.29638,
+    "hash": "cbc43b8bc34c618260e23d4ef86fc44e"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\wormhole\\WormholeChain.svelte": {
+    "mtime": 1783900868.479577,
+    "hash": "eef5fff162304971ebd272a26c5c5ca5"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\windows\\PanelWindow.svelte": {
+    "mtime": 1783898590.4360824,
+    "hash": "1a6b75825f08c8750132ed392ff8f779"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\build.rs": {
+    "mtime": 1783887123.077358,
+    "hash": "667702979da61fdc96948886b7cd7a33"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\cache.rs": {
+    "mtime": 1783897272.858629,
+    "hash": "0cb1531bfa25ccb8e580e74c3c179cb0"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\lib.rs": {
+    "mtime": 1783900717.2187135,
+    "hash": "cf23caae807e7c1b6ceac2acd6a053c5"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\main.rs": {
+    "mtime": 1783887123.0893583,
+    "hash": "82657a05fd959d25074e6758597ca84f"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\sde.rs": {
+    "mtime": 1783900738.0598502,
+    "hash": "ea6e3ed68ccbcbdcff59fd8cc5533ac7"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\commands\\auth.rs": {
+    "mtime": 1783897272.8606284,
+    "hash": "aabd2285bb6a2777dc47dfb2f8db8c2f"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\commands\\eve_logs.rs": {
+    "mtime": 1783887750.1752627,
+    "hash": "adf7d5c59201581cb5e33ededfae27cc"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\commands\\mod.rs": {
+    "mtime": 1783897233.2407634,
+    "hash": "05c1f368a2432a5bc2f5b498ac45ac1a"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\commands\\windows.rs": {
+    "mtime": 1783899648.2376919,
+    "hash": "41c3d8cdcc989925035c5b4f53880568"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\eve_logs\\decoder.rs": {
+    "mtime": 1783887804.325051,
+    "hash": "6b85e1bd9ccc96acf301469294d1502b"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\eve_logs\\discovery.rs": {
+    "mtime": 1783888395.7547953,
+    "hash": "d431b1f9225eee77ab9a1967772ac18d"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\eve_logs\\mod.rs": {
+    "mtime": 1783892322.680206,
+    "hash": "9c7edb5ba63d2af895751762e11cb0e2"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\eve_logs\\parser.rs": {
+    "mtime": 1783887621.1250155,
+    "hash": "9d1982ad8b39bf7a8a7706eb308b392c"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\src\\eve_logs\\tailer.rs": {
+    "mtime": 1783892322.6782072,
+    "hash": "f36e1fc8d232aa64dcef7db5b78837b4"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\index.html": {
+    "mtime": 1783887400.2974894,
+    "hash": "4a60b853c9a5cdbd873bf32089347189"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\PLAN.md": {
+    "mtime": 1783888840.3649049,
+    "hash": "e3d584a7c4ce9aaef6a8c9e0acb8c810"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\README.md": {
+    "mtime": 1783899481.1444094,
+    "hash": "10e39e7c2340047311dc5b3ebb5f87c8"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src\\lib\\api\\openapi.yaml": {
+    "mtime": 1783901839.0697932,
+    "hash": "fd50808861ae82b9e52d4454314f3274"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\128x128.png": {
+    "mtime": 1783887123.078359,
+    "hash": "fdd248e915476e6212afcb096c330992"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\128x128@2x.png": {
+    "mtime": 1783887123.078359,
+    "hash": "fd32cf41af4c52d279b92e9c61676130"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\32x32.png": {
+    "mtime": 1783887123.078359,
+    "hash": "1344a8f2569a67c695807140fb49cf10"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\icon.png": {
+    "mtime": 1783887123.0883582,
+    "hash": "3fa4420986811b429d7f1654da77ac3b"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square107x107Logo.png": {
+    "mtime": 1783887123.0793586,
+    "hash": "24754965fb63f23a0fad45db0ef2554b"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square142x142Logo.png": {
+    "mtime": 1783887123.0793586,
+    "hash": "55d92879c6bd61fc7e79a84e1dcc51f6"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square150x150Logo.png": {
+    "mtime": 1783887123.0803614,
+    "hash": "6e41a89b0a2b484f3e7f1b3a5db65730"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square284x284Logo.png": {
+    "mtime": 1783887123.0813594,
+    "hash": "b5f57838809a4d93eed8ef656ce7c2c4"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square30x30Logo.png": {
+    "mtime": 1783887123.0823615,
+    "hash": "7a18f38b895070303fda351bd8ae757d"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square310x310Logo.png": {
+    "mtime": 1783887123.0833645,
+    "hash": "eeabbd0c2b13960e089e468c20f99e51"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square44x44Logo.png": {
+    "mtime": 1783887123.0843651,
+    "hash": "42c67a38757b409cec4b6eb0c25c714c"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square71x71Logo.png": {
+    "mtime": 1783887123.085365,
+    "hash": "0670843e2fc39a0e53817a47b2b3399d"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\Square89x89Logo.png": {
+    "mtime": 1783887123.085365,
+    "hash": "2bfa099bf584686f0dd98cfafb10bda3"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\src-tauri\\icons\\StoreLogo.png": {
+    "mtime": 1783887123.086361,
+    "hash": "02859e2326344ae7c9559f1af0abba34"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\static\\favicon.png": {
+    "mtime": 1783887123.0933602,
+    "hash": "3a387408ecc6cc283f724b39ca5fffb4"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\static\\svelte.svg": {
+    "mtime": 1783887123.0933602,
+    "hash": "bf6f61806de2953fe8dfce3cf8040ec3"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\static\\tauri.svg": {
+    "mtime": 1783887123.0933602,
+    "hash": "f0966ff85db99f2d00771f92d18c9e7f"
+  },
+  "C:\\Users\\Arawn\\FZ\\evemerc-desktop\\static\\vite.svg": {
+    "mtime": 1783887123.0923572,
+    "hash": "8e3a10e157f75ada21ab742c022d5430"
+  }
+}

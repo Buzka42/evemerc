@@ -7,6 +7,7 @@
   import { fetchFleetSnapshot, reconcileFleetSnapshot, type FleetSnapshot } from './lib/fleet/status';
   import { fetchMapChoices, type MapChoice } from './lib/maps/choices';
   import { getRegionTopology, getSignatureCatalog, getSolarSystemDetails, syncSdeSnapshot, type RegionTopology, type SignatureCatalogEntry } from './lib/sde/bridge';
+  import { fetchRegions, type RegionChoice } from './lib/regional/regions';
   import { publishEveLogObservation } from './lib/telemetry/publisher';
   import { connectFleetRealtime, type ConnectionState } from './lib/realtime/echo';
   import { fleetSnapshotFromEvent } from './lib/realtime/fleetEvents';
@@ -80,6 +81,8 @@
   let connectionState = $state<ConnectionState>('offline');
   let showingCachedFleet = $state(false);
   let regionTopology = $state<RegionTopology | null>(null);
+  let regions = $state<RegionChoice[]>([]);
+  let selectedRegionId = $state<number | null>(null);
   let serverUrl = $state('https://wormhole.systems');
   let settings = $state<DesktopSettings | null>(null);
   let waypointSystemId = $state('');
@@ -363,6 +366,7 @@
       fleetSnapshot = null;
       regionTopology = null;
       regionalLayers = [];
+      selectedRegionId = null;
       chainSnapshot = null;
       mapStatistics = null;
       selectedChainSystemId = null;
@@ -643,6 +647,9 @@
       selectedMapSlug = '';
       fleetSnapshot = null;
       regionTopology = null;
+      regionalLayers = [];
+      regions = [];
+      selectedRegionId = null;
       chainSnapshot = null;
       fleetKills = [];
       ignoredSystemIds = [];
@@ -651,6 +658,26 @@
       mapStatistics = null;
       accountCharacters = [];
       authState = { phase: 'idle' };
+    }
+  }
+
+  async function loadRegionData(mapSlug: string, regionId: number): Promise<void> {
+    regionTopology = await getRegionTopology(regionId);
+    regionalLayers = await Promise.all(moduleRegistry.regionalLayers().map((layer) => layer.load({
+      api,
+      mapSlug,
+      regionId,
+    })));
+  }
+
+  async function changeRegion(regionId: number): Promise<void> {
+    if (!selectedMapSlug || regionId === selectedRegionId) return;
+    try {
+      fleetError = null;
+      selectedRegionId = regionId;
+      await loadRegionData(selectedMapSlug, regionId);
+    } catch (error) {
+      fleetError = error instanceof Error ? error.message : String(error);
     }
   }
 
@@ -691,17 +718,20 @@
         }
         selectedMapSlug = maps[0]?.slug ?? '';
       }
+      if (regions.length === 0) {
+        try {
+          regions = await fetchRegions(api);
+        } catch {
+          regions = [];
+        }
+      }
       if (selectedMapSlug) {
         mapRoutingSettings = await fetchMapRoutingSettings(api, selectedMapSlug);
         mapAccess = mapRoutingSettings.canManageAccess ? await fetchMapAccess(api, selectedMapSlug).catch(() => null) : null;
         const activeMap = maps.find((map) => map.slug === selectedMapSlug);
         if (activeMap?.defaultRegionId) {
-          regionTopology = await getRegionTopology(activeMap.defaultRegionId);
-          regionalLayers = await Promise.all(moduleRegistry.regionalLayers().map((layer) => layer.load({
-            api,
-            mapSlug: selectedMapSlug,
-            regionId: activeMap.defaultRegionId as number,
-          })));
+          selectedRegionId = activeMap.defaultRegionId;
+          await loadRegionData(selectedMapSlug, activeMap.defaultRegionId);
         }
         if (!fleetSnapshot) {
           const cachedSnapshot = await readCache<FleetSnapshot>(serverUrl, 'fleet', selectedMapSlug);
@@ -890,6 +920,7 @@
     fleetSnapshot = null;
     regionTopology = null;
     regionalLayers = [];
+    selectedRegionId = null;
     chainSnapshot = null;
     mapStatistics = null;
     selectedChainSystemId = null;
@@ -1085,17 +1116,31 @@
         <p class="text-sm text-slate-400">Primary workspace</p>
         <div class="mt-2 flex items-center justify-between gap-4">
           <h2 class="text-2xl font-medium">Regional fleet command</h2>
-          {#if maps.length > 0}
-            <select
-              class="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200"
-              value={selectedMapSlug}
-              onchange={selectMap}
-            >
-              {#each maps as map}
-                <option value={map.slug}>{map.name}</option>
-              {/each}
-            </select>
-          {/if}
+          <div class="flex items-center gap-2">
+            {#if regions.length > 0}
+              <select
+                aria-label="Region"
+                class="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200"
+                value={selectedRegionId ?? ''}
+                onchange={(event) => changeRegion(Number((event.currentTarget as HTMLSelectElement).value))}
+              >
+                {#each regions as region}
+                  <option value={region.id}>{region.name}</option>
+                {/each}
+              </select>
+            {/if}
+            {#if maps.length > 0}
+              <select
+                class="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200"
+                value={selectedMapSlug}
+                onchange={selectMap}
+              >
+                {#each maps as map}
+                  <option value={map.slug}>{map.name}</option>
+                {/each}
+              </select>
+            {/if}
+          </div>
         </div>
         <p class="mt-3 max-w-xl text-sm leading-6 text-slate-300">
           Live fleet positions, freshness, command state, and regional intel will remain at the center of every built-in layout.

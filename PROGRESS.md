@@ -19,9 +19,9 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 ## Verified working right now
 
 ```
-npm test         # 59/59 tests pass (31 files)
+npm test         # 61/61 tests pass (32 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 518 KB / 137 KB gzipped
+npm run build    # vite build succeeds; main JS bundle 520 KB / 137 KB gzipped
 cargo check       # (src-tauri) clean, not re-run this pass (no Rust files touched)
 cargo clippy      # (src-tauri) clean, no warnings, not re-run this pass (no Rust files touched)
 cargo test        # (src-tauri) 27/27 tests pass, not re-run this pass (no Rust files touched)
@@ -555,6 +555,27 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   separate channels; rings stay empty when no layer contributes any). 59/59 tests, 0 type errors,
   clean build (the new module code-splits into its own ~0.7 KB lazy chunk, matching the existing
   `kill-activity`/`provider.ts` pattern).
+
+- **Added the region-picker dropdown** (PLAN.md M-regional: "The region picker is fed by public
+  `api/regions`"). Previously the desktop client only ever showed a map's `default_region_id` —
+  there was no way to browse a different k-space region's topology at all, unlike the web app.
+  `GET /api/v1/regions`'s schema.d.ts entry only documents a 500-error response (Scribe never
+  captured a success example for this one) — read `RegionalMapController::regions()` directly to
+  get the real shape: a bare `[{id, name}, ...]` array sorted by name, filtered to `type === 'eve'`
+  (k-space only). New `lib/regional/regions.ts` (`fetchRegions()`, bypassing the incomplete
+  generated type the same documented way as the other under-specified endpoints this session),
+  covered by `regions.test.ts`. `App.svelte` gained a `selectedRegionId` state, a
+  `loadRegionData(mapSlug, regionId)` helper factored out of the inline logic that used to run
+  once at map-load time (now also reusable by the new `changeRegion()` handler), and a region
+  `<select>` next to the existing map switcher in the `fleet-command` panel header. Selecting a map
+  still defaults to its `default_region_id` as before; the new picker lets the operator additionally
+  browse other regions' topology/kill-activity/sovereignty layers without changing which map's
+  fleet/chain data is active. `selectedRegionId`/`regions` are reset alongside the other map-scoped
+  state on map switch, map delete, and logout — while doing this, also fixed a latent pre-existing
+  gap where `regionalLayers` (and now `regions`) weren't being reset on logout, leaving stale data
+  briefly visible to whoever logged in next in the same session; small, low-risk fix bundled in
+  since it was directly adjacent to the state this change already touches. 61/61 tests, 0 type
+  errors, clean build.
 
 ## Recommended order for the next session
 

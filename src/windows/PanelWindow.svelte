@@ -5,6 +5,7 @@
   import { onPanelState, requestPanelState, type PanelWindowState } from '../lib/layout/panelBridge';
   import type { PanelId } from '../lib/layout/profiles';
   import { setPanelAlwaysOnTop } from '../lib/layout/windows';
+  import { getEveLogStatus, onEveLogObservation, type EveLogObservation, type EveLogStatus } from '../lib/telemetry/eveLogs';
 
   interface Props {
     panelId: PanelId;
@@ -15,6 +16,8 @@
   let panelState: PanelWindowState | null = $state(null);
   let panelOpacity = $state(0.94);
   let alwaysOnTop = $state(true);
+  let logStatus: EveLogStatus | null = $state(null);
+  let lastObservation: EveLogObservation | null = $state(null);
 
   async function toggleAlwaysOnTop(): Promise<void> {
     alwaysOnTop = !alwaysOnTop;
@@ -29,7 +32,19 @@
       return requestPanelState();
     });
 
-    return () => unlisten();
+    let unlistenObservations: () => void = () => {};
+    if (panelId === 'telemetry') {
+      void getEveLogStatus().then((status) => logStatus = status);
+      void onEveLogObservation((observation) => {
+        lastObservation = observation;
+        if (logStatus) logStatus = { ...logStatus, observationsEmitted: logStatus.observationsEmitted + 1 };
+      }).then((dispose) => unlistenObservations = dispose);
+    }
+
+    return () => {
+      unlisten();
+      unlistenObservations();
+    };
   });
 </script>
 
@@ -82,6 +97,26 @@
       </div>
       <p class="mt-3 text-[10px] text-slate-600">Read-only — manage characters and tokens from the main window.</p>
     {:else}<p class="text-sm text-slate-500">No characters loaded yet.</p>{/if}
+  {:else if panelId === 'telemetry'}
+    {#if logStatus}
+      <dl class="grid grid-cols-2 gap-2 text-xs">
+        <dt class="text-slate-500">Gamelogs</dt>
+        <dd class="text-right text-slate-300">{logStatus.gamelogFiles}</dd>
+        <dt class="text-slate-500">Chatlogs</dt>
+        <dd class="text-right text-slate-300">{logStatus.chatlogFiles}</dd>
+        <dt class="text-slate-500">Read errors</dt>
+        <dd class="text-right text-slate-300">{logStatus.readErrors}</dd>
+        <dt class="text-slate-500">Observations</dt>
+        <dd class="text-right text-slate-300">{logStatus.observationsEmitted}</dd>
+      </dl>
+    {:else}<p class="text-sm text-slate-500">Discovering the EVE logs folder…</p>{/if}
+    {#if lastObservation}
+      <div class="mt-3 rounded-md border border-cyan-300/15 bg-cyan-950/20 p-3 text-xs">
+        <p class="text-cyan-200">Jump observed</p>
+        <p class="mt-1 text-slate-300">{lastObservation.fromSystem} → {lastObservation.toSystem}</p>
+      </div>
+    {/if}
+    <p class="mt-3 text-[10px] text-slate-600">Read-only — change the EVE logs folder from the main window.</p>
   {:else}
     <p class="text-sm text-slate-400">This compact panel remains synchronized with the main window. Management controls stay in the main workspace.</p>
   {/if}

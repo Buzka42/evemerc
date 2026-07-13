@@ -220,7 +220,19 @@ continuing to peel off presentational leaves.
   full fix, not the fix itself — see gap #1 for what's still needed on top of this.
 - Wired `account` up as a real, independently-toggleable dock panel using the same DOM-move
   renderer as the other three panels — see gap #1's sub-bullet for the full detail on scope and
-  what's still out (the popout-window branch, and Svelte-`mount()`-based dynamic panels).
+  what's still out (Svelte-`mount()`-based dynamic panels, which is a separate, harder question).
+- `PanelWindow.svelte`'s `account` and `telemetry` popouts now show real read-only content
+  instead of the generic "stays synchronized" placeholder. `account` reads `accountCharacters`
+  from the existing `PanelWindowState` cross-window bridge (new field, published alongside the
+  fleet/chain/regional data it already carried). `telemetry` didn't need that bridge at all —
+  `getEveLogStatus()`/`onEveLogObservation()` are plain Tauri `invoke`/`listen` calls with no
+  dependency on `App.svelte`'s state, and Tauri's IPC is shared across every window of the same
+  app, so the popout calls them directly. Neither popout exposes write actions (refresh a
+  character, change the logs root, etc.) — see gap #1's `account` sub-bullet for why that's
+  correctly out of scope until the action-dispatch mechanism exists. The generic placeholder
+  branch in `PanelWindow.svelte` is now unreachable for any current `PanelId` value; it's dead
+  code, not a bug — safe to leave until a genuinely new panel type needs it, or worth deleting in
+  a later cleanup pass.
 
 ## Recommended order for the next session
 

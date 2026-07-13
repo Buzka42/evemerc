@@ -53,6 +53,15 @@ export type EveLogObservation =
   | CombatMissObservation
   | CombatHitObservation;
 
+export interface IntelChannelMessage {
+  channel: string;
+  observedAt: string;
+  characterId: number | null;
+  speaker: string;
+  message: string;
+  sourceEventId: string;
+}
+
 const browserStatus: EveLogStatus = {
   root: null,
   watching: false,
@@ -64,12 +73,17 @@ const browserStatus: EveLogStatus = {
   lastObservationAt: null,
 };
 
-export async function startEveLogWatcher(root?: string): Promise<EveLogStatus> {
+/**
+ * `intelChannels` is an explicit opt-in allowlist (PLAN.md's stated design) - a chatlog whose
+ * channel name (parsed from its filename) is not in this list is only tailed and counted, never
+ * parsed or transmitted. Nothing is enabled by default.
+ */
+export async function startEveLogWatcher(root?: string, intelChannels: string[] = []): Promise<EveLogStatus> {
   if (!isTauri()) {
     return browserStatus;
   }
 
-  return invoke<EveLogStatus>('start_eve_log_watcher', { root: root ?? null });
+  return invoke<EveLogStatus>('start_eve_log_watcher', { root: root ?? null, intelChannels });
 }
 
 export async function getEveLogStatus(): Promise<EveLogStatus> {
@@ -88,6 +102,16 @@ export async function onEveLogObservation(
   }
 
   return listen<EveLogObservation>('eve-log://observation', (event) => handler(event.payload));
+}
+
+export async function onIntelChannelMessage(
+  handler: (message: IntelChannelMessage) => void,
+): Promise<UnlistenFn> {
+  if (!isTauri()) {
+    return () => undefined;
+  }
+
+  return listen<IntelChannelMessage>('eve-log://intel-message', (event) => handler(event.payload));
 }
 
 export function describeObservation(observation: EveLogObservation): string {

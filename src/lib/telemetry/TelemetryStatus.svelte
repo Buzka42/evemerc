@@ -7,9 +7,23 @@
     lastObservation: EveLogObservation | null;
     eveLogsRoot: string;
     onApply: () => void;
+    intelChannels: string[];
+    intelChannelInput: string;
+    onAddIntelChannel: () => void;
+    onRemoveIntelChannel: (channel: string) => void;
   }
 
-  let { logStatus, watcherError, lastObservation, eveLogsRoot = $bindable(), onApply }: Props = $props();
+  let {
+    logStatus,
+    watcherError,
+    lastObservation,
+    eveLogsRoot = $bindable(),
+    onApply,
+    intelChannels,
+    intelChannelInput = $bindable(),
+    onAddIntelChannel,
+    onRemoveIntelChannel,
+  }: Props = $props();
 </script>
 
 <div class="mt-2 border-t border-slate-700/70 pt-4">
@@ -52,5 +66,32 @@
     <button class="rounded-md border border-slate-700 px-2 py-1.5 text-xs text-slate-300" onclick={onApply}>
       Apply
     </button>
+  </div>
+
+  <div class="mt-4 border-t border-slate-700/70 pt-4">
+    <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">INTEL CHANNELS</p>
+    <p class="mt-1 text-[11px] leading-4 text-slate-500">
+      Opt-in only. A channel's chat is never read unless it's tracked here — everything else stays
+      tailed-and-counted only, exactly as before.
+    </p>
+    <div class="mt-2 flex gap-2">
+      <input
+        class="min-w-0 grow rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-300"
+        aria-label="Chat channel name to track"
+        placeholder="e.g. gem.imperium"
+        bind:value={intelChannelInput}
+      />
+      <button class="rounded-md border border-slate-700 px-2 py-1.5 text-xs text-slate-300" onclick={onAddIntelChannel}>
+        Track
+      </button>
+    </div>
+    <div class="mt-2 flex flex-wrap gap-2">
+      {#each intelChannels as channel}
+        <button class="rounded-full bg-slate-800 px-3 py-1 text-xs" onclick={() => onRemoveIntelChannel(channel)}>
+          {channel} ×
+        </button>
+      {/each}
+      {#if intelChannels.length === 0}<p class="text-xs text-slate-500">No channels tracked.</p>{/if}
+    </div>
   </div>
 </div>

@@ -7,6 +7,7 @@ import type { ChainSnapshot } from '../wormhole/types'
 import type { RegionalLayerData } from '../modules/types'
 import type { SystemIntel } from '../intel/system'
 import type { FleetKill } from '../intel/killfeed'
+import type { IntelChannelMessage } from '../telemetry/eveLogs'
 
 export interface PanelWindowState {
   selectedMapSlug: string
@@ -21,6 +22,7 @@ export interface PanelWindowState {
   selectedRegionalSystemId: number | null
   selectedSystemIntel: SystemIntel | null
   fleetKills: FleetKill[]
+  intelMessages: IntelChannelMessage[]
   updatedAt: string
 }
 

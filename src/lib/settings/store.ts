@@ -11,6 +11,9 @@ export interface DesktopSettings {
   enabledModules: string[]
   theme: 'dark' | 'light' | 'system'
   density: 'comfortable' | 'compact'
+  /** Opt-in allowlist of chat channel names to parse for intel messages. Empty by default - a
+   *  channel not in this list is only tailed and counted, never parsed (PLAN.md's stated design). */
+  intelChannels: string[]
 }
 
 export async function loadSettings(): Promise<DesktopSettings> {
@@ -22,6 +25,7 @@ export async function loadSettings(): Promise<DesktopSettings> {
     enabledModules: stored?.enabledModules ?? ['local-telemetry', 'fleet', 'regional', 'reference-intel', 'wormhole-map'],
     theme: stored?.theme ?? 'dark',
     density: stored?.density ?? 'comfortable',
+    intelChannels: stored?.intelChannels ?? [],
   }
 }
 

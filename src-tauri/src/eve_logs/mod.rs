@@ -4,7 +4,7 @@ mod offsets;
 mod parser;
 mod tailer;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -13,12 +13,16 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-use discovery::{default_logs_root, text_files, validate_logs_root};
+use discovery::{
+    channel_name_from_path, character_id_from_path, default_logs_root, text_files,
+    validate_logs_root,
+};
 use offsets::{offsets_file_path, PersistedOffsets};
-use parser::EveLogObservation;
+use parser::{parse_chat_line, EveLogObservation};
 use tailer::{is_chatlog, is_gamelog, normalized_path, TailState};
 
 const OBSERVATION_EVENT: &str = "eve-log://observation";
+const INTEL_MESSAGE_EVENT: &str = "eve-log://intel-message";
 
 #[derive(Clone, Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,6 +46,10 @@ struct ServiceState {
     /// of starting fresh at EOF. `None` when running outside a real app-data directory (e.g. the
     /// unit tests in this module), in which case persistence is silently skipped.
     offsets_path: Option<PathBuf>,
+    /// Chat channels the user has explicitly opted into parsing (PLAN.md's opt-in-per-channel
+    /// requirement). Any chatlog whose channel name is not in this set is only tailed and
+    /// counted, exactly as before this feature existed - never parsed, never emitted.
+    intel_channels: HashSet<String>,
 }
 
 #[derive(Default)]
@@ -55,6 +63,7 @@ impl EveLogService {
         &self,
         app: AppHandle,
         requested_root: Option<String>,
+        intel_channels: Vec<String>,
     ) -> Result<EveLogStatus, String> {
         self.stop()?;
 
@@ -102,6 +111,7 @@ impl EveLogService {
             state.tails = tails;
             state.chat_tails = chat_tails;
             state.offsets_path = offsets_path;
+            state.intel_channels = intel_channels.into_iter().collect();
         }
 
         let callback_state = Arc::clone(&self.state);
@@ -117,7 +127,7 @@ impl EveLogService {
                     if is_gamelog(&path, &callback_root) {
                         process_path(&callback_state, &app, &path);
                     } else if is_chatlog(&path, &callback_root) {
-                        process_chat_path(&callback_state, &path);
+                        process_chat_path(&callback_state, &app, &path);
                     }
                 }
             })
@@ -148,6 +158,7 @@ impl EveLogService {
         state.status.watching = false;
         state.tails.clear();
         state.chat_tails.clear();
+        state.intel_channels.clear();
 
         Ok(())
     }
@@ -160,33 +171,64 @@ impl EveLogService {
     }
 }
 
-fn process_chat_path(state: &Arc<Mutex<ServiceState>>, path: &Path) {
+fn process_chat_path(state: &Arc<Mutex<ServiceState>>, app: &AppHandle, path: &Path) {
     let normalized = normalized_path(path);
-    let Ok(mut state) = state.lock() else {
-        return;
-    };
+    let channel = channel_name_from_path(path);
+    let character_id = character_id_from_path(path);
 
-    if !state.chat_tails.contains_key(&normalized) {
-        match TailState::created(path) {
-            Ok(tail) => {
-                state.chat_tails.insert(normalized.clone(), tail);
-                state.status.chatlog_files += 1;
+    let lines = {
+        let Ok(mut state) = state.lock() else {
+            return;
+        };
+
+        if !state.chat_tails.contains_key(&normalized) {
+            match TailState::created(path) {
+                Ok(tail) => {
+                    state.chat_tails.insert(normalized.clone(), tail);
+                    state.status.chatlog_files += 1;
+                }
+                Err(_) => {
+                    state.status.read_errors += 1;
+                    return;
+                }
+            }
+        }
+
+        let result = state
+            .chat_tails
+            .get_mut(&normalized)
+            .expect("chat tail was inserted")
+            .read_complete_lines(path);
+
+        match result {
+            Ok(lines) => {
+                state.status.chat_lines_read += lines.len() as u64;
+                let is_enabled_channel = channel
+                    .as_deref()
+                    .is_some_and(|name| state.intel_channels.contains(name));
+                if is_enabled_channel {
+                    lines
+                } else {
+                    Vec::new()
+                }
             }
             Err(_) => {
                 state.status.read_errors += 1;
-                return;
+                Vec::new()
             }
         }
-    }
+    };
 
-    let result = state
-        .chat_tails
-        .get_mut(&normalized)
-        .expect("chat tail was inserted")
-        .read_complete_lines(path);
-    match result {
-        Ok(lines) => state.status.chat_lines_read += lines.len() as u64,
-        Err(_) => state.status.read_errors += 1,
+    let Some(channel) = channel else {
+        return;
+    };
+
+    for (line, event_id) in lines {
+        if let Some(message) =
+            parse_chat_line(&line, channel.clone(), character_id, event_id)
+        {
+            let _ = app.emit(INTEL_MESSAGE_EVENT, &message);
+        }
     }
 }
 

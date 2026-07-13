@@ -24,7 +24,7 @@ npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 523 KB / 138 KB gzipped
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
-cargo test        # (src-tauri) 34/34 tests pass
+cargo test        # (src-tauri) 42/42 tests pass
 ```
 
 Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
@@ -239,15 +239,62 @@ exactly right.
 `svelte-check`/component rendering, not given a dedicated unit test; consider adding one if it
 grows more branches), 0 type errors, clean build, `cargo clippy` clean.
 
-### 3. `Chatlogs` are tailed but never parsed
+### 3. (Resolved) Opt-in intel channel parsing implemented
 
-`eve_logs/mod.rs`'s `process_chat_path` calls `read_complete_lines` and only counts them
-(`chat_lines_read`). This matches PLAN.md's requirement that chat is opt-in per channel and not
-yet a location source, but there is currently no channel-allowlist mechanism at all — any
-chatlog file is tailed and counted, with no per-channel enable/disable and no parsing into any
-structure. This is fine for now (nothing sensitive leaves the tailer since nothing is emitted),
-but it means the "Chatlogs" feature described in PLAN.md §9.4 is stubbed, not partially built —
-don't assume any chat-derived intel exists yet.
+Was: `eve_logs/mod.rs`'s `process_chat_path` tailed and counted every chatlog file with no
+per-channel allowlist and no parsing into any structure.
+
+**Investigated before building anything** and found "Fleet broadcasts" (the structured Warp
+To/In Position/Need Backup UI pings PLAN.md's original framing implied) **do not exist as
+loggable data at all** — they're client-side overlay icons, never written to any log file.
+What the `Fleet` chatlog channel actually contains is free-form conversation between named
+players, which is a materially different and more sensitive thing than a structured system
+event — there's no reliable way to extract "intel" from open chat text, and parsing it means
+storing other real players' verbatim conversation. Flagged this to the user rather than build a
+feature around data that either doesn't exist or would mean logging people's chat for no real
+value; the user redirected to a genuinely structured, real use case instead: null-sec
+alliance/coalition **intel-reporting channels** (e.g. `gem.imperium`), which follow a real,
+observable convention — `<SYSTEM> <PILOT> [SHIP] [status shorthand]` — explicitly described in
+that channel's own MOTD ("Report all neutrals and hostiles... EXAMPLE: 'PR-8CA Asher Elias on
+the 5-C gate'"). Given that per-alliance shorthand (`nv`, `clr`, `mb`, etc.) is inherently
+inconsistent across corps/alliances, scope was deliberately kept to **extracting the structured
+part reliably** (timestamp, speaker, raw message, channel) rather than attempting full
+hostile/friendly/ship-type NLP parsing of free text with alliance-specific slang — that would be
+guessing, not parsing.
+
+**Implementation**, per PLAN.md's explicit opt-in-per-channel design and validated against real
+chatlog files the user granted access to:
+
+- `discovery::channel_name_from_path()` extracts the channel name from a Chatlogs filename by
+  stripping the trailing `_<date>_<time>[_<characterId>]` suffix (matched by digit-length, not
+  split position) — channel names can contain underscores themselves (e.g. `3X_Scum_Poly`), so a
+  naive first-underscore split would have broken. Verified against all ~400 real chatlog
+  filenames in the user's own log folder (read-only, nothing copied into the repo): 100% matched.
+- `parser::parse_chat_line()` matches `[timestamp] Speaker > message`, skipping the
+  `EVE System > Channel MOTD: ...` line every channel starts with (channel configuration text,
+  not a player report). Validated against ~200 real message lines across `gem.imperium` and
+  `Fleet` samples (read-only PowerShell sweep, nothing copied into the repo): 100% matched.
+- `ServiceState.intel_channels: HashSet<String>` is the opt-in allowlist — a chatlog whose parsed
+  channel name isn't in this set is tailed and counted exactly as before, **never parsed, never
+  emitted**. Nothing is enabled by default. `EveLogService::start()` takes the allowlist as a
+  parameter (same pattern as `eveLogsRoot`); `start_eve_log_watcher`'s Tauri command signature
+  grew `intel_channels: Option<Vec<String>>`.
+- New `eve-log://intel-message` event, `IntelChannelMessage { channel, observed_at,
+  character_id, speaker, message, source_event_id }`.
+- Frontend: `settings/store.ts`'s `DesktopSettings` gained `intelChannels: string[]` (persisted,
+  empty by default). `TelemetryStatus.svelte` gained a channel allowlist editor (add-by-name +
+  removable chips, same convention as `IgnoreListPanel`/`SavedLocationsPanel`) with an explicit
+  "opt-in only" note next to it. New `lib/intel/IntelChannelFeed.svelte` renders a scrolling feed
+  (capped at 100 messages client-side), wired into the `system-intel` dock panel next to
+  `SelectedSystemIntel`/`FleetKillfeed`, and mirrored into `system-intel`'s existing popout window
+  via `PanelWindowState.intelMessages` (same cross-window bridge pattern already used for the
+  rest of that panel).
+
+Real third-party player/corp names encountered while investigating this were **not** committed
+into fixtures or comments anywhere — only synthetic examples and the channel's own public MOTD
+text (which describes the reporting convention, not any specific player) appear in code/tests.
+
+42 Rust tests (was 34), 64 JS tests, 0 type errors, clean build, `cargo clippy` clean.
 
 ### 4. `openapi.yaml` may be stale relative to a real backend
 
@@ -277,6 +324,22 @@ generates the OpenAPI spec from the literal route pattern, that parameter-name m
 would make a straight `npm run sync:api` regenerate a client that doesn't match hand-written call
 sites like this one. Don't assume `sync:api` is a mechanical no-think step once the backend is
 ready — expect to reconcile naming mismatches like this one by hand.
+
+**Update, later session:** the user explicitly authorized backend work in `C:\Users\Arawn\FZ\EveMerc`
+specifically to add the missing read endpoints blocking ship history (M-tracking) and
+Routes/Route Finder (M-navigation) — see gap #7 below. Checked `git status` there first, per the
+standing "investigate unfamiliar repo state before acting" rule, and found the backend now has
+**250 uncommitted files on `main`**, not a small delta — a large, unreviewed, in-progress change
+spanning dozens of controllers/resources. Critically, `app/Features/ShipHistoryFeature.php`,
+`app/Http/Resources/ShipHistoryResource.php`, and `app/Events/ShipHistories/
+ShipHistoryChangedEvent.php` are all marked **deleted** in this diff — meaning ship history
+support looks like it's being actively removed from this backend right now, not something safe
+to add a new read endpoint on top of without understanding why. Reported this to the user with
+the specific finding rather than either guessing at intent or proceeding blind; the user chose to
+stop and leave the backend untouched until that uncommitted work is resolved. **No backend edits
+were made.** Re-check `git status` there before attempting gap #7's blocked items again — if that
+250-file diff is still present and still shows `ShipHistoryFeature`/`ShipHistoryResource` deleted,
+the same stop-and-ask judgment call should be made again, not silently built around.
 
 ### 5. `App.svelte` size (much improved this session, not resolved)
 
@@ -368,6 +431,14 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   again), but that's not a usable feature, it's a write-only API call with no product value.
   Genuinely blocked on a missing read endpoint, not a design/scope question — don't attempt a
   partial version of this.
+
+**Update, later session:** the user authorized adding the missing read endpoints for this and for
+ship history (M-tracking) directly in the backend repo. Before doing so, checked `git status`
+there and found 250 uncommitted files on `main`, including ship-history-related files marked
+deleted — see gap #4's update above for the full finding. Stopped without making any backend
+edits per the user's decision. Both `map-route-solarsystems`'s missing read endpoint and ship
+history remain genuinely blocked, now for two independent reasons: no read endpoint exists, *and*
+the backend repo isn't in a state it's safe to add one into.
 
 ## Fixed this session
 

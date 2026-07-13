@@ -201,6 +201,57 @@ pub fn parse_line(
     None
 }
 
+static CHAT_MESSAGE_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r"^{TIMESTAMP_PATTERN}\s*(?<speaker>[^>]+?)\s*>\s*(?<message>.*)$"
+    ))
+    .expect("chat message pattern must compile")
+});
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IntelChannelMessage {
+    pub channel: String,
+    pub observed_at: String,
+    pub character_id: Option<u64>,
+    pub speaker: String,
+    pub message: String,
+    pub source_event_id: String,
+}
+
+/// Parses a single Chatlogs line for an *opted-in* intel channel only - callers must not invoke
+/// this for a channel the user hasn't explicitly enabled (PLAN.md's opt-in-per-channel
+/// requirement is enforced by the caller, not here). Skips the `EVE System > ...` MOTD/system
+/// line every chat channel starts with - that is channel configuration text, not a player
+/// report, and is never useful as an intel message.
+pub fn parse_chat_line(
+    line: &str,
+    channel: String,
+    character_id: Option<u64>,
+    source_event_id: String,
+) -> Option<IntelChannelMessage> {
+    let normalized = line.trim_start_matches('\u{feff}');
+    let captures = CHAT_MESSAGE_PATTERN.captures(normalized)?;
+    let speaker = captures["speaker"].trim().to_owned();
+    if speaker == "EVE System" {
+        return None;
+    }
+
+    let message = captures["message"].trim().to_owned();
+    if message.is_empty() {
+        return None;
+    }
+
+    Some(IntelChannelMessage {
+        channel,
+        observed_at: parse_timestamp(&captures["timestamp"])?,
+        character_id,
+        speaker,
+        message,
+        source_event_id,
+    })
+}
+
 fn combat_hit(
     captures: &regex::Captures,
     direction: CombatDirection,
@@ -353,6 +404,56 @@ mod tests {
         assert!(parse_line(
             "[ 2026.07.12 19:41:32 ] (notify) You cannot do that while warping.",
             Some(90_000_001),
+            "event-id".to_owned(),
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn parses_an_intel_channel_report() {
+        let message = parse_chat_line(
+            "[ 2026.07.01 13:26:37 ] Some Reporter > LX-ZOJ    Hostile Pilot nv",
+            "gem.imperium".to_owned(),
+            Some(90_000_001),
+            "event-id".to_owned(),
+        )
+        .expect("chat line should parse");
+
+        assert_eq!(message.channel, "gem.imperium");
+        assert_eq!(message.observed_at, "2026-07-01T13:26:37.000Z");
+        assert_eq!(message.speaker, "Some Reporter");
+        assert_eq!(message.message, "LX-ZOJ    Hostile Pilot nv");
+        assert_eq!(message.character_id, Some(90_000_001));
+    }
+
+    #[test]
+    fn skips_the_eve_system_motd_line() {
+        assert!(parse_chat_line(
+            "[ 2026.07.01 12:55:14 ] EVE System > Channel MOTD: welcome",
+            "gem.imperium".to_owned(),
+            None,
+            "event-id".to_owned(),
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn skips_empty_messages() {
+        assert!(parse_chat_line(
+            "[ 2026.07.01 12:55:14 ] Some Reporter >    ",
+            "gem.imperium".to_owned(),
+            None,
+            "event-id".to_owned(),
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn ignores_lines_with_no_speaker_separator() {
+        assert!(parse_chat_line(
+            "[ 2026.07.01 12:55:14 ] not a chat message at all",
+            "gem.imperium".to_owned(),
+            None,
             "event-id".to_owned(),
         )
         .is_none());

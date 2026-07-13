@@ -4,6 +4,7 @@
   import WormholeChain from '../lib/wormhole/WormholeChain.svelte';
   import SelectedSystemIntel from '../lib/intel/SelectedSystemIntel.svelte';
   import FleetKillfeed from '../lib/intel/FleetKillfeed.svelte';
+  import IntelChannelFeed from '../lib/intel/IntelChannelFeed.svelte';
   import { onPanelState, requestPanelState, type PanelWindowState } from '../lib/layout/panelBridge';
   import type { PanelId } from '../lib/layout/profiles';
   import { setPanelAlwaysOnTop } from '../lib/layout/windows';
@@ -124,6 +125,7 @@
       <SelectedSystemIntel systemId={panelState.selectedRegionalSystemId} intel={panelState.selectedSystemIntel} error={null} />
     {:else}<p class="text-sm text-slate-500">No system is currently selected on the regional map.</p>{/if}
     <FleetKillfeed kills={panelState.fleetKills} error={null} />
+    <IntelChannelFeed messages={panelState.intelMessages} />
   {:else}
     <p class="text-sm text-slate-400">This compact panel remains synchronized with the main window. Management controls stay in the main workspace.</p>
   {/if}

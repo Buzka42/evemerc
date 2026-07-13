@@ -58,11 +58,14 @@
   import MapRoutingPanel from './lib/maps/MapRoutingPanel.svelte';
   import {
     onEveLogObservation,
+    onIntelChannelMessage,
     startEveLogWatcher,
     type EveLogObservation,
     type EveLogStatus,
+    type IntelChannelMessage,
   } from './lib/telemetry/eveLogs';
   import TelemetryStatus from './lib/telemetry/TelemetryStatus.svelte';
+  import IntelChannelFeed from './lib/intel/IntelChannelFeed.svelte';
 
   const foundations = [
     'Regional fleet command workspace',
@@ -105,6 +108,9 @@
   let savedLocationSystemId = $state('');
   let savedLocationNote = $state('');
   let eveLogsRoot = $state('');
+  let intelChannels = $state<string[]>([]);
+  let intelChannelInput = $state('');
+  let intelMessages = $state<IntelChannelMessage[]>([]);
   let moduleRevision = $state(0);
   let accountCharacters = $state<AccountCharacter[]>([]);
   let accountError = $state<string | null>(null);
@@ -162,6 +168,7 @@
         selectedRegionalSystemId,
         selectedSystemIntel,
         fleetKills,
+        intelMessages,
         updatedAt: new Date().toISOString(),
       });
     }, 16);
@@ -180,6 +187,7 @@
     selectedRegionalSystemId;
     selectedSystemIntel;
     fleetKills;
+    intelMessages;
     schedulePanelStatePublish();
   });
 
@@ -236,7 +244,30 @@
       await saveSettings(settings);
     }
     watcherError = null;
-    logStatus = await startEveLogWatcher(eveLogsRoot.trim() || undefined);
+    logStatus = await startEveLogWatcher(eveLogsRoot.trim() || undefined, intelChannels);
+  }
+
+  async function addIntelChannel(): Promise<void> {
+    const channel = intelChannelInput.trim();
+    if (!channel || intelChannels.includes(channel)) return;
+    intelChannels = [...intelChannels, channel];
+    intelChannelInput = '';
+    if (settings) {
+      settings.intelChannels = intelChannels;
+      await saveSettings(settings);
+    }
+    watcherError = null;
+    logStatus = await startEveLogWatcher(eveLogsRoot.trim() || undefined, intelChannels);
+  }
+
+  async function removeIntelChannel(channel: string): Promise<void> {
+    intelChannels = intelChannels.filter((candidate) => candidate !== channel);
+    if (settings) {
+      settings.intelChannels = intelChannels;
+      await saveSettings(settings);
+    }
+    watcherError = null;
+    logStatus = await startEveLogWatcher(eveLogsRoot.trim() || undefined, intelChannels);
   }
 
   async function applyAppearance(): Promise<void> {
@@ -970,6 +1001,7 @@
     let unlisten: () => void = () => {};
     let unlistenAuth: () => void = () => {};
     let unlistenPanelRequest: () => void = () => {};
+    let unlistenIntel: () => void = () => {};
     const fleetPoll = window.setInterval(() => {
       if (authState.phase === 'authenticated' && selectedMapSlug) {
         void loadFleetWorkspace();
@@ -996,6 +1028,7 @@
           currentDensity = settings.density;
           await applyAppearance();
           eveLogsRoot = settings.eveLogsRoot ?? '';
+          intelChannels = settings.intelChannels;
           for (const module of moduleRegistry.modules()) {
             if (!module.core && !settings.enabledModules.includes(module.id)) {
               moduleRegistry.disable(module.id);
@@ -1014,6 +1047,9 @@
           void authFlow.acceptCallback(url).catch(() => undefined);
         });
         unlistenPanelRequest = await onPanelStateRequest(schedulePanelStatePublish);
+        unlistenIntel = await onIntelChannelMessage((message) => {
+          intelMessages = [message, ...intelMessages].slice(0, 100);
+        });
         unlisten = await onEveLogObservation((observation) => {
           lastObservation = observation;
           if (authState.phase === 'authenticated') {
@@ -1035,7 +1071,7 @@
             logStatus.lastObservationAt = new Date().toISOString();
           }
         });
-        const status = await startEveLogWatcher(settings?.eveLogsRoot ?? undefined);
+        const status = await startEveLogWatcher(settings?.eveLogsRoot ?? undefined, intelChannels);
         if (!disposed) {
           logStatus = status;
         }
@@ -1051,6 +1087,7 @@
       unlisten();
       unlistenAuth();
       unlistenPanelRequest();
+      unlistenIntel();
       window.clearInterval(fleetPoll);
       window.removeEventListener('keydown', handleShortcut);
       if (chainRefreshTimer !== null) window.clearTimeout(chainRefreshTimer);
@@ -1282,6 +1319,10 @@
             {lastObservation}
             bind:eveLogsRoot
             onApply={applyEveLogsRoot}
+            {intelChannels}
+            bind:intelChannelInput
+            onAddIntelChannel={addIntelChannel}
+            onRemoveIntelChannel={removeIntelChannel}
           />
         {/if}
       </aside>
@@ -1293,6 +1334,7 @@
           <p class="text-sm text-slate-500">Select a system on the regional map to see its intel.</p>
         {/if}
         <FleetKillfeed kills={fleetKills} error={killfeedError} />
+        <IntelChannelFeed messages={intelMessages} />
       </aside>
 
       <aside data-dock-panel="map-settings" class="hidden h-full flex-col gap-4 overflow-auto rounded-xl border border-slate-700/70 bg-slate-950/55 p-5">

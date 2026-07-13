@@ -16,17 +16,17 @@ describe('resolveVisiblePanels', () => {
   const profile = defaultLayoutProfiles[0]
 
   it('includes every profile-visible panel when all owning modules are enabled', () => {
-    expect(resolveVisiblePanels(profile, () => true)).toEqual(['fleet-command', 'wormhole-chain', 'account', 'telemetry'])
+    expect(resolveVisiblePanels(profile, () => true)).toEqual(['fleet-command', 'wormhole-chain', 'account', 'telemetry', 'map-settings'])
   })
 
   it('drops a panel whose owning module is disabled, even though the profile marks it visible', () => {
     const panels = resolveVisiblePanels(profile, (moduleId) => moduleId !== 'wormhole-map')
-    expect(panels).toEqual(['fleet-command', 'account', 'telemetry'])
+    expect(panels).toEqual(['fleet-command', 'account', 'telemetry', 'map-settings'])
   })
 
   it('never drops shell panels with no owning module regardless of module state', () => {
     const panels = resolveVisiblePanels(profile, () => false)
-    expect(panels).toEqual(['account', 'telemetry'])
+    expect(panels).toEqual(['account', 'telemetry', 'map-settings'])
   })
 
   it('still honors profile-level visibility before module gating', () => {

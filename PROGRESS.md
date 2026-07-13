@@ -122,13 +122,18 @@ not the "panels come from modules" half:
   command palette's `filterPaletteCommands` works off the static `paletteCommands` array in
   `lib/commands/palette.ts`, not the registry. Keep this in mind before assuming any extension
   point beyond `regionalLayers` is load-bearing.
-- The signatures/routing/audits/killfeed/system-intel *sections* still aren't panels at all —
-  they're now standalone `.svelte` components (see "Fixed this session"), but they're still
-  mounted inline inside the `fleet-command` and `telemetry` dock panels, so they can't be
-  independently toggled, popped out, or owned by a module yet. Extracting them into components
-  was a prerequisite step, not the fix itself — the remaining work is wiring
-  `moduleRegistry.panels()` to actually place them as their own dock panels. (`account` used to
-  be in this list too — see below, it's fixed now.)
+- The signatures/routing/audits/killfeed/system-intel *sections* still mostly aren't panels —
+  they're standalone `.svelte` components (see "Fixed this session"), but most are still mounted
+  inline inside the `fleet-command` and `telemetry` dock panels, so they can't be independently
+  toggled, popped out, or owned by a module yet. Extracting them into components was a
+  prerequisite step, not the fix itself — the remaining work is wiring `moduleRegistry.panels()`
+  to actually place them as their own dock panels. (`account` used to be in this list too — see
+  below, it's fixed now. `map-settings` — `MapRoutingPanel` + `MapAccessPanel`, previously buried
+  inside `telemetry` — is now also a real, independently-toggleable dock panel using the same
+  DOM-move mechanism, see "Fixed this session". Still using the closed `PanelId` union, still not
+  a `moduleRegistry.panels()`-driven `PanelDefinition`, so it doesn't close the deeper half of
+  this gap — but it does shrink `telemetry` and give per-panel toggle/layout control over map
+  settings, which is real, incremental progress toward it.)
 - **`account` is now a real dock panel in the main window** (was a phantom — see the entry two
   bullets up in an earlier version of this file if you need the archaeology). It uses the exact
   same `ExistingElementRenderer` DOM-move mechanism already proven for `fleet-command`/
@@ -494,6 +499,24 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   `preferCharacter` already does, since `preferCharacter` sets both the active *and* preferred
   character) — neither is a real gap, just left noted here so the schema-diff sweep doesn't
   re-flag them as "new" next time.
+
+- **Split `map-settings` (`MapRoutingPanel` + `MapAccessPanel`) out of the `telemetry` panel into
+  its own real dock panel** (gap #1 groundwork — see its entry above for full detail). Extended
+  `PanelId` to include `'map-settings'`, added it to `panelModuleOwners` as unowned (`null`, shell
+  chrome like `account`, not tied to a toggleable feature module — map settings are core, not
+  optional), added it to all three `defaultLayoutProfiles` (visible in Fleet Command and Scanning,
+  hidden by default in Compact Fleet, matching how `account` is scoped across the same profiles),
+  and added a `panelTitles`/`addPanel` entry in `dock.ts`. Existing saved dockview layouts
+  (`localStorage['evemerc.dock.<profileId>']`) predate this panel and won't contain it —
+  `loadProfile`'s existing fallback (if a currently-visible panel is missing from the saved JSON,
+  discard the saved layout and rebuild fresh) already handles this correctly with no extra code;
+  verified this is pre-existing, deliberate behavior, not something added for this change. No
+  popout support was added for `map-settings` (unlike `account`/`telemetry`/`wormhole-chain`) —
+  its controls are all mutations (rename, delete map, grant/revoke access), and PLAN.md §10.4's
+  cross-window action-dispatch mechanism that would let a popout window safely forward those
+  writes back to the main window doesn't exist yet for any panel; a stripped read-only version
+  wouldn't be useful for a settings panel the way it is for account/telemetry, so it was correctly
+  left out rather than half-built.
 
 ## Recommended order for the next session
 

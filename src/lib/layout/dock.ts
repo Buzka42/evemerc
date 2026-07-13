@@ -6,6 +6,7 @@ const panelTitles: Record<PanelId, string> = {
   'wormhole-chain': 'Wormhole Chain',
   account: 'Account',
   telemetry: 'Operations',
+  'map-settings': 'Map Settings',
 }
 
 export interface DockWorkspace {
@@ -97,6 +98,7 @@ export function createDockWorkspace(
     if (visible.has('fleet-command')) addPanel('fleet-command')
     if (visible.has('telemetry')) addPanel('telemetry', { referencePanel: 'fleet-command', direction: 'right' })
     if (visible.has('account')) addPanel('account', { referencePanel: 'fleet-command', direction: 'right' })
+    if (visible.has('map-settings')) addPanel('map-settings', { referencePanel: 'fleet-command', direction: 'right' })
     if (visible.has('wormhole-chain')) addPanel('wormhole-chain', { referencePanel: 'fleet-command', direction: 'below' })
     applying = false
     saveLayout()

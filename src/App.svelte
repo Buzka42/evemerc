@@ -1201,6 +1201,18 @@
           <SelectedSystemIntel systemId={selectedRegionalSystemId} intel={selectedSystemIntel} error={systemIntelError} />
         {/if}
 
+        {#if panelVisible(activeLayout, 'telemetry')}
+          <TelemetryStatus
+            {logStatus}
+            {watcherError}
+            {lastObservation}
+            bind:eveLogsRoot
+            onApply={applyEveLogsRoot}
+          />
+        {/if}
+      </aside>
+
+      <aside data-dock-panel="map-settings" class="hidden h-full flex-col gap-4 overflow-auto rounded-xl border border-slate-700/70 bg-slate-950/55 p-5">
         {#if mapRoutingSettings}
           <MapRoutingPanel
             bind:settings={mapRoutingSettings}
@@ -1219,14 +1231,8 @@
           <MapAccessPanel access={mapAccess} message={mapAccessMessage} onSetAccess={setSelectedMapAccess} />
         {/if}
 
-        {#if panelVisible(activeLayout, 'telemetry')}
-          <TelemetryStatus
-            {logStatus}
-            {watcherError}
-            {lastObservation}
-            bind:eveLogsRoot
-            onApply={applyEveLogsRoot}
-          />
+        {#if !mapRoutingSettings && !mapAccess}
+          <p class="text-sm text-slate-500">Select a map to manage its routing and access settings.</p>
         {/if}
       </aside>
 

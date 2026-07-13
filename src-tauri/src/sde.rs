@@ -180,6 +180,20 @@ pub fn get_region_topology(
 }
 
 #[tauri::command]
+pub fn get_universe_graph(app: AppHandle) -> Result<Option<RegionTopology>, String> {
+    let path = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| error.to_string())?
+        .join("sde.sqlite");
+    if !path.is_file() {
+        return Ok(None);
+    }
+
+    read_universe_graph(&path).map(Some)
+}
+
+#[tauri::command]
 pub fn get_signature_catalog(app: AppHandle) -> Result<Vec<SignatureCatalogEntry>, String> {
     let path = app
         .path()
@@ -336,6 +350,46 @@ fn read_region_topology(path: &Path, region_id: i64) -> Result<RegionTopology, S
     Ok(RegionTopology { systems, jumps })
 }
 
+/// The full stargate-connectivity graph across all of known space, unfiltered by region - the
+/// desktop-side equivalent of the web app's `resources/static/solarsystems.json` +
+/// `connections.json`, needed for cross-region point-to-point/closest-of-type routing rather
+/// than the single-region topology `read_region_topology` provides for the map view.
+fn read_universe_graph(path: &Path) -> Result<RegionTopology, String> {
+    let database = Connection::open(path)
+        .map_err(|error| format!("Could not open the SDE snapshot: {error}"))?;
+    let mut systems_statement = database
+        .prepare("SELECT id, name, security, pos_x, pos_z FROM solarsystems ORDER BY id")
+        .map_err(|error| format!("Could not prepare the universe graph query: {error}"))?;
+    let systems = systems_statement
+        .query_map([], |row| {
+            Ok(RegionSystem {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                security: row.get(2)?,
+                position_x: row.get(3)?,
+                position_z: row.get(4)?,
+            })
+        })
+        .map_err(|error| format!("Could not query universe systems: {error}"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|error| format!("Could not read universe systems: {error}"))?;
+    let mut jumps_statement = database
+        .prepare("SELECT from_system_id, to_system_id FROM jumps ORDER BY from_system_id, to_system_id")
+        .map_err(|error| format!("Could not prepare the universe jump query: {error}"))?;
+    let jumps = jumps_statement
+        .query_map([], |row| {
+            Ok(RegionJump {
+                from_system_id: row.get(0)?,
+                to_system_id: row.get(1)?,
+            })
+        })
+        .map_err(|error| format!("Could not query universe jumps: {error}"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|error| format!("Could not read universe jumps: {error}"))?;
+
+    Ok(RegionTopology { systems, jumps })
+}
+
 fn resolve_system_id(path: &Path, name: &str) -> Result<Option<i64>, String> {
     if !path.is_file() {
         return Ok(None);
@@ -437,6 +491,25 @@ mod tests {
         let topology = read_region_topology(&path, 10).expect("topology");
         assert_eq!(topology.systems.len(), 2);
         assert_eq!(topology.jumps.len(), 1);
+    }
+
+    #[test]
+    fn loads_the_universe_graph_across_every_region() {
+        let directory = tempfile::tempdir().expect("temp directory");
+        let path = directory.path().join("sde.sqlite");
+        let database = Connection::open(&path).expect("database");
+        database
+            .execute_batch(
+                "CREATE TABLE solarsystems (id INTEGER PRIMARY KEY, name TEXT, security REAL, region_id INTEGER, pos_x REAL, pos_z REAL);
+                 CREATE TABLE jumps (from_system_id INTEGER, to_system_id INTEGER);
+                 INSERT INTO solarsystems VALUES (1, 'Alpha', 0.5, 10, 10.0, 20.0), (2, 'Beta', 0.1, 10, 30.0, 40.0), (3, 'Other', 0.0, 11, 50.0, 60.0);
+                 INSERT INTO jumps VALUES (1, 2), (2, 3);",
+            )
+            .expect("fixture");
+
+        let graph = read_universe_graph(&path).expect("graph");
+        assert_eq!(graph.systems.len(), 3, "must include systems from every region, not just one");
+        assert_eq!(graph.jumps.len(), 2, "must include jumps that cross a region boundary");
     }
 
     #[test]

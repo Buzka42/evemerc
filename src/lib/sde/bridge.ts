@@ -57,6 +57,19 @@ export async function getRegionTopology(regionId: number): Promise<RegionTopolog
   return invoke<RegionTopology | null>('get_region_topology', { regionId })
 }
 
+/**
+ * The full stargate-connectivity graph across all of known space, not scoped to one region -
+ * needed for cross-region routing (Route Finder), unlike `getRegionTopology` which only covers
+ * one region's systems/jumps for the regional map view.
+ */
+export async function getUniverseGraph(): Promise<RegionTopology | null> {
+  if (!isTauri()) {
+    return null
+  }
+
+  return invoke<RegionTopology | null>('get_universe_graph')
+}
+
 export async function getSignatureCatalog(): Promise<SignatureCatalogEntry[]> {
   if (!isTauri()) {
     return []

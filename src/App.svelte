@@ -55,6 +55,9 @@
   import { fetchMapAccess, setMapAccess, type EntityType, type MapAccessList, type MapPermission } from './lib/maps/access';
   import MapAccessPanel from './lib/maps/MapAccessPanel.svelte';
   import IgnoreListPanel from './lib/routing/IgnoreListPanel.svelte';
+  import RouteFinder from './lib/routing/RouteFinder.svelte';
+  import { UniverseGraph, dynamicConnectionsFromChain, findClosestSystems, findRoute, type ClosestCondition, type RouteResult, type RoutingSettings } from './lib/routing/pathfinder';
+  import { getUniverseGraph } from './lib/sde/bridge';
   import MapRoutingPanel from './lib/maps/MapRoutingPanel.svelte';
   import {
     onEveLogObservation,
@@ -133,6 +136,15 @@
   let killfeedError = $state<string | null>(null);
   let ignoredSystemIds = $state<number[]>([]);
   let ignoreListInput = $state('');
+  let universeGraph: UniverseGraph | null = null;
+  let routeFromId = $state('');
+  let routeToId = $state('');
+  let routeMode = $state<'point-to-point' | 'closest-of-type'>('point-to-point');
+  let routeCondition = $state<ClosestCondition>('highsec');
+  let routeSettings = $state<RoutingSettings>({ routePreference: 'shorter', securityPenalty: 0, lifetimeStatus: 'critical', massStatus: 'critical' });
+  let routeResult = $state<RouteResult | null>(null);
+  let closestSystems = $state<{ solarsystemId: number; jumps: number }[]>([]);
+  let routeFinderError = $state<string | null>(null);
   let routeSystemInput = $state('');
   let mapRoutingSettings = $state<MapRoutingSettings | null>(null);
   let mapSettingsMessage = $state<string | null>(null);
@@ -340,6 +352,47 @@
     } catch (error) {
       commandMessage = error instanceof Error ? error.message : String(error);
     }
+  }
+
+  async function ensureUniverseGraph(): Promise<UniverseGraph | null> {
+    if (universeGraph) return universeGraph;
+    const topology = await getUniverseGraph();
+    if (!topology) return null;
+    universeGraph = new UniverseGraph(topology);
+    return universeGraph;
+  }
+
+  async function findRouteFromInputs(): Promise<void> {
+    routeFinderError = null;
+    const from = Number(routeFromId);
+    const to = Number(routeToId);
+    if (!Number.isInteger(from) || !Number.isInteger(to)) {
+      routeFinderError = 'Enter valid solar system IDs.';
+      return;
+    }
+    const universe = await ensureUniverseGraph();
+    if (!universe) {
+      routeFinderError = 'Universe graph is not available yet - sync the SDE snapshot first.';
+      return;
+    }
+    const dynamicConnections = chainSnapshot ? dynamicConnectionsFromChain(chainSnapshot) : [];
+    routeResult = findRoute(universe, routeSettings, from, to, dynamicConnections, ignoredSystemIds);
+  }
+
+  async function findClosestFromInputs(): Promise<void> {
+    routeFinderError = null;
+    const from = Number(routeFromId);
+    if (!Number.isInteger(from)) {
+      routeFinderError = 'Enter a valid solar system ID.';
+      return;
+    }
+    const universe = await ensureUniverseGraph();
+    if (!universe) {
+      routeFinderError = 'Universe graph is not available yet - sync the SDE snapshot first.';
+      return;
+    }
+    const dynamicConnections = chainSnapshot ? dynamicConnectionsFromChain(chainSnapshot) : [];
+    closestSystems = findClosestSystems(universe, routeSettings, from, routeCondition, 10, dynamicConnections, ignoredSystemIds);
   }
 
   async function sendPlannedRoute(): Promise<void> {
@@ -1364,6 +1417,19 @@
             onRemove={removeIgnoredSystemById}
           />
         {/if}
+
+        <RouteFinder
+          bind:fromId={routeFromId}
+          bind:toId={routeToId}
+          bind:mode={routeMode}
+          bind:condition={routeCondition}
+          bind:settings={routeSettings}
+          result={routeResult}
+          closestResults={closestSystems}
+          error={routeFinderError}
+          onFindRoute={findRouteFromInputs}
+          onFindClosest={findClosestFromInputs}
+        />
 
         {#if !mapRoutingSettings && !mapAccess}
           <p class="text-sm text-slate-500">Select a map to manage its routing and access settings.</p>

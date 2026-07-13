@@ -48,6 +48,7 @@ pub fn run() {
             sde::sync_sde_snapshot,
             sde::resolve_solar_system,
             sde::get_region_topology,
+            sde::get_universe_graph,
             sde::get_signature_catalog,
             sde::get_solar_system_details,
         ])

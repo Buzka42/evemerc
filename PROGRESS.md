@@ -59,7 +59,7 @@ still the current plan of record — see "Full parity initiative" below for that
 ## Verified working right now
 
 ```
-npm test         # 77/77 tests pass (34 files)
+npm test         # 94/94 tests pass (37 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 537 KB / 142 KB gzipped
 cargo check       # (src-tauri) clean
@@ -193,12 +193,41 @@ slot), and a new `RegionalMapLegend.svelte`. **Not done**: sovereignty vulnerabi
 still a fixed viewBox projection, no drag-to-pan/wheel-to-zoom — "scale-invariant" labels aren't
 meaningful without zoom to be invariant against; this is a separate, larger interaction feature).
 
-**3.4 Real-time polish — half done.** Added a proper connection-health indicator
-(`lib/realtime/ConnectionIndicator.svelte`: Wifi/WifiOff icon + colored dot + tooltip, matching
-the web app's spec) using `@lucide/svelte`, which was installed as a dependency but unused
-anywhere until now. **Not done**: cross-panel hover sync (hover a pilot row → highlight their
-route on the map) — needs a shared "highlighted path" reactive state threaded through
-`FleetMemberList`/`RegionMap`, not yet built.
+**3.3 Wormhole chain map upgrade — done (partial).** Right-click context menus on systems
+(set/clear home, set/clear rally, copy name, delete) and connections (delete) via new
+`lib/ui/ContextMenu.svelte` — a small reusable fixed-position menu, not chain-map-specific, built
+to be reused for future context menus elsewhere. All actions reuse existing, already-tested
+handlers rather than duplicating logic. The rally badge (`lib/wormhole/RallyBadge.svelte`) matches
+the web app's glassmorphic styling (gradient pink/rose, backdrop-blur, colored glow — one of the
+few deliberately glassy moments in either app) and shows a jump count computed by a small dedicated
+BFS over the chain's own connection graph (`lib/wormhole/rallyRoute.ts` — a different id space and
+graph shape than the Route Finder's cross-region pathfinder, so not reused there). **Not done**:
+the animated "marching ants" highlighted route on the SVG itself (the badge shows a jump count as
+text, not a highlighted path overlay); richer system node cards (satellite-dish "has signatures"
+icon, extra-connections badge — these may already partially exist from an earlier session pass,
+not reverified in this one).
+
+**3.4 Real-time polish — done.** Connection-health indicator
+(`lib/realtime/ConnectionIndicator.svelte`: Wifi/WifiOff icon + colored dot + tooltip) using
+`@lucide/svelte`, which was installed as a dependency but unused anywhere until now. Cross-panel
+hover sync: hovering a pilot row in `FleetMemberList` now highlights their system on `RegionMap`
+via a dedicated cyan dashed pulsing ring, kept as a separate visual channel from the existing
+amber "objective system" ring rather than reusing it (conflating the two would make an objective
+system look hovered and vice versa).
+
+**3.5 Signature paste diff UX, fleet composition, audit sentences — done.** Newly-pasted
+signatures flash green for ~4 seconds (computed client-side by diffing signature ids before/after
+the paste + refresh, since the backend's paste endpoint only returns the resulting full list, not
+a diff — checked `PasteSignatureController.php` directly). New `lib/fleet/composition.ts` +
+`FleetComposition.svelte`: a genuinely new panel (the desktop had no ship-type breakdown at all,
+not just an upgrade), showing per-ship-type counts with a 5-minute rolling gain/loss delta
+(`CompositionHistory`, clock-injectable for testability) — deliberately reports delta 0 rather than
+a misleading full-count delta before any observation is old enough to compare against. New
+`lib/audits/describe.ts`: `describeAudit()` turns raw event+field-diff audit rows into real
+sentences ("Arawn changed status from "active" to "empty"") instead of a raw field-name dump.
+**Not done**: the "updated"/"deleted" halves of the full three-way paste diff (new-only is
+implemented) — those need field-level hash comparison and a separate removal-confirmation flow,
+both bigger than this slice.
 
 **3.6 Access expiry picker — done.** `setMapAccess()` already accepted an `expiresAt` parameter
 but nothing in the UI ever set it. New `lib/maps/AccessExpiryPicker.svelte` (preset buttons, custom
@@ -218,19 +247,28 @@ adding `deleteChainSystem()` — `DELETE /api/v1/map-solarsystems/{id}` was full
 `schema.d.ts` but had zero callers; there was previously no way to remove a system from the chain
 map at all. **Not done**: `Ctrl+V` paste-signatures-from-clipboard — needs the Tauri
 clipboard-manager plugin as a new dependency, deliberately not added without being asked to extend
-the app's dependency surface (`CLAUDE.md`'s "don't change dependencies without approval" spirit
-applies here even though it's not explicitly about the desktop repo).
+the app's dependency surface. (Copy-to-clipboard, used by the chain-map context menu's "Copy name"
+action, needed no new dependency — `navigator.clipboard.writeText()` works directly; only clipboard
+*reads* need the native plugin.)
 
-**3.3 Wormhole chain map upgrade, 3.5 signature paste diff UX, fleet composition rolling deltas,
-audit sentences — not started.** The customizable drag/resize/hide dashboard grid remains
-deliberately last, highest risk, not started.
+**Not started**: the customizable drag/resize/hide dashboard grid (deliberately last, highest
+risk — see Phase 3's intro for why), Phase 1's reference web-app instance (deferred — reading
+source directly proved sufficient for everything built so far), and the remaining bulk of Phase
+2's component-by-component slate/cyan-to-semantic-token migration (only 7 components' section
+labels were unified this pass; most components still use literal Tailwind color classes, and light
+mode specifically needs a real pass — see Phase 2's entry above).
 
 Cross-cutting lesson from this pass: a real layout bug in the freshly-built `RouteFinder.svelte`
 (3-column settings grid truncating badly at the app's narrow default panel width — "shorter"
 rendered as "shorf") was only caught by actually loading the app in the browser preview and
 looking at it, exactly the failure mode flagged earlier in this document. `npm run
 check`/`test`/`build` all stayed green through the bug. Keep verifying new UI in a real browser
-before considering it done, not just before considering it *shippable*.
+before considering it done, not just before considering it *shippable*. Most of the newer features
+in this section (fleet composition, audit sentences, rally badge, context menus) were verified via
+`npm run check`/`test`/`build` plus a no-console-errors browser load, **not** full interactive
+click-through — none of them had live backend data to test against in this environment. Treat them
+as "compiles and the logic is unit-tested" rather than "confirmed correct against a real fleet",
+and give them a real look with live data before trusting them fully.
 
 ## What is actually implemented
 

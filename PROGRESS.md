@@ -32,34 +32,166 @@ just re-run test suites — but the lesson stands: **`vite build` succeeding is 
 sufficient, for "the UI actually works."** Before declaring anything shippable again, load the
 real running app (browser preview or `tauri dev`) and look at it.
 
-Two known gaps are intentionally shipping unresolved, tracked (not silently dropped) in gaps #4
-and #7 below and in the README's "Known limitations" section:
-1. **Ship history** — no backend read endpoint exists.
-2. **Routes / Route Finder** — no backend read endpoint exists for `map-route-solarsystems`.
+**Update, 2026-07-14 — scope changed to full parity + a full backend commit landed.** The user
+decided the desktop app needs full feature parity with the original web app (not just the initial
+"thin client" scope) and to surpass it visually, with the backend fully owned under the EveMerc
+brand rather than treated as an external third-party service. Full plan and current status are in
+the new "Full parity initiative" section below. As part of that work, the backend repo's 250
+uncommitted files were triaged, found to be the legitimate, ~97%-test-passing desktop API
+implementation (not risky unrelated work), and committed — see that section for the full story.
+**One of the two gaps below is now resolved**, not still blocked:
 
-Both are additionally blocked right now by the backend repo's own state (250 uncommitted files
-on `main`, including ship-history files marked deleted) — see gap #4's update for the full
-finding. The user explicitly decided to ship without these rather than wait, so don't treat them
-as release blockers in future sessions unless told otherwise; just keep them documented until the
-backend side is resolved.
+1. **Ship history** — still no backend read endpoint exists, and per `DESKTOP_REBUILD_PLAN.md`
+   (found when triaging the backend diff) this was already explicitly decided out of scope on
+   2026-07-12: "killmail ingestion/threat-analysis features already deleted from the web app are
+   OUT of scope." Not a gap to close — correctly not built.
+2. **Routes / Route Finder** — **RESOLVED, was never actually backend-blocked.** A source-code
+   audit of the web app found route-finding is entirely client-side (Dijkstra over static
+   stargate + dynamic wormhole connections, no per-search backend call). Now implemented — see
+   "Full parity initiative" below. The one real sub-gap (no *list* endpoint for user-saved named
+   routes, `map-route-solarsystems`) remains separately blocked and is much smaller in scope than
+   the Route Finder itself.
+
+The rest of this "Release readiness" section (above this update) is historical, describing state
+as of 2026-07-13, before the scope changed to full parity. Kept for the record, not because it's
+still the current plan of record — see "Full parity initiative" below for that.
 
 ## Verified working right now
 
 ```
-npm test         # 64/64 tests pass (32 files)
+npm test         # 74/74 tests pass (33 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 523 KB / 138 KB gzipped
+npm run build    # vite build succeeds; main JS bundle 537 KB / 142 KB gzipped
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
-cargo test        # (src-tauri) 42/42 tests pass
+cargo test        # (src-tauri) 43/43 tests pass
 ```
 
-Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
-131 KB gzipped bundle is comfortably under PLAN.md §13's <400 KB initial-bundle budget.
-`npm run tauri dev` / `npm run tauri build` have **not** been exercised in this session (no
-Tauri runtime available in this environment) — treat those as unverified. `vite build` only
-proves the web bundle compiles; it does not prove the Tauri shell, IPC commands, or any native
-window behavior work.
+Nothing here is aspirational — all six were re-run and confirmed clean as of this update.
+`npm run tauri build` (both `--debug` and release) has been exercised and produces a working
+installer — see "Release readiness" above.
+
+## Full parity initiative (started 2026-07-14)
+
+The user decided the desktop app should reach **full feature parity with the original web app**
+and **surpass it visually**, with the backend fully owned under the EveMerc brand (self-hosted,
+rebranded, no dependency on any third party) rather than the narrower "thin client, ship what's
+easy" scope this file previously tracked. Full plan: `~/.claude/plans/silly-wishing-quill.md`
+(also readable via the plan; not duplicated here in full — this section tracks execution status).
+
+**Architecture confirmed with the user**: not peer-to-peer. Desktop clients continue talking to
+one shared EveMerc backend instance over HTTPS/Reverb — "autonomous" means independent of any
+third party, not independent of a server (fleet tracking is inherently multiplayer).
+
+A full source-code audit of the web app (`C:\Users\Arawn\FZ\EveMerc\resources\js`) found the gap
+is structural, not cosmetic: a fully customizable drag/resize/hide dashboard grid (not fixed
+dockview panels), a separate tactical-HUD regional map with live sovereignty countdowns and a
+zKillboard feed, a three-mode client-side route finder, pervasive real-time cross-panel hover
+sync, and a purpose-built dense dark color/typography system. That research is the source of
+truth for every phase below — re-run it (or read the relevant `resources/js/components/*`
+directly) rather than guessing at web-app behavior.
+
+### Phase 0 — Backend triage and rebrand (done)
+
+The backend repo (`C:\Users\Arawn\FZ\EveMerc`) had 250 uncommitted files on `main`. Triaged before
+touching anything (per the standing "investigate unfamiliar repo state" rule): it turned out to be
+the **complete, legitimate desktop-facing `api/v1` backend implementation** — every controller
+this desktop app has been calling all session (`AccountController`, `DesktopAuthController`,
+`RegionalMapController`, `SovereigntyController`, `FleetWaypointController`, etc.), plus matching
+migrations, factories, and tests, built in an earlier pass but never committed.
+`DESKTOP_REBUILD_PLAN.md`/`IMPLEMENTATION.md` (also untracked, now committed) are the original
+specs for exactly this work. `php artisan test` passed 170/176 before any fixes; the 6 failures
+all traced to one missing generated file, `resources/static/solarsystems.json` — fixed by running
+`php artisan generate:static-data` (the SDE `.jsonl` source files were already present in
+`storage/app/private/sde/`, no raw import needed). After that fix and a `npm run build`,
+172/176 pass; the remaining 4 are pre-existing Playwright browser-test failures on unrelated
+map-settings pages (title text confirmed present in source — looks like browser-test-runner
+staleness, not a real regression) and weren't chased further given the scope of everything else.
+
+**Committed** (271 files, `031101e6`): the desktop API implementation, excluding a handful of
+confirmed scratch/debug files left alone rather than deleted (`test.js`, `newLayout.js`,
+`decoded_layout.json`, `fixMoved.cjs`, `updateSignatures.cjs`, `sde_seed_output.txt`, a stray
+tinker crash log). Also confirms **ship history/killmail/threat-analysis removal was already an
+explicit, locked-in decision** (`DESKTOP_REBUILD_PLAN.md`: "out of scope"), not accidental
+breakage — closes that ambiguity for good.
+
+**Rebranded** `APP_NAME` from `"FleetZone Intel Tool"` to `"EveMerc"` across `.env`,
+`.env.example`, `vite.config.ts` (PWA manifest), `AppLogo.vue`, `SeoHead.vue`, `MapIntroduction.vue`,
+`About.vue`, `Login.vue`, `ServiceUnavailable.vue`, `Landing.vue`, `scribe/index.blade.php`,
+`IMPLEMENTATION.md`, and the two tests asserting on that text (`HomeTest`, `MapTest`). Verified via
+full-text grep sweep: zero `FleetZone` references remain in source. **Not yet done**: the actual
+logo image assets (`public/logo/*.png`/`.svg`) still contain old branding visually — filenames are
+generic enough not to need renaming, but the image content itself needs a design pass, out of
+scope for a text-only rebrand session.
+
+### Phase 1 — Reference web-app instance (not started)
+
+Deferred — Phase 0 and 3.1 turned out to deliver more value per unit time, and reading the web
+app's source directly (already proven reliable all session) covers most of what a running
+reference instance would add, short of literal screenshot comparison. Revisit if visual-parity
+work (Phase 3.2/3.3) stalls on ambiguity that only a real screenshot would resolve.
+
+### Phase 2 — Desktop design system rebuild (foundation done, migration ongoing)
+
+Ported the web app's actual design tokens from `resources/css/app.css` into
+`evemerc-desktop/src/app.css` verbatim rather than approximating: semantic
+background/foreground/card/popover/primary/secondary/muted/accent/destructive/border/input/ring
+tokens (dark by default with a light override block, exact HSL values), the full EVE-domain
+semantic palette (security `hs`/`ls`/`ns`, wormhole class `c1`–`c6`, WH effects, fleet/intel status,
+threat) as CSS custom properties referencing Tailwind's own generated color scale exactly as the
+web app does, a `.hud-label` utility for the dense mono-uppercase-tracked section-label idiom, and
+matching thin custom-scrollbar styling. New `lib/ui/PanelSection.svelte` mirrors the web app's
+`MapPanelHeader` contract, not yet adopted everywhere.
+
+Unified 7 components' section-label markup onto `.hud-label` via a mechanical find-replace of the
+4 exact class-string variants in use (`App.svelte`, `AccountPanel`, `SelectedSystemIntel`,
+`MapAccessPanel`, `MapRoutingPanel`, `IgnoreListPanel`, `TelemetryStatus`).
+
+**Not done**: this is a first pass, not a full migration. Most components still use literal
+slate/cyan Tailwind utility classes directly rather than the new semantic tokens — Tailwind's
+default palette is untouched (only additive tokens were introduced), so dark mode looks unchanged
+beyond the section labels; there's no regression, just limited visible delta yet. **Light mode
+needs a follow-up pass**: the old `[data-theme='light']` block used `!important` overrides keyed
+to literal slate class names, which don't compose with the new token system, so those overrides
+were removed and light mode is currently unstyled until components migrate to semantic classes
+(`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, etc.) instead of literal
+`bg-slate-950/55` etc. Next session: pick a handful of high-traffic components per pass and
+convert their literal color classes to semantic ones, verifying dark AND light mode via browser
+screenshot each time — don't trust `npm run check` alone for this, it can't catch a visual
+regression.
+
+### Phase 3 — Feature parity (3.1 done, rest not started)
+
+**3.1 Route Finder — done.** Was wrongly documented as backend-blocked before this session's scope
+change; the web app computes routes entirely client-side (Dijkstra over a static stargate graph
+plus dynamic wormhole connections, no per-search backend call — confirmed by reading
+`resources/js/composables/useRoutingWorker.ts`). Ported the algorithm as closely as possible:
+`src-tauri/src/sde.rs` gained `get_universe_graph` (all solarsystems/jumps with no region filter,
+modeled on the existing region-scoped query — the only real desktop-side gap, since
+`get_region_topology` is intentionally scoped to one region for the map view). New
+`lib/routing/pathfinder.ts`: `UniverseGraph`, `findRoute`, `findClosestSystems`,
+`dynamicConnectionsFromChain` (translates `ChainSnapshot`'s `map_solarsystem`-id-keyed connections
+to the raw solarsystem ids the pathfinder operates in — a real id-space translation, not just a
+type cast). Same edge-cost model as the web app (shorter/safer/less_secure route preferences with
+a security-penalty knob), same mass/lifetime-status wormhole filtering, same hardcoded Zarzakh
+exclusion. New `lib/routing/RouteFinder.svelte`, wired into `map-settings`: point-to-point and
+closest-of-type modes. **Known limitation**: closest-of-type only supports security-based
+conditions (highsec/lowsec/nullsec) — station/observatory/service conditions need schema data
+(`has_jove_observatory`, `has_stations`, `services`) the desktop's `sde.sqlite` snapshot doesn't
+carry yet (`BuildDesktopSnapshotCommand.php` on the backend would need to embed it). 10 new tests
+cover shortest-path correctness, wormhole shortcuts, mass/lifetime filtering, ignored-system
+routing, the Zarzakh exclusion, route-preference weighting, and the id-space translation.
+
+**3.2–3.8 — not started.** In priority order per the plan: regional map tactical-HUD upgrade
+(scale-invariant glow rings, sovereignty vulnerability countdown, kill-icon legend, fit-to-container
+zoom), wormhole chain map upgrade (right-click context menus, rally-badge glassmorphic overlay with
+marching-ants route animation, richer system node cards), real-time polish (explicit
+connection-health indicator, cross-panel hover sync — hover a pilot row, highlight their route on
+the map), signature paste diff UX (color-flash new/updated/deleted rows), fleet composition
+5-minute rolling deltas, a toast notification system (the app has none currently), access expiry
+picker presets, human-readable audit sentences, keyboard shortcuts (Delete to remove selected map
+systems, Ctrl+V to paste signatures), and — deliberately last, highest risk — the customizable
+drag/resize/hide dashboard grid to replace or extend the current fixed dockview layout.
 
 ## What is actually implemented
 

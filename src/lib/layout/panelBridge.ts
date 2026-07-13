@@ -1,5 +1,6 @@
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { isTauri } from '@tauri-apps/api/core'
+import type { AccountCharacter } from '../account/api'
 import type { FleetSnapshot } from '../fleet/status'
 import type { RegionTopology } from '../sde/bridge'
 import type { ChainSnapshot } from '../wormhole/types'
@@ -14,6 +15,7 @@ export interface PanelWindowState {
   regionalLayers: RegionalLayerData[]
   chainSnapshot: ChainSnapshot | null
   selectedChainSystemId: number | null
+  accountCharacters: AccountCharacter[]
   updatedAt: string
 }
 

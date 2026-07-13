@@ -143,6 +143,7 @@
         regionalLayers,
         chainSnapshot,
         selectedChainSystemId,
+        accountCharacters,
         updatedAt: new Date().toISOString(),
       });
     }, 16);
@@ -157,6 +158,7 @@
     regionalLayers;
     chainSnapshot;
     selectedChainSystemId;
+    accountCharacters;
     schedulePanelStatePublish();
   });
 

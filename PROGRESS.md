@@ -134,10 +134,17 @@ not the "panels come from modules" half:
   `resolveVisiblePanels` includes it. Deliberately did **not** attempt the harder half of this
   gap (Svelte-`mount()`-based dynamic panels with live-reactive props) in the same pass — that
   needs real browser verification of Svelte 5's prop-reactivity-through-`mount()` semantics,
-  which isn't available in this environment, so it stayed out of scope. `PanelWindow.svelte`'s
-  popout branch for `account` still falls through to the generic placeholder — wiring that up
-  requires extending the cross-window action-dispatch mechanism (PLAN.md §10.4) to carry account
-  mutations back to the main window, which doesn't exist yet; out of scope for this fix.
+  which isn't available in this environment, so it stayed out of scope.
+  `PanelWindow.svelte`'s popout branch for `account` now shows a **read-only** character list
+  (`PanelWindowState` gained an `accountCharacters` field, published from `App.svelte`'s existing
+  debounced `schedulePanelStatePublish()` — added to both the publish call and the `$effect`'s
+  dependency-tracking block, matching exactly how `fleet-command`'s popout already shows a
+  read-only `RegionMap` and `wormhole-chain`'s shows a read-only `WormholeChain`). It intentionally
+  has no action buttons (refresh/prefer/revoke/issue-token) — wiring those would require the
+  cross-window action-dispatch mechanism PLAN.md §10.4 describes ("mutations from popouts are
+  forwarded to the main window"), which doesn't exist yet for any popout, not just this one; out
+  of scope for this fix, and account tokens are deliberately NOT included in the synced state
+  (no reason to mirror token metadata into a second window).
 
 **To fully fix**: make `createDockWorkspace` accept `PanelDefinition[]` instead of reading
 `data-dock-panel` elements, using `component()` to mount panels via Svelte's

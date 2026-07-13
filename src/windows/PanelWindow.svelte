@@ -67,6 +67,21 @@
     {#if panelState.chainSnapshot}
       <WormholeChain snapshot={panelState.chainSnapshot} selectedSystemId={panelState.selectedChainSystemId} onSelect={() => undefined} />
     {:else}<p class="text-sm text-slate-500">No wormhole chain is currently active.</p>{/if}
+  {:else if panelId === 'account'}
+    {#if panelState.accountCharacters.length > 0}
+      <div class="flex flex-col gap-2">
+        {#each panelState.accountCharacters as character}
+          <div class="rounded-md bg-slate-900/70 p-3 text-xs">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-slate-200">{character.name}</span>
+              {#if character.isPreferred}<span class="text-emerald-300">preferred</span>{/if}
+            </div>
+            <p class="mt-1 text-slate-400">{character.isOnline ? 'online' : 'offline'} · {character.solarSystemName ?? 'location unknown'} · {character.shipName ?? 'ship unknown'}</p>
+          </div>
+        {/each}
+      </div>
+      <p class="mt-3 text-[10px] text-slate-600">Read-only — manage characters and tokens from the main window.</p>
+    {:else}<p class="text-sm text-slate-500">No characters loaded yet.</p>{/if}
   {:else}
     <p class="text-sm text-slate-400">This compact panel remains synchronized with the main window. Management controls stay in the main workspace.</p>
   {/if}

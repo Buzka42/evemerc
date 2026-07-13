@@ -10,6 +10,7 @@ describe('command palette', () => {
       'popout-chain',
       'popout-account',
       'popout-telemetry',
+      'popout-system-intel',
     ])
   })
 })

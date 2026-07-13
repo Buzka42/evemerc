@@ -1,6 +1,12 @@
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 
-const ALLOWED_PANELS: [&str; 4] = ["fleet-command", "wormhole-chain", "account", "telemetry"];
+const ALLOWED_PANELS: [&str; 5] = [
+    "fleet-command",
+    "wormhole-chain",
+    "account",
+    "telemetry",
+    "system-intel",
+];
 
 #[tauri::command]
 pub async fn open_panel_window(
@@ -85,6 +91,7 @@ fn panel_title(panel_id: &str) -> &str {
         "wormhole-chain" => "Wormhole Chain",
         "account" => "EVE Account",
         "telemetry" => "EVE Telemetry",
+        "system-intel" => "System Intel",
         _ => "Panel",
     }
 }

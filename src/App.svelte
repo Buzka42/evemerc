@@ -159,6 +159,9 @@
         chainSnapshot,
         selectedChainSystemId,
         accountCharacters,
+        selectedRegionalSystemId,
+        selectedSystemIntel,
+        fleetKills,
         updatedAt: new Date().toISOString(),
       });
     }, 16);
@@ -174,6 +177,9 @@
     chainSnapshot;
     selectedChainSystemId;
     accountCharacters;
+    selectedRegionalSystemId;
+    selectedSystemIntel;
+    fleetKills;
     schedulePanelStatePublish();
   });
 
@@ -866,6 +872,10 @@
     }
     if (commandId === 'popout-telemetry') {
       await openPanelWindow('telemetry');
+      return;
+    }
+    if (commandId === 'popout-system-intel') {
+      await openPanelWindow('system-intel');
       return;
     }
     if (commandId === 'toggle-wormhole') {

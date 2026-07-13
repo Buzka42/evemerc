@@ -21,7 +21,7 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 ```
 npm test         # 64/64 tests pass (32 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 522 KB / 137 KB gzipped
+npm run build    # vite build succeeds; main JS bundle 523 KB / 138 KB gzipped
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
 cargo test        # (src-tauri) 27/27 tests pass
@@ -625,6 +625,22 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   `/api/v1/statistics` should check `routes/api.php`'s controller, not `routes/web.php`'s, since
   they're genuinely different controllers behind the same path. 64/64 tests, 0 type errors, clean
   build.
+
+- **Gave `system-intel` a read-only popout**, unlike `map-settings` — this one is legitimately safe
+  to pop out because `SelectedSystemIntel`/`FleetKillfeed` have no mutating actions at all (unlike
+  `map-settings`' rename/delete/access controls, which correctly stayed popout-less earlier this
+  session for exactly that reason). Cross-stack change, same shape as the existing
+  account/telemetry popouts: `src-tauri/src/commands/windows.rs`'s `ALLOWED_PANELS` and
+  `panel_title()` gained `"system-intel"` (covered automatically by the existing
+  `every_allowed_panel_has_a_title` test, no new Rust test needed); `main.ts`'s `allowedPanels`
+  gained it too; `lib/layout/panelBridge.ts`'s `PanelWindowState` gained
+  `selectedRegionalSystemId`/`selectedSystemIntel`/`fleetKills`, published from `App.svelte`'s
+  existing debounced `schedulePanelStatePublish()`; `PanelWindow.svelte` gained a `system-intel`
+  render branch; a `popout-system-intel` command palette entry was added
+  (`lib/commands/palette.ts` + `App.svelte`'s `executeCommand`), matching the account/telemetry
+  precedent of palette-only (no dedicated header button — only `wormhole-chain` has one).
+  `palette.test.ts`'s `overlay`-keyword-search assertion updated for the new entry. 64/64 JS tests,
+  27/27 Rust tests, 0 type errors, clean build across both stacks.
 
 ## Recommended order for the next session
 

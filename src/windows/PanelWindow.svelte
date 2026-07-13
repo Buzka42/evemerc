@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import RegionMap from '../lib/regional/RegionMap.svelte';
   import WormholeChain from '../lib/wormhole/WormholeChain.svelte';
+  import SelectedSystemIntel from '../lib/intel/SelectedSystemIntel.svelte';
+  import FleetKillfeed from '../lib/intel/FleetKillfeed.svelte';
   import { onPanelState, requestPanelState, type PanelWindowState } from '../lib/layout/panelBridge';
   import type { PanelId } from '../lib/layout/profiles';
   import { setPanelAlwaysOnTop } from '../lib/layout/windows';
@@ -57,7 +59,7 @@
   <header class="mb-3 flex items-center justify-between border-b border-cyan-300/20 pb-3">
     <div>
       <p class="text-xs tracking-[0.18em] text-cyan-300">EVEMERC LIVE PANEL</p>
-      <h1 class="text-lg font-medium">{panelId === 'wormhole-chain' ? 'Wormhole chain' : panelId === 'fleet-command' ? 'Fleet command' : panelId === 'account' ? 'EVE account' : 'EVE telemetry'}</h1>
+      <h1 class="text-lg font-medium">{panelId === 'wormhole-chain' ? 'Wormhole chain' : panelId === 'fleet-command' ? 'Fleet command' : panelId === 'account' ? 'EVE account' : panelId === 'system-intel' ? 'System intel' : 'EVE telemetry'}</h1>
     </div>
     <div class="flex items-center gap-2">
       <label class="flex items-center gap-1 text-[10px] text-slate-500">Opacity <input aria-label="Panel opacity" class="w-16 accent-cyan-300" type="range" min="0.35" max="1" step="0.05" bind:value={panelOpacity} /></label>
@@ -117,6 +119,11 @@
       </div>
     {/if}
     <p class="mt-3 text-[10px] text-slate-600">Read-only — change the EVE logs folder from the main window.</p>
+  {:else if panelId === 'system-intel'}
+    {#if panelState.selectedRegionalSystemId}
+      <SelectedSystemIntel systemId={panelState.selectedRegionalSystemId} intel={panelState.selectedSystemIntel} error={null} />
+    {:else}<p class="text-sm text-slate-500">No system is currently selected on the regional map.</p>{/if}
+    <FleetKillfeed kills={panelState.fleetKills} error={null} />
   {:else}
     <p class="text-sm text-slate-400">This compact panel remains synchronized with the main window. Management controls stay in the main workspace.</p>
   {/if}

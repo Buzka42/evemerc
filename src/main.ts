@@ -12,7 +12,7 @@ if (target === null) {
 
 const parameters = new URLSearchParams(window.location.search);
 const requestedPanel = parameters.get('panel');
-const allowedPanels: PanelId[] = ['fleet-command', 'wormhole-chain', 'account', 'telemetry'];
+const allowedPanels: PanelId[] = ['fleet-command', 'wormhole-chain', 'account', 'telemetry', 'system-intel'];
 const panelId = allowedPanels.find((candidate) => candidate === requestedPanel) ?? null;
 const opacityParam = parameters.get('opacity');
 const requestedOpacity = opacityParam ? Number(opacityParam) : NaN;

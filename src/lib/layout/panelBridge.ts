@@ -5,6 +5,8 @@ import type { FleetSnapshot } from '../fleet/status'
 import type { RegionTopology } from '../sde/bridge'
 import type { ChainSnapshot } from '../wormhole/types'
 import type { RegionalLayerData } from '../modules/types'
+import type { SystemIntel } from '../intel/system'
+import type { FleetKill } from '../intel/killfeed'
 
 export interface PanelWindowState {
   selectedMapSlug: string
@@ -16,6 +18,9 @@ export interface PanelWindowState {
   chainSnapshot: ChainSnapshot | null
   selectedChainSystemId: number | null
   accountCharacters: AccountCharacter[]
+  selectedRegionalSystemId: number | null
+  selectedSystemIntel: SystemIntel | null
+  fleetKills: FleetKill[]
   updatedAt: string
 }
 

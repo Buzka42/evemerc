@@ -1,5 +1,5 @@
 import type { EveMercApi } from '../api/client'
-import type { ChainSnapshot, ParsedSignature } from './types'
+import type { ChainConnectionUpdate, ChainSnapshot, ParsedSignature } from './types'
 import type { SolarSystemDetails } from '../sde/bridge'
 
 export async function fetchChainSnapshot(api: EveMercApi, mapSlug: string): Promise<ChainSnapshot> {
@@ -84,6 +84,23 @@ export async function createChainConnection(api: EveMercApi, fromId: number, toI
   if (error) throw new Error('Could not create the wormhole connection.')
 }
 
+export async function updateChainConnection(api: EveMercApi, id: number, update: ChainConnectionUpdate): Promise<void> {
+  const { error } = await api.PUT('/api/v1/map-connections/{id}', {
+    params: { path: { id } },
+    body: {
+      mass_status: update.massStatus,
+      lifetime: update.lifetimeStatus,
+      ship_size: update.shipSize,
+    },
+  })
+  if (error) throw new Error('Could not update the wormhole connection.')
+}
+
+export async function deleteChainConnection(api: EveMercApi, id: number): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/map-connections/{id}', { params: { path: { id } } })
+  if (error) throw new Error('Could not delete the wormhole connection.')
+}
+
 export async function moveChainSystem(api: EveMercApi, id: number, positionX: number, positionY: number): Promise<void> {
   const { error } = await api.PUT('/api/v1/map-selection', {
     body: { map_solarsystems: [{ id, position_x: positionX, position_y: positionY }] },
@@ -96,6 +113,18 @@ export async function pasteSignatures(api: EveMercApi, mapSolarsystemId: number,
     body: { map_solarsystem_id: mapSolarsystemId, signatures },
   })
   if (error) throw new Error('Could not synchronize the pasted signatures.')
+}
+
+export async function deleteSignature(api: EveMercApi, signatureId: number): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/signatures/{id}', { params: { path: { id: signatureId } } })
+  if (error) throw new Error('Could not delete the signature.')
+}
+
+export async function deleteAllSignatures(api: EveMercApi, mapSolarsystemId: number): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/map-solarsystems/{mapSolarsystem_id}/signatures', {
+    params: { path: { mapSolarsystem_id: mapSolarsystemId } },
+  })
+  if (error) throw new Error('Could not clear the signatures for this system.')
 }
 
 export async function trackTransition(

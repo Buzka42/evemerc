@@ -4,11 +4,20 @@
   interface Props {
     snapshot: ChainSnapshot;
     selectedSystemId: number | null;
+    selectedConnectionId?: number | null;
     onSelect: (id: number) => void;
     onMove?: (id: number, x: number, y: number) => void;
+    onSelectConnection?: (id: number) => void;
   }
 
-  let { snapshot, selectedSystemId, onSelect, onMove = () => undefined }: Props = $props();
+  let {
+    snapshot,
+    selectedSystemId,
+    selectedConnectionId = null,
+    onSelect,
+    onMove = () => undefined,
+    onSelectConnection = () => undefined,
+  }: Props = $props();
   let positions = $state(new Map<number, { x: number; y: number }>());
   let zoom = $state(1);
   let panX = $state(0);
@@ -26,7 +35,7 @@
   function connectionColor(massStatus: string | null, lifetimeStatus: string | null): string {
     if (massStatus === 'critical') return '#fb7185';
     if (massStatus === 'reduced') return '#f97316';
-    if (lifetimeStatus === 'end_of_life') return '#fbbf24';
+    if (lifetimeStatus === 'eol') return '#fbbf24';
     return '#64748b';
   }
 
@@ -95,14 +104,24 @@
           {@const from = positions.get(connection.fromMapSolarsystemId)}
           {@const to = positions.get(connection.toMapSolarsystemId)}
           {#if from && to}
-            <line
-              x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-              stroke={connectionColor(connection.massStatus, connection.lifetimeStatus)}
-              stroke-width={connection.shipSize === 'frigate' ? 1.5 : 3}
-              stroke-dasharray={connection.lifetimeStatus === 'end_of_life' ? '8 5' : undefined}
+            <g
+              role="button"
+              tabindex="0"
+              aria-label={`Select connection between ${connection.fromMapSolarsystemId} and ${connection.toMapSolarsystemId}`}
+              onpointerdown={(event) => event.stopPropagation()}
+              onclick={(event) => { event.stopPropagation(); onSelectConnection(connection.id); }}
+              onkeydown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.stopPropagation(); onSelectConnection(connection.id); } }}
             >
-              <title>Mass {connection.massStatus ?? 'stable'} · Lifetime {connection.lifetimeStatus ?? 'stable'} · {connection.shipSize ?? 'unknown'} ships</title>
-            </line>
+              <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke="transparent" stroke-width="18" />
+              <line
+                x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                stroke={selectedConnectionId === connection.id ? '#67e8f9' : connectionColor(connection.massStatus, connection.lifetimeStatus)}
+                stroke-width={connection.shipSize === 'frigate' ? 1.5 : 3}
+                stroke-dasharray={connection.lifetimeStatus === 'eol' ? '8 5' : undefined}
+              >
+                <title>Mass {connection.massStatus ?? 'stable'} · Lifetime {connection.lifetimeStatus ?? 'stable'} · {connection.shipSize ?? 'unknown'} ships</title>
+              </line>
+            </g>
           {/if}
         {/each}
       </g>

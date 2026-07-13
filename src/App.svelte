@@ -22,7 +22,10 @@
   import { fleetAlerts } from './lib/fleet/alerts';
   import FleetAlertsPanel from './lib/fleet/FleetAlertsPanel.svelte';
   import FleetCommandActions from './lib/fleet/FleetCommandActions.svelte';
-  import { createChainConnection, createChainSystem, deleteMapLocation, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, trackTransition, type MapStatistics } from './lib/wormhole/api';
+  import { createChainConnection, createChainSystem, deleteAllSignatures, deleteChainConnection, deleteMapLocation, deleteSignature, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, trackTransition, updateChainConnection, type MapStatistics } from './lib/wormhole/api';
+  import type { ChainConnectionUpdate } from './lib/wormhole/types';
+  import ConnectionEditor from './lib/wormhole/ConnectionEditor.svelte';
+  import SignatureList from './lib/wormhole/SignatureList.svelte';
   import SavedLocationsPanel from './lib/wormhole/SavedLocationsPanel.svelte';
   import { parseProbeScanner } from './lib/wormhole/signatureParser';
   import type { ChainSnapshot } from './lib/wormhole/types';
@@ -83,6 +86,7 @@
   let commanderCharacterId = $state('');
   let chainSnapshot = $state<ChainSnapshot | null>(null);
   let selectedChainSystemId = $state<number | null>(null);
+  let selectedConnectionId = $state<number | null>(null);
   let newChainSystemId = $state('');
   let connectionFromId = $state('');
   let connectionToId = $state('');
@@ -346,6 +350,7 @@
       chainSnapshot = null;
       mapStatistics = null;
       selectedChainSystemId = null;
+      selectedConnectionId = null;
       mapRoutingSettings = null;
       showingCachedFleet = false;
       realtimeMapId = null;
@@ -441,6 +446,33 @@
     }
   }
 
+  function selectChainConnection(id: number): void {
+    selectedConnectionId = selectedConnectionId === id ? null : id;
+  }
+
+  async function saveSelectedConnection(update: ChainConnectionUpdate): Promise<void> {
+    if (selectedConnectionId === null) return;
+    try {
+      chainError = null;
+      await updateChainConnection(api, selectedConnectionId, update);
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function deleteSelectedConnection(): Promise<void> {
+    if (selectedConnectionId === null) return;
+    try {
+      chainError = null;
+      await deleteChainConnection(api, selectedConnectionId);
+      selectedConnectionId = null;
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
   async function persistChainSystemPosition(id: number, x: number, y: number): Promise<void> {
     try {
       await moveChainSystem(api, id, x, y);
@@ -464,6 +496,27 @@
       chainError = null;
       await pasteSignatures(api, selectedChainSystemId, parseProbeScanner(signaturePaste, signatureCatalog));
       signaturePaste = '';
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function deleteSelectedSignature(signatureId: number): Promise<void> {
+    try {
+      chainError = null;
+      await deleteSignature(api, signatureId);
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function deleteAllSelectedSignatures(): Promise<void> {
+    if (!selectedChainSystemId) return;
+    try {
+      chainError = null;
+      await deleteAllSignatures(api, selectedChainSystemId);
       await refreshChain();
     } catch (error) {
       chainError = error instanceof Error ? error.message : String(error);
@@ -779,6 +832,7 @@
     chainSnapshot = null;
     mapStatistics = null;
     selectedChainSystemId = null;
+    selectedConnectionId = null;
     showingCachedFleet = false;
     realtimeMapId = null;
     disconnectRealtime();
@@ -1143,7 +1197,25 @@
           <button class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-300" onclick={() => openPanelWindow('wormhole-chain')}>Pop out</button>
         </div>
         {#if chainSnapshot}
-          <WormholeChain snapshot={chainSnapshot} selectedSystemId={selectedChainSystemId} onSelect={selectChainSystem} onMove={persistChainSystemPosition} />
+          <WormholeChain
+            snapshot={chainSnapshot}
+            selectedSystemId={selectedChainSystemId}
+            {selectedConnectionId}
+            onSelect={selectChainSystem}
+            onMove={persistChainSystemPosition}
+            onSelectConnection={selectChainConnection}
+          />
+          {#if selectedConnectionId !== null}
+            {@const selectedConnection = chainSnapshot.connections.find((connection) => connection.id === selectedConnectionId)}
+            {#if selectedConnection}
+              <ConnectionEditor
+                connection={selectedConnection}
+                onSave={saveSelectedConnection}
+                onDelete={deleteSelectedConnection}
+                onClose={() => selectedConnectionId = null}
+              />
+            {/if}
+          {/if}
           <ChainEditToolbar
             bind:newChainSystemId
             bind:connectionFromId
@@ -1164,6 +1236,16 @@
             onSave={addSavedLocation}
             onRemove={removeSavedLocation}
           />
+          {#if selectedChainSystemId !== null}
+            {@const selectedSignatureSystem = chainSnapshot.systems.find((system) => system.id === selectedChainSystemId)}
+            {#if selectedSignatureSystem}
+              <SignatureList
+                signatures={selectedSignatureSystem.signatures}
+                onDelete={deleteSelectedSignature}
+                onDeleteAll={deleteAllSelectedSignatures}
+              />
+            {/if}
+          {/if}
           {#if selectedSystemDetails?.id === selectedChainSystemId}
             <MapActivityLog audits={selectedSystemDetails.audits} />
           {/if}

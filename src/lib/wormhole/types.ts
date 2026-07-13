@@ -29,6 +29,12 @@ export interface ChainConnection {
   shipSize: string | null
 }
 
+export interface ChainConnectionUpdate {
+  massStatus: 'fresh' | 'reduced' | 'critical' | 'unknown' | null
+  lifetimeStatus: 'healthy' | 'eol' | 'critical' | null
+  shipSize: 'frigate' | 'medium' | 'large' | null
+}
+
 export interface ChainSnapshot {
   mapId: number
   mapSlug: string

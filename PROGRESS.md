@@ -9,8 +9,12 @@ Last updated: 2026-07-13, by a Claude Code session that pushed the initial scaff
 [github.com/Buzka42/evemerc](https://github.com/Buzka42/evemerc), ran graphify
 (`graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`), did a first correctness pass,
 partially closed gap #1 (module-driven dock: module-gating logic, 12 presentational component
-extractions out of `App.svelte`, and finally making `account` a real dock panel — see "Fixed
-this session" below).
+extractions out of `App.svelte`, and finally making `account` a real dock panel), persisted EVE
+log offsets across restarts (a named PLAN.md acceptance criterion — see gap history below), and
+closed a systematic sweep of PLAN.md §11 feature-parity gaps (map rename/delete, wormhole
+connection editing/delete, signature delete/bulk-delete, an EOL-detection bug fix) found by
+diffing the vendored OpenAPI schema against what actually has client code calling it — see
+"Fixed this session" below for the full list.
 
 ## Verified working right now
 
@@ -258,6 +262,30 @@ was this session: check the schema, write a thin wrapper in `lib/maps/settings.t
 `MapRoutingPanel.svelte` (or a dedicated component, if the panel is getting overloaded — see the
 naming note in "Fixed this session"). Don't build a placeholder/guessed version in the meantime.
 
+### 7. Signature *editing* is blocked the same way; `map-route-solarsystems` (the "Routes" panel) was never built at all
+
+Two more gaps found by the same "grep the schema for endpoints with no client caller" method that
+found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
+
+- **`PUT /api/v1/signatures/{id}`** (the only signature-update endpoint) has `requestBody?:
+  never` in the schema — Scribe found no documented request fields at all. There is no way to
+  know what an "edit signature" UI would even send. Individual delete
+  (`DELETE /api/v1/signatures/{id}`) and bulk delete
+  (`DELETE /api/v1/map-solarsystems/{mapSolarsystem_id}/signatures`) *are* fully documented and
+  are now implemented (see "Fixed this session") — only the update path is blocked, and for the
+  same reason as gap #6: an empty/undocumented request body, not unwillingness to build it.
+- **`map-route-solarsystems` (`POST`/`PUT`/`DELETE /api/v1/map-route-solarsystems[/{id}]`) has no
+  client code anywhere** — not blocked, just never built. PLAN.md's M-navigation module calls for
+  a "Routes" panel: "map-route-solarsystems list with live route lengths + quick-select buttons."
+  This is a distinct backend concept from the `ignore-systems`/`waypoints` functionality that
+  *is* implemented (`lib/routing/api.ts`, wired into `FleetCommandActions.svelte`) — it looks
+  like a way to save/name specific routes for repeated one-click use, not just plan-and-send a
+  route once. Did not build this: unlike connection/signature editing, which slot into existing
+  UI (the chain map, the selected-system panel), a "Routes" panel is a new, standalone piece of
+  UI with its own list/CRUD/quick-select interaction design, and PLAN.md doesn't specify enough
+  about the resource's fields (query the schema at `map-route-solarsystems` operations before
+  starting) to build it blind. Left as a scoped, well-defined next task rather than guessed at.
+
 ## Fixed this session
 
 - `App.svelte` `selectLayout()` called `dockWorkspace?.applyProfile(profile)` twice in a row
@@ -363,9 +391,47 @@ naming note in "Fixed this session"). Don't build a placeholder/guessed version 
   realtime). Investigating this surfaced two related, currently-blocked settings — home
   system/rally point and the access ACL — documented precisely as gap #6 below rather than
   guessed at.
+- **Fixed a verified end-of-life detection bug**: `WormholeChain.svelte`'s `connectionColor()`
+  checked `lifetimeStatus === 'end_of_life'` to color a connection amber and dash its stroke, but
+  the backend's documented `lifetime`/`lifetime_status` vocabulary (checked in `schema.d.ts`, both
+  the write-side PUT enum and every example value in GET responses) is `"healthy" | "eol" |
+  "critical"` — `'end_of_life'` never appears anywhere in the schema. The EOL visual indicator
+  could never have triggered against real backend data. Fixed both occurrences to check `'eol'`.
+- **Implemented wormhole connection editing and delete** (PLAN.md §11 M-map's context-menu spec:
+  "connection: mass status, lifetime, ship size, delete") — previously only connection *creation*
+  existed; there was no way to ever change a connection's mass/lifetime/ship-size classification
+  or remove one, which is core, everyday wormhole-mapping functionality. `wormhole/api.ts` gained
+  `updateChainConnection`/`deleteChainConnection` against `PUT`/`DELETE /api/v1/map-connections/{id}`
+  — note the PUT body field is literally named `lifetime`, not `lifetime_status` like the GET
+  response; another read/write naming split in this backend, caught by reading the schema rather
+  than assuming symmetry. `WormholeChain.svelte`'s connection lines are now individually
+  selectable (wrapped in a `<g>` with a wide invisible hit-line for easier clicking, matching the
+  existing system-node click pattern) and highlight cyan when selected. New
+  `ConnectionEditor.svelte` shows mass/lifetime/ship-size `<select>`s seeded from the selected
+  connection's current values (via the same `untrack()`-seeded-`$state` + resetting `$effect`
+  pattern used for `MapRoutingPanel`'s rename input) plus Save and a two-click-confirm Delete.
+- **Implemented signature delete and bulk delete** (PLAN.md §11 M-signatures: "bulk delete").
+  `wormhole/api.ts` gained `deleteSignature`/`deleteAllSignatures` against the fully-documented
+  `DELETE /api/v1/signatures/{id}` and `DELETE /api/v1/map-solarsystems/{mapSolarsystem_id}/signatures`
+  (note the camelCase `mapSolarsystem_id` here vs. the lowercase `map_solarsystem_id` used by the
+  *create*-signature endpoint at a *different* path — yet another same-resource naming
+  inconsistency across endpoints, not a typo on this side). New `SignatureList.svelte` renders
+  the selected chain system's signatures (already present in `ChainMapSolarsystem.signatures`,
+  no new fetch needed) with a per-row Delete and a two-click-confirm "Clear all." Signature
+  *editing* is separately blocked — see gap #7.
 
 ## Recommended order for the next session
 
+0. **The most productive technique found this session**: diff `src/lib/api/schema.d.ts` (every
+   `"/api/v1/..."` path key) against what's actually called from `src/lib/**/*.ts` (excluding
+   `schema.d.ts`/`openapi.yaml` themselves). Every gap found and fixed this session past the
+   dock/offset-persistence work (map rename/delete, connection editing, signature delete) was
+   found this way, and it also caught two real backend-side naming inconsistencies (`slug` vs.
+   `map_slug`, `lifetime` vs. `lifetime_status`) that would have caused silent bugs if guessed
+   from memory instead of read from the schema. Re-run this sweep periodically, especially after
+   any `npm run sync:api`. When a candidate endpoint's `requestBody`/`responses` in the schema is
+   `never` or otherwise underspecified (gaps #6 and #7), that's a real signal to stop and document
+   it rather than guess a shape — don't build against an endpoint you can't read the contract for.
 1. **Read this file and `graphify-out/GRAPH_REPORT.md`** before making changes — the report's
    "Suggested Questions" section flags real ambiguous edges worth a second look (e.g. whether
    `parseProbeScanner()`'s inferred connections to `pasteSignatures()`/`getSignatureCatalog()`

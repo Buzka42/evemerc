@@ -21,7 +21,7 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 ```
 npm test         # 53/53 tests pass (30 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 516 KB / 136 KB gzipped
+npm run build    # vite build succeeds; main JS bundle 517 KB / 136 KB gzipped
 cargo check       # (src-tauri) clean, not re-run this pass (no Rust files touched)
 cargo clippy      # (src-tauri) clean, no warnings, not re-run this pass (no Rust files touched)
 cargo test        # (src-tauri) 27/27 tests pass, not re-run this pass (no Rust files touched)
@@ -475,6 +475,25 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   cast to a hand-written body type — the same "Scribe under-documented it" pattern already found
   twice for gap #6, now confirmed a third time by reading `SignatureController.php`/
   `SignatureData.php` directly.
+
+- **Implemented account character removal** (not previously tracked as a gap — found by re-running
+  the schema-diff sweep after the Access ACL/signature-editing work). `routes/api.php` in the
+  backend registers `DELETE user-characters/{character}` → `AccountController::deleteCharacter()`,
+  which is a genuinely distinct capability from the already-implemented "revoke ESI scopes"
+  (`revokeCharacterScopes`) — it disassociates the character from the account entirely, and the
+  backend refuses with a 422 if it's the account's last character. `lib/account/api.ts` gained
+  `removeCharacter()`; `AccountPanel.svelte` gained a per-character two-click-confirm "Remove
+  character" button (same established destructive-action pattern as map/connection/signature
+  delete), wired through `App.svelte`'s new `removeSelectedCharacter()` handler. The schema-diff
+  sweep also confirmed `/api/v1/tokens[/{id}]` and `/api/v1/account/tokens[/{id}]` are duplicate
+  route aliases to the same controller methods (same for `/api/v1/account/characters/{id}/preferred`
+  vs. `/api/v1/preferred-character/{id}`) — the client's existing choice of path was already
+  correct, nothing to change there. `/api/v1/maps/{map_slug}/ping` remains unused (a heartbeat
+  endpoint, not obviously needed by anything the client currently does) and
+  `/api/v1/account/characters/{character_id}/active` remains unused (a strict subset of what
+  `preferCharacter` already does, since `preferCharacter` sets both the active *and* preferred
+  character) — neither is a real gap, just left noted here so the schema-diff sweep doesn't
+  re-flag them as "new" next time.
 
 ## Recommended order for the next session
 

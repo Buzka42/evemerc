@@ -10,6 +10,7 @@
     onRefresh: () => void;
     onPreferCharacter: (characterId: number) => void;
     onRemoveScopes: (characterId: number) => void;
+    onRemoveCharacter: (characterId: number) => void;
     onIssueToken: () => void;
     onRevokeToken: (tokenId: number) => void;
     onDismissSecret: () => void;
@@ -25,11 +26,23 @@
     onRefresh,
     onPreferCharacter,
     onRemoveScopes,
+    onRemoveCharacter,
     onIssueToken,
     onRevokeToken,
     onDismissSecret,
     onAddScopes,
   }: Props = $props();
+
+  let confirmingRemoveId = $state<number | null>(null);
+
+  function handleRemoveClick(characterId: number): void {
+    if (confirmingRemoveId === characterId) {
+      confirmingRemoveId = null;
+      onRemoveCharacter(characterId);
+    } else {
+      confirmingRemoveId = characterId;
+    }
+  }
 </script>
 
 <div>
@@ -57,6 +70,16 @@
         </div>
         <p class="mt-1 text-slate-400">{character.isOnline ? 'online' : 'offline'} · {character.solarSystemName ?? 'location unknown'} · {character.shipName ?? 'ship unknown'}</p>
         <p class="mt-1 text-slate-600">{character.locationSource ?? 'no source'} · {character.locationState ?? 'unknown'}</p>
+        <div class="mt-2 flex justify-end">
+          <button
+            class="rounded border px-2 py-0.5 text-[11px]"
+            class:border-rose-400={confirmingRemoveId === character.id}
+            class:text-rose-300={confirmingRemoveId === character.id}
+            class:border-slate-700={confirmingRemoveId !== character.id}
+            class:text-slate-500={confirmingRemoveId !== character.id}
+            onclick={() => handleRemoveClick(character.id)}
+          >{confirmingRemoveId === character.id ? 'Confirm remove?' : 'Remove character'}</button>
+        </div>
       </div>
     {/each}
     {#if characters.length === 0}<p class="text-xs text-slate-500">Loading characters…</p>{/if}

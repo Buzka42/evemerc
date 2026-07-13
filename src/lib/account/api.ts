@@ -75,6 +75,14 @@ export async function revokeCharacterScopes(api: EveMercApi, characterId: number
   if (error) throw new Error('Unable to revoke character scopes.')
 }
 
+/** Removes a character from the account entirely (not just its ESI scopes). The backend refuses with a 422 if this is the account's last character. */
+export async function removeCharacter(api: EveMercApi, characterId: number): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/user-characters/{character_id}', {
+    params: { path: { character_id: characterId } },
+  })
+  if (error) throw new Error('Unable to remove the character. An account must keep at least one character.')
+}
+
 export const accountCharactersFromApi = charactersFrom
 
 function tokensFrom(data: unknown): AccountToken[] {

@@ -32,7 +32,7 @@
   import type { ChainSnapshot } from './lib/wormhole/types';
   import WormholeChain from './lib/wormhole/WormholeChain.svelte';
   import ChainEditToolbar from './lib/wormhole/ChainEditToolbar.svelte';
-  import { createAccountToken, deleteAccountToken, fetchAccountCharacters, fetchAccountTokens, revokeCharacterScopes, setPreferredCharacter, type AccountCharacter, type AccountToken } from './lib/account/api';
+  import { createAccountToken, deleteAccountToken, fetchAccountCharacters, fetchAccountTokens, removeCharacter, revokeCharacterScopes, setPreferredCharacter, type AccountCharacter, type AccountToken } from './lib/account/api';
   import AccountPanel from './lib/account/AccountPanel.svelte';
   import { defaultLayoutProfiles, panelVisible, type LayoutProfile } from './lib/layout/profiles';
   import { controlMainWindow, openPanelWindow } from './lib/layout/windows';
@@ -750,6 +750,16 @@
     }
   }
 
+  async function removeSelectedCharacter(characterId: number): Promise<void> {
+    try {
+      accountError = null;
+      await removeCharacter(api, characterId);
+      accountCharacters = await fetchAccountCharacters(api);
+    } catch (error) {
+      accountError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
   async function issueToken(): Promise<void> {
     if (!newTokenName.trim()) return;
     try {
@@ -1231,6 +1241,7 @@
             onRefresh={async () => accountCharacters = await fetchAccountCharacters(api)}
             onPreferCharacter={preferCharacter}
             onRemoveScopes={removeScopes}
+            onRemoveCharacter={removeSelectedCharacter}
             onIssueToken={issueToken}
             onRevokeToken={revokeToken}
             onDismissSecret={() => createdTokenSecret = null}

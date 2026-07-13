@@ -33,7 +33,7 @@
   import type { ChainSnapshot } from './lib/wormhole/types';
   import WormholeChain from './lib/wormhole/WormholeChain.svelte';
   import ChainEditToolbar from './lib/wormhole/ChainEditToolbar.svelte';
-  import { createAccountToken, deleteAccountToken, fetchAccountCharacters, fetchAccountTokens, removeCharacter, revokeCharacterScopes, setPreferredCharacter, type AccountCharacter, type AccountToken } from './lib/account/api';
+  import { createAccountToken, deleteAccountToken, fetchAccountCharacters, fetchAccountTokens, fetchMissingScopeCharacters, removeCharacter, revokeCharacterScopes, setPreferredCharacter, type AccountCharacter, type AccountToken } from './lib/account/api';
   import AccountPanel from './lib/account/AccountPanel.svelte';
   import { defaultLayoutProfiles, panelVisible, type LayoutProfile } from './lib/layout/profiles';
   import { controlMainWindow, openPanelWindow } from './lib/layout/windows';
@@ -109,6 +109,7 @@
   let accountCharacters = $state<AccountCharacter[]>([]);
   let accountError = $state<string | null>(null);
   let accountTokens = $state<AccountToken[]>([]);
+  let missingScopeNames = $state<string[]>([]);
   let newTokenName = $state('');
   let createdTokenSecret = $state<string | null>(null);
   let activeLayout = $state<LayoutProfile>(defaultLayoutProfiles[0]);
@@ -678,6 +679,7 @@
       mapAccess = null;
       mapStatistics = null;
       accountCharacters = [];
+      missingScopeNames = [];
       authState = { phase: 'idle' };
     }
   }
@@ -711,6 +713,7 @@
           fetchAccountTokens(api),
           fetchIgnoredSystems(api),
         ]);
+        missingScopeNames = (await fetchMissingScopeCharacters(api).catch(() => [])).map((character) => character.name);
       }
       if (!sdeReady) {
         try {
@@ -1316,10 +1319,14 @@
           <AccountPanel
             characters={accountCharacters}
             tokens={accountTokens}
+            {missingScopeNames}
             bind:newTokenName
             {createdTokenSecret}
             error={accountError}
-            onRefresh={async () => accountCharacters = await fetchAccountCharacters(api)}
+            onRefresh={async () => {
+              accountCharacters = await fetchAccountCharacters(api);
+              missingScopeNames = (await fetchMissingScopeCharacters(api).catch(() => [])).map((character) => character.name);
+            }}
             onPreferCharacter={preferCharacter}
             onRemoveScopes={removeScopes}
             onRemoveCharacter={removeSelectedCharacter}

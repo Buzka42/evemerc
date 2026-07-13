@@ -4,6 +4,7 @@
   interface Props {
     characters: AccountCharacter[];
     tokens: AccountToken[];
+    missingScopeNames: string[];
     newTokenName: string;
     createdTokenSecret: string | null;
     error: string | null;
@@ -20,6 +21,7 @@
   let {
     characters,
     tokens,
+    missingScopeNames,
     newTokenName = $bindable(),
     createdTokenSecret,
     error,
@@ -47,6 +49,12 @@
 
 <div>
   <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">EVE ACCOUNT</p>
+  {#if missingScopeNames.length > 0}
+    <div class="mt-2 rounded border border-amber-300/30 bg-amber-300/10 p-2 text-xs text-amber-100">
+      {missingScopeNames.join(', ')} {missingScopeNames.length === 1 ? 'is' : 'are'} missing the ESI
+      scopes tracking needs. Use "Add ESI scopes" below to re-authorize.
+    </div>
+  {/if}
   <div class="mt-2 flex gap-2">
     <button class="rounded border border-slate-700 px-2 py-1 text-xs text-cyan-200" onclick={onAddScopes}>Add ESI scopes</button>
     <button class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-400" onclick={onRefresh}>Refresh</button>

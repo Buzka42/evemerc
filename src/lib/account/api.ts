@@ -119,3 +119,38 @@ export async function deleteAccountToken(api: EveMercApi, tokenId: number): Prom
 }
 
 export const accountTokensFromApi = tokensFrom
+
+interface MissingScopeCharacter {
+  id: number
+  name: string
+}
+
+function missingScopesFrom(value: unknown): MissingScopeCharacter[] {
+  const root = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+  const rows = Array.isArray(root.missing_scopes)
+    ? root.missing_scopes
+    : Array.isArray((root.data as Record<string, unknown> | undefined)?.missing_scopes)
+      ? (root.data as { missing_scopes: unknown[] }).missing_scopes
+      : []
+
+  return rows.flatMap((row) => {
+    const record = row as { id?: unknown; name?: unknown }
+    return typeof record.id === 'number' && typeof record.name === 'string' ? [{ id: record.id, name: record.name }] : []
+  })
+}
+
+/**
+ * Characters lacking the ESI scopes tracking needs, per `DesktopAuthController::me()`'s
+ * `missing_scopes` field (`doesntHaveTokenWithTrackingScopes()`) - PLAN.md M-tracking calls for
+ * porting the web app's `ActiveCharacterWarning`, and this is the backend's own signal for it
+ * rather than re-deriving the scope check client-side. `schema.d.ts` only documents this
+ * operation's 401 response (no 200 example was ever captured), so the envelope is read
+ * defensively rather than trusting a generated type.
+ */
+export async function fetchMissingScopeCharacters(api: EveMercApi): Promise<MissingScopeCharacter[]> {
+  const { data, error } = await api.GET('/api/v1/me')
+  if (error) throw new Error('Unable to load account status.')
+  return missingScopesFrom(data)
+}
+
+export const missingScopeCharactersFromApi = missingScopesFrom

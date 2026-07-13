@@ -19,9 +19,9 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 ## Verified working right now
 
 ```
-npm test         # 61/61 tests pass (32 files)
+npm test         # 64/64 tests pass (32 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 521 KB / 137 KB gzipped
+npm run build    # vite build succeeds; main JS bundle 522 KB / 137 KB gzipped
 cargo check       # (src-tauri) clean, not re-run this pass (no Rust files touched)
 cargo clippy      # (src-tauri) clean, no warnings, not re-run this pass (no Rust files touched)
 cargo test        # (src-tauri) 27/27 tests pass, not re-run this pass (no Rust files touched)
@@ -591,6 +591,33 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   "clear all" endpoint exists (only per-system add/remove) so the panel doesn't offer one; clearing
   is click-each-chip, which is fine at the sizes this list realistically reaches. 61/61 tests, 0
   type errors, clean build.
+
+- **Added a missing-ESI-scopes warning to the Account panel** (PLAN.md M-tracking: "Port
+  `ActiveCharacterWarning` (character in-map but tracking off)"). While auditing `/api/v1/me`
+  (found unused by the schema-diff sweep), read `DesktopAuthController::me()` directly and found
+  it already computes exactly this signal server-side: a `missing_scopes` field listing characters
+  that `doesntHaveTokenWithTrackingScopes()` — the backend's own tracking-readiness check, not
+  something worth re-deriving client-side from raw ESI scope lists (which could drift from the
+  backend's actual required-scope set). `schema.d.ts` only documents this operation's 401 response
+  (no 200 example was ever captured, same pattern as several other endpoints this session), so
+  `lib/account/api.ts`'s new `fetchMissingScopeCharacters()` reads the response envelope
+  defensively (checks both a top-level `missing_scopes` and one nested under `data`, since the
+  exact `UserResource::make($user)->additional([...])` envelope shape wasn't independently
+  confirmed against a live response) rather than assuming one exact shape. `AccountPanel.svelte`
+  gained an amber banner listing affected character names with a nudge toward the existing "Add
+  ESI scopes" button when any are missing. Refreshed both on initial load and when the user clicks
+  the panel's existing "Refresh" button (so re-authorizing scopes and refreshing clears the
+  warning without needing a full app restart); reset on logout alongside the other account state.
+  Also verified (found nothing to fix): `M-stats`'s `POST /api/v1/statistics` looked suspicious at
+  first — the *web* app's `StatisticsController::store` only queues a background job and redirects,
+  which would have meant the client's `fetchMapStatistics()` was reading fields that don't exist —
+  but the desktop client correctly calls the *API* route, which resolves to a different controller
+  (`Api\MapStatisticsController`) that does return the exact synchronous `{systems, connections,
+  signatures, saved_locations, fleet_members}` shape already assumed. Worth recording since it was
+  a real "looks broken, isn't" scare that cost time to rule out — future sessions re-auditing
+  `/api/v1/statistics` should check `routes/api.php`'s controller, not `routes/web.php`'s, since
+  they're genuinely different controllers behind the same path. 64/64 tests, 0 type errors, clean
+  build.
 
 ## Recommended order for the next session
 

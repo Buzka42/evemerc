@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { accountCharactersFromApi, accountTokensFromApi } from './api'
+import { accountCharactersFromApi, accountTokensFromApi, missingScopeCharactersFromApi } from './api'
 
 describe('account character normalization', () => {
   it('keeps only valid characters and normalizes optional account state', () => {
@@ -26,5 +26,25 @@ describe('account character normalization', () => {
       createdAt: 'now',
       lastUsedAt: null,
     }])
+  })
+})
+
+describe('missing-scope character normalization', () => {
+  it('reads missing_scopes at the top level of the /me envelope', () => {
+    expect(missingScopeCharactersFromApi({
+      data: { id: 1, name: 'Arawn' },
+      missing_scopes: [{ id: 7, name: 'Alt Character' }],
+    })).toEqual([{ id: 7, name: 'Alt Character' }])
+  })
+
+  it('falls back to missing_scopes nested under data if the top level is absent', () => {
+    expect(missingScopeCharactersFromApi({
+      data: { id: 1, name: 'Arawn', missing_scopes: [{ id: 7, name: 'Alt Character' }] },
+    })).toEqual([{ id: 7, name: 'Alt Character' }])
+  })
+
+  it('returns an empty list for a malformed or missing payload', () => {
+    expect(missingScopeCharactersFromApi(null)).toEqual([])
+    expect(missingScopeCharactersFromApi({ data: {} })).toEqual([])
   })
 })

@@ -5,6 +5,8 @@ export type CommandId =
   | 'layout-scanning'
   | 'popout-fleet'
   | 'popout-chain'
+  | 'popout-account'
+  | 'popout-telemetry'
   | 'toggle-wormhole'
 
 export interface PaletteCommand {
@@ -20,6 +22,8 @@ export const paletteCommands: PaletteCommand[] = [
   { id: 'layout-scanning', title: 'Use Scanning layout', keywords: ['profile', 'wormhole'] },
   { id: 'popout-fleet', title: 'Pop out Fleet Command', keywords: ['window', 'overlay', 'map'] },
   { id: 'popout-chain', title: 'Pop out Wormhole Chain', keywords: ['window', 'overlay', 'scan'] },
+  { id: 'popout-account', title: 'Pop out Account', keywords: ['window', 'overlay', 'character', 'tokens'] },
+  { id: 'popout-telemetry', title: 'Pop out Telemetry', keywords: ['window', 'overlay', 'logs', 'operations'] },
   { id: 'toggle-wormhole', title: 'Toggle Wormhole Map module', keywords: ['module', 'chain'] },
 ]
 

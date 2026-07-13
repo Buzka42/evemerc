@@ -655,6 +655,14 @@
       await openPanelWindow('wormhole-chain');
       return;
     }
+    if (commandId === 'popout-account') {
+      await openPanelWindow('account');
+      return;
+    }
+    if (commandId === 'popout-telemetry') {
+      await openPanelWindow('telemetry');
+      return;
+    }
     if (commandId === 'toggle-wormhole') {
       await toggleModule('wormhole-map');
       return;

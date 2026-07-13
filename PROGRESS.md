@@ -233,6 +233,12 @@ continuing to peel off presentational leaves.
   branch in `PanelWindow.svelte` is now unreachable for any current `PanelId` value; it's dead
   code, not a bug — safe to leave until a genuinely new panel type needs it, or worth deleting in
   a later cleanup pass.
+- Added `popout-account`/`popout-telemetry` command palette entries (`Ctrl+K`) so the two newly
+  functional popouts are actually discoverable — before this change there was no way to open
+  them at all (`wormhole-chain` has both a palette command and a dedicated "Pop out" button in
+  its own header; `fleet-command` only has the palette command; `account`/`telemetry` had
+  neither). Matches the exact existing pattern (`lib/commands/palette.ts` + `App.svelte`'s
+  `executeCommand`), no new mechanism introduced.
 
 ## Recommended order for the next session
 

@@ -105,6 +105,15 @@ not the "panels come from modules" half:
 - `lib/layout/dock.ts` still reads DOM elements tagged `data-dock-panel="..."` out of a static
   template in `App.svelte` — it never calls `moduleRegistry.panels()`. `PanelDefinition` objects
   (with `component: () => Promise<...>`) are still never consumed anywhere.
+- It's not just `panels()`: `ModuleRegistry.fleetWidgets()`, `.intelProviders()`, and
+  `.commands()` are all implemented and covered by `registry.test.ts`, but **zero** modules
+  populate `fleetWidgets`/`intelProviders`/`commands` today (only `reference-intel` populates
+  `regionalLayers`, which is the one contribution type that IS consumed, via
+  `moduleRegistry.regionalLayers()` in `App.svelte`), and nothing in `App.svelte` or
+  `PanelWindow.svelte` calls `.fleetWidgets()`, `.intelProviders()`, or `.commands()` at all — the
+  command palette's `filterPaletteCommands` works off the static `paletteCommands` array in
+  `lib/commands/palette.ts`, not the registry. Keep this in mind before assuming any extension
+  point beyond `regionalLayers` is load-bearing.
 - The signatures/routing/audits/account/killfeed/system-intel *sections* still aren't panels at
   all — they're now standalone `.svelte` components (see "Fixed this session"), but they're
   still mounted inline inside the `fleet-command` and `telemetry` dock panels, so they can't be

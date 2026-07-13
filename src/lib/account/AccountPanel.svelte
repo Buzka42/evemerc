@@ -48,7 +48,7 @@
 </script>
 
 <div>
-  <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">EVE ACCOUNT</p>
+  <p class="hud-label">EVE ACCOUNT</p>
   {#if missingScopeNames.length > 0}
     <div class="mt-2 rounded border border-amber-300/30 bg-amber-300/10 p-2 text-xs text-amber-100">
       {missingScopeNames.join(', ')} {missingScopeNames.length === 1 ? 'is' : 'are'} missing the ESI
@@ -94,7 +94,7 @@
     {#if error}<p class="text-xs text-amber-200">{error}</p>{/if}
   </div>
   <div class="mt-3 border-t border-slate-700/70 pt-3">
-    <p class="text-[10px] font-semibold tracking-[0.14em] text-slate-500">API TOKENS</p>
+    <p class="hud-label">API TOKENS</p>
     <div class="mt-2 flex gap-2">
       <input class="min-w-0 grow rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs" placeholder="Token name" bind:value={newTokenName} />
       <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={onIssueToken}>Create</button>

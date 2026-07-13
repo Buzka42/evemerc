@@ -40,7 +40,7 @@
 </script>
 
 <div class="border-t border-slate-700/70 pt-4">
-  <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">MAP & ROUTING</p>
+  <p class="hud-label">MAP & ROUTING</p>
   {#if settings.canManageAccess}
     <div class="mt-2 flex gap-2">
       <input

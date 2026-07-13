@@ -1,14 +1,95 @@
 @import 'tailwindcss';
 @import 'dockview-core/dist/styles/dockview.css';
 
+/*
+ * Design tokens ported from the EveMerc web app (resources/css/app.css) so the desktop client
+ * shares the same visual language: a neutral dark HUD theme plus a domain-specific semantic
+ * palette for EVE security/wormhole-class/fleet-status/threat coloring, rather than ad-hoc
+ * Tailwind slate/cyan utility classes with no shared vocabulary.
+ */
 @theme {
-  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
-  --color-space-950: #03070d;
-  --color-space-900: #07111d;
-  --color-signal: #67e8f9;
+  --font-sans: 'Instrument Sans', Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Security */
+  --color-hs: var(--color-green-500);
+  --color-ls: var(--color-orange-500);
+  --color-ns: var(--color-red-500);
+  /* Wormhole class */
+  --color-c1: var(--color-cyan-300);
+  --color-c2: var(--color-blue-500);
+  --color-c3: var(--color-purple-300);
+  --color-c4: var(--color-violet-500);
+  --color-c5: var(--color-orange-400);
+  --color-c6: var(--color-red-500);
+  /* Wormhole effects */
+  --color-pulsar: var(--color-blue-500);
+  --color-magnetar: var(--color-pink-500);
+  --color-wolf-rayet-star: var(--color-amber-950);
+  --color-black-hole: var(--color-gray-500);
+  --color-catalysmic-variable: var(--color-yellow-300);
+  --color-red-giant: var(--color-red-500);
+  /* Fleet / intel status */
+  --color-friendly: var(--color-blue-500);
+  --color-unknown: var(--color-neutral-300);
+  --color-hostile: var(--color-red-500);
+  --color-unscanned: var(--color-cyan-500);
+  --color-active: var(--color-orange-500);
+  --color-empty: var(--color-emerald-400);
+  /* Threat */
+  --color-threat-critical: var(--color-red-600);
+  --color-threat-high: var(--color-orange-500);
+
+  --text-2xs: 0.7rem;
+  --text-3xs: 0.625rem;
 }
 
+/* Dark is the default and primary theme for this app - a tactical HUD, not a light admin panel. */
 :root {
+  --background: hsl(0 0% 3.9%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 3.9%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(0 0% 3.9%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(0 0% 98%);
+  --primary-foreground: hsl(0 0% 9%);
+  --secondary: hsl(0 0% 14.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(0 0% 16.08%);
+  --muted-foreground: hsl(0 0% 63.9%);
+  --accent: hsl(0 0% 14.9%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 14.9%);
+  --input: hsl(0 0% 14.9%);
+  --ring: hsl(0 0% 83.1%);
+  --grid: hsl(0 0% 12%);
+
   font-family: var(--font-sans);
   color-scheme: dark;
   font-synthesis: none;
@@ -21,37 +102,71 @@
 }
 
 :root[data-theme='light'] {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 3.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(0 0% 3.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(0 0% 3.9%);
+  --primary: hsl(0 0% 9%);
+  --primary-foreground: hsl(0 0% 98%);
+  --secondary: hsl(0 0% 92.1%);
+  --secondary-foreground: hsl(0 0% 9%);
+  --muted: hsl(0 0% 96.1%);
+  --muted-foreground: hsl(0 0% 45.1%);
+  --accent: hsl(0 0% 96.1%);
+  --accent-foreground: hsl(0 0% 9%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 92.8%);
+  --input: hsl(0 0% 89.8%);
+  --ring: hsl(0 0% 3.9%);
+  --grid: hsl(0 0% 90%);
   color-scheme: light;
-}
-
-:root[data-theme='light'] body,
-:root[data-theme='light'] main {
-  background: #e8eef5 !important;
-  color: #102033;
-}
-
-:root[data-theme='light'] .bg-slate-950\/55,
-:root[data-theme='light'] .bg-slate-950\/50,
-:root[data-theme='light'] .bg-slate-950\/40,
-:root[data-theme='light'] .bg-slate-900\/80,
-:root[data-theme='light'] .bg-slate-900\/70,
-:root[data-theme='light'] .bg-slate-900\/60 {
-  background-color: rgb(255 255 255 / 0.9) !important;
-}
-
-:root[data-theme='light'] .text-slate-100,
-:root[data-theme='light'] .text-slate-200,
-:root[data-theme='light'] .text-slate-300 {
-  color: #183047 !important;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 button,
 input {
   font: inherit;
+}
+
+/* Dense, mono-uppercase-tracked section labels - the recurring "cockpit instrument" idiom every
+   panel in the web app uses for its header/section titles. */
+.hud-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-700) transparent;
+}
+
+:root[data-theme='light'] * {
+  scrollbar-color: var(--color-neutral-300) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-700);
+  border-radius: 4px;
+}
+
+:root[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-300);
 }

@@ -28,7 +28,7 @@
 
 <div class="mt-2 border-t border-slate-700/70 pt-4">
   <div class="flex items-center justify-between">
-    <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">EVE LOG TELEMETRY</p>
+    <p class="hud-label">EVE LOG TELEMETRY</p>
     <span class:!bg-emerald-300={logStatus?.watching} class="size-2 rounded-full bg-slate-600"></span>
   </div>
 
@@ -69,7 +69,7 @@
   </div>
 
   <div class="mt-4 border-t border-slate-700/70 pt-4">
-    <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">INTEL CHANNELS</p>
+    <p class="hud-label">INTEL CHANNELS</p>
     <p class="mt-1 text-[11px] leading-4 text-slate-500">
       Opt-in only. A channel's chat is never read unless it's tracked here — everything else stays
       tailed-and-counted only, exactly as before.

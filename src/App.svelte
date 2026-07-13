@@ -1283,7 +1283,7 @@
         {/each}
 
         <div class="border-t border-slate-700/70 pt-4">
-          <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">MODULES</p>
+          <p class="hud-label">MODULES</p>
           <div class="mt-3 flex flex-col gap-2">
             {#each moduleRegistry.modules() as module}
               <button
@@ -1301,7 +1301,7 @@
         </div>
 
         <div class="border-t border-slate-700/70 pt-4">
-          <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">APPEARANCE</p>
+          <p class="hud-label">APPEARANCE</p>
           <div class="mt-2 grid grid-cols-2 gap-2">
             <select aria-label="Color theme" class="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" bind:value={currentTheme} onchange={applyAppearance}>
               <option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option>
@@ -1400,7 +1400,7 @@
       <section data-dock-panel="wormhole-chain" class="hidden h-full rounded-xl border border-slate-700/60 bg-slate-950/50 p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs font-semibold tracking-[0.2em] text-slate-500">SECONDARY WORKSPACE</p>
+            <p class="hud-label">SECONDARY WORKSPACE</p>
             <h2 class="mt-1 text-lg font-medium">Wormhole chain map</h2>
           </div>
           <span class="text-xs text-slate-500">Docked lower by default</span>

@@ -17,7 +17,7 @@
 </script>
 
 <div class="border-t border-slate-700/70 pt-4">
-  <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">MAP ACCESS</p>
+  <p class="hud-label">MAP ACCESS</p>
   <div class="mt-2 flex flex-col gap-1 text-xs">
     {#each access.entries as entry}
       <div class="flex items-center justify-between gap-2 rounded bg-slate-900/70 px-2 py-1.5">
@@ -42,7 +42,7 @@
   </div>
 
   {#if unGranted.length > 0}
-    <p class="mt-3 text-[10px] font-semibold tracking-[0.14em] text-slate-500">GRANT ACCESS</p>
+    <p class="mt-3 hud-label">GRANT ACCESS</p>
     <div class="mt-2 flex flex-col gap-1 text-xs">
       {#each unGranted as candidate}
         <div class="flex items-center justify-between gap-2 rounded bg-slate-900/50 px-2 py-1.5">

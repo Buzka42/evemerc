@@ -11,7 +11,7 @@
 </script>
 
 <div class="border-t border-slate-700/70 pt-4">
-  <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">SELECTED SYSTEM · {systemId}</p>
+  <p class="hud-label">SELECTED SYSTEM · {systemId}</p>
   {#if intel?.systemId === systemId}
     <dl class="mt-2 grid grid-cols-2 gap-2 text-xs">
       <div class="rounded bg-slate-900/70 p-2"><dt class="text-slate-500">Jumps (1h)</dt><dd class="text-lg">{intel.jumps}</dd></div>

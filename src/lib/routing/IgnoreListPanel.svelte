@@ -10,7 +10,7 @@
 </script>
 
 <div class="border-t border-slate-700/70 pt-4">
-  <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">ROUTE EXCLUSIONS</p>
+  <p class="hud-label">ROUTE EXCLUSIONS</p>
   <div class="mt-2 flex gap-2">
     <input
       class="min-w-0 grow rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs"

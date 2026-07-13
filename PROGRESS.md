@@ -7,12 +7,13 @@
 
 Last updated: 2026-07-13, by a Claude Code session that pushed the initial scaffold to
 [github.com/Buzka42/evemerc](https://github.com/Buzka42/evemerc), ran graphify
-(`graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`), and did a first correctness pass.
+(`graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`), did a first correctness pass, and
+then partially closed gap #1 (module-driven dock — see "Fixed this session" below).
 
 ## Verified working right now
 
 ```
-npm test         # 45/45 tests pass (28 files)
+npm test         # 49/49 tests pass (28 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
@@ -69,33 +70,45 @@ state as flat `$state` variables and orchestrates every feature inline.
 
 Ordered by how much they matter for PLAN.md's stated design goals.
 
-### 1. The module registry doesn't actually drive the dock (biggest gap)
+### 1. The module registry doesn't actually drive the dock (biggest gap — partially closed)
 
-PLAN.md §10.1's whole point is "disabling a module removes its panels from all layouts." Today:
+PLAN.md §10.1's whole point is "disabling a module removes its panels from all layouts."
 
-- `lib/layout/profiles.ts` hardcodes `PanelId = 'fleet-command' | 'wormhole-chain' | 'account' |
-  'telemetry'` — four fixed panels.
-- `lib/layout/dock.ts`'s `createDockWorkspace` reads DOM elements tagged
-  `data-dock-panel="..."` directly out of a static template in `App.svelte` — it never calls
-  `moduleRegistry.panels()`.
-- `ModuleRegistry.panels()` / `.regionalLayers()` / `.commands()` exist and are tested
-  (`registry.test.ts`), but only `regionalLayers()` and (indirectly) module enable/disable
-  gating in `App.svelte`'s `toggleModule()` are actually consumed. `panels()` has no caller in
-  `App.svelte` at all.
-- Net effect: toggling a module in the Settings panel changes `moduleRegistry.isEnabled()` and
-  refreshes regional-layer data, but it cannot add or remove a dock panel, because dock panels
-  aren't sourced from modules.
+**What this session fixed**: `lib/layout/profiles.ts` now exports `panelModuleOwners` (a
+`PanelId -> moduleId | null` map) and `resolveVisiblePanels(profile, isModuleEnabled)`, a pure
+function that intersects profile visibility with module enablement. `lib/layout/dock.ts`'s
+`createDockWorkspace` takes a new `isModuleEnabled` callback and uses `resolveVisiblePanels`
+both when building a fresh layout and when restoring a saved one from `localStorage` — a saved
+layout can no longer resurrect a panel whose owning module has since been disabled (it's
+actively removed via `api.removePanel`). `App.svelte` now passes
+`(moduleId) => moduleRegistry.isEnabled(moduleId)` into `createDockWorkspace`. Covered by 4 new
+tests in `lib/layout/profiles.test.ts`. Today `wormhole-chain` is the only panel with a real
+owning module (`wormhole-map`); `fleet-command` maps to the `fleet` core module (always
+enabled); `account` and `telemetry` are shell chrome with no owner (`null`), so they're
+unaffected by module toggling — see the next paragraph for why.
 
-**To fix properly**: `PanelDefinition` in `lib/modules/types.ts` already has the right shape
-(`id`, `title`, `component`, `defaultPlacement`, `popoutable`). The work is: (a) make
-`createDockWorkspace` accept `PanelDefinition[]` instead of reading `data-dock-panel` elements,
-using `component()` to mount panels via Svelte's `mount()`/`unmount()` (see PLAN.md §10.2's
-"thin adapter" note); (b) convert the four hardcoded panels plus the inline
-signatures/routing/audits/account/killfeed/system-intel blocks in `App.svelte` into panel
-components owned by their own modules; (c) make `LayoutProfile.panels` reference module panel
-ids generically instead of the closed `PanelId` union. This is a real refactor, not a small
-patch — budget it as its own milestone slice, and do it with the dockview spike risk noted in
-PLAN.md §17.2 in mind (approved fallback: `golden-layout` v2 if dockview-core fights back).
+**What's still NOT fixed** — this only closes the "module state gates a panel" half of the gap,
+not the "panels come from modules" half:
+
+- `lib/layout/profiles.ts` still hardcodes `PanelId = 'fleet-command' | 'wormhole-chain' |
+  'account' | 'telemetry'` — four fixed panels, a closed union.
+- `lib/layout/dock.ts` still reads DOM elements tagged `data-dock-panel="..."` out of a static
+  template in `App.svelte` — it never calls `moduleRegistry.panels()`. `PanelDefinition` objects
+  (with `component: () => Promise<...>`) are still never consumed anywhere.
+- The inline signatures/routing/audits/account/killfeed/system-intel blocks in `App.svelte`
+  still aren't panels at all — they're embedded inside the `fleet-command` and `telemetry`
+  blocks, so they can't be independently toggled, popped out, or owned by a module.
+
+**To fully fix**: make `createDockWorkspace` accept `PanelDefinition[]` instead of reading
+`data-dock-panel` elements, using `component()` to mount panels via Svelte's
+`mount()`/`unmount()` (see PLAN.md §10.2's "thin adapter" note); split those inline blocks into
+real panel components owned by their own modules; make `LayoutProfile.panels` reference module
+panel ids generically instead of the closed `PanelId` union. This is a real refactor, not a
+small patch — budget it as its own milestone slice, and do it with the dockview spike risk noted
+in PLAN.md §17.2 in mind (approved fallback: `golden-layout` v2 if dockview-core fights back).
+The module-gating plumbing landed this session (`panelModuleOwners`, `resolveVisiblePanels`)
+should carry over directly — extend `panelModuleOwners` as new panels get real owners instead of
+inventing a second mechanism.
 
 ### 2. EVE log parser only recognizes one template
 
@@ -143,6 +156,9 @@ own `$state`, exposed through `ModuleCtx` per PLAN.md §10.1) rather than doing 
 
 - `App.svelte` `selectLayout()` called `dockWorkspace?.applyProfile(profile)` twice in a row
   (harmless but dead duplicate call) — removed the duplicate.
+- Dock panel visibility now respects module enablement, not just profile visibility (see gap #1
+  above for the full detail). `wormhole-chain` correctly disappears from every layout when the
+  `wormhole-map` module is disabled, including on restore from a saved dockview layout.
 
 ## Recommended order for the next session
 
@@ -152,9 +168,11 @@ own `$state`, exposed through `ModuleCtx` per PLAN.md §10.1) rather than doing 
    are structurally sound).
 2. If backend `api/v1` work has landed in the main `EveMerc` repo since this was written, run
    `npm run sync:api` first and re-run `npm run check` to catch any type drift.
-3. Tackle gap #1 (module-driven dock) as its own scoped piece of work — it's the highest-value
-   fix because it's what makes "user chooses which features he sees" actually true, which is a
-   stated non-negotiable goal for this rebuild.
+3. Finish gap #1: convert `createDockWorkspace` to mount `PanelDefinition[]` from
+   `moduleRegistry.panels()` instead of scanning static `data-dock-panel` DOM elements, and
+   split the inline signatures/routing/audits/account/killfeed/system-intel blocks in
+   `App.svelte` into real panel components. The module-gating half (`panelModuleOwners`,
+   `resolveVisiblePanels`) is already done — reuse it, don't re-derive it.
 4. Only touch gap #2 (log parser templates) once real gamelog fixtures are available; add them
    under a `src-tauri/src/eve_logs/fixtures/` (or similar) directory and write the property/fuzz
    tests PLAN.md §15 calls for alongside the new templates.

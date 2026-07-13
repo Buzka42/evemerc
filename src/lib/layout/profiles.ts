@@ -75,3 +75,30 @@ function isLayoutProfile(value: unknown): value is LayoutProfile {
 export function panelVisible(profile: LayoutProfile, panelId: PanelId): boolean {
   return profile.panels.find((panel) => panel.id === panelId)?.visible ?? false
 }
+
+/**
+ * Maps each dock panel to the feature module that owns it. `null` means the panel is shell
+ * chrome (not tied to a toggleable feature) and is always eligible regardless of module state.
+ * Extend this as more panels move from inline App.svelte blocks into real FeatureModule panels.
+ */
+export const panelModuleOwners: Record<PanelId, string | null> = {
+  'fleet-command': 'fleet',
+  'wormhole-chain': 'wormhole-map',
+  account: null,
+  telemetry: null,
+}
+
+/**
+ * A panel is eligible for the dock when the profile marks it visible AND, if it is owned by a
+ * feature module, that module is currently enabled. Pure and DOM-free so it is unit-testable
+ * without a dockview instance.
+ */
+export function resolveVisiblePanels(profile: LayoutProfile, isModuleEnabled: (moduleId: string) => boolean): PanelId[] {
+  return profile.panels
+    .filter((panel) => panel.visible)
+    .map((panel) => panel.id)
+    .filter((panelId) => {
+      const owner = panelModuleOwners[panelId]
+      return owner === null || isModuleEnabled(owner)
+    })
+}

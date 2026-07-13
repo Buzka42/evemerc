@@ -1,5 +1,5 @@
 import { createDockview, themeAbyss, type DockviewApi, type IContentRenderer } from 'dockview-core'
-import type { LayoutProfile, PanelId } from './profiles'
+import { resolveVisiblePanels, type LayoutProfile, type PanelId } from './profiles'
 
 const panelTitles: Record<PanelId, string> = {
   'fleet-command': 'Regional Fleet Command',
@@ -37,7 +37,12 @@ class ExistingElementRenderer implements IContentRenderer {
   }
 }
 
-export function createDockWorkspace(host: HTMLElement, source: HTMLElement, profile: LayoutProfile): DockWorkspace {
+export function createDockWorkspace(
+  host: HTMLElement,
+  source: HTMLElement,
+  profile: LayoutProfile,
+  isModuleEnabled: (moduleId: string) => boolean = () => true,
+): DockWorkspace {
   const api = createDockview(host, {
     theme: themeAbyss,
     keyboardNavigation: true,
@@ -68,15 +73,18 @@ export function createDockWorkspace(host: HTMLElement, source: HTMLElement, prof
     applying = true
     profile = nextProfile
     api.closeAllGroups()
+    const visible = new Set(
+      resolveVisiblePanels(profile, isModuleEnabled).filter((panelId) => source.querySelector(`[data-dock-panel="${panelId}"]`)),
+    )
     const saved = window.localStorage.getItem(`evemerc.dock.${profile.id}`)
     if (saved) {
       try {
         api.fromJSON(JSON.parse(saved) as ReturnType<DockviewApi['toJSON']>)
-        const expectedPanels = profile.panels
-          .filter((panel) => panel.visible && source.querySelector(`[data-dock-panel="${panel.id}"]`))
-          .map((panel) => panel.id)
-        if (!expectedPanels.every((panelId) => api.getPanel(panelId))) {
+        if (![...visible].every((panelId) => api.getPanel(panelId))) {
           throw new Error('Saved dock layout is missing a required panel.')
+        }
+        for (const panel of api.panels) {
+          if (!visible.has(panel.id as PanelId)) api.removePanel(panel)
         }
         applying = false
         return
@@ -86,8 +94,7 @@ export function createDockWorkspace(host: HTMLElement, source: HTMLElement, prof
       }
     }
 
-    const visible = new Set(profile.panels.filter((panel) => panel.visible).map((panel) => panel.id))
-    addPanel('fleet-command')
+    if (visible.has('fleet-command')) addPanel('fleet-command')
     if (visible.has('telemetry')) addPanel('telemetry', { referencePanel: 'fleet-command', direction: 'right' })
     if (visible.has('wormhole-chain')) addPanel('wormhole-chain', { referencePanel: 'fleet-command', direction: 'below' })
     applying = false

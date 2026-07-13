@@ -747,7 +747,7 @@
     };
     window.addEventListener('keydown', handleShortcut);
     activeLayout = defaultLayoutProfiles.find((profile) => profile.id === window.localStorage.getItem('evemerc.active-layout')) ?? defaultLayoutProfiles[0];
-    dockWorkspace = createDockWorkspace(dockHost, dockSource, activeLayout);
+    dockWorkspace = createDockWorkspace(dockHost, dockSource, activeLayout, (moduleId) => moduleRegistry.isEnabled(moduleId));
 
     void (async () => {
       try {

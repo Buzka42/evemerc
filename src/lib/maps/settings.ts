@@ -72,3 +72,16 @@ export async function revokeMapShareToken(api: EveMercApi, mapSlug: string): Pro
   const { error } = await api.DELETE('/api/v1/maps/{map_slug}/settings/revoke-share-token', { params: { path: { map_slug: mapSlug } } })
   if (error) throw new Error('Could not revoke the share token.')
 }
+
+export async function renameMap(api: EveMercApi, mapSlug: string, name: string): Promise<void> {
+  const { error } = await api.PUT('/api/v1/maps/{slug}', {
+    params: { path: { slug: mapSlug } },
+    body: { name },
+  })
+  if (error) throw new Error('Could not rename the map.')
+}
+
+export async function deleteMap(api: EveMercApi, mapSlug: string): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/maps/{slug}', { params: { path: { slug: mapSlug } } })
+  if (error) throw new Error('Could not delete the map.')
+}

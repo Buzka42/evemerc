@@ -46,7 +46,7 @@
   import FleetKillfeed from './lib/intel/FleetKillfeed.svelte';
   import FleetCommanders from './lib/fleet/FleetCommanders.svelte';
   import { addIgnoredSystem, fetchIgnoredSystems, parseRouteSystemIds, removeIgnoredSystem, sendRouteWaypoints } from './lib/routing/api';
-  import { fetchMapRoutingSettings, generateMapShareToken, revokeMapShareToken, toggleMapPublic, updateMapRoutingSettings, type MapRoutingSettings } from './lib/maps/settings';
+  import { deleteMap, fetchMapRoutingSettings, generateMapShareToken, renameMap, revokeMapShareToken, toggleMapPublic, updateMapRoutingSettings, type MapRoutingSettings } from './lib/maps/settings';
   import MapRoutingPanel from './lib/maps/MapRoutingPanel.svelte';
   import {
     onEveLogObservation,
@@ -316,6 +316,43 @@
         mapRoutingSettings.shareToken = await generateMapShareToken(api, selectedMapSlug);
       }
       mapSettingsMessage = revoke ? 'Share link revoked.' : 'Share link generated.';
+    } catch (error) {
+      mapSettingsMessage = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function renameCurrentMap(name: string): Promise<void> {
+    if (!selectedMapSlug) return;
+    try {
+      await renameMap(api, selectedMapSlug, name);
+      const map = maps.find((candidate) => candidate.slug === selectedMapSlug);
+      if (map) map.name = name;
+      mapSettingsMessage = 'Map renamed.';
+    } catch (error) {
+      mapSettingsMessage = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function deleteCurrentMap(): Promise<void> {
+    if (!selectedMapSlug) return;
+    const deletedSlug = selectedMapSlug;
+    try {
+      await deleteMap(api, deletedSlug);
+      maps = maps.filter((map) => map.slug !== deletedSlug);
+      selectedMapSlug = maps[0]?.slug ?? '';
+      fleetSnapshot = null;
+      regionTopology = null;
+      regionalLayers = [];
+      chainSnapshot = null;
+      mapStatistics = null;
+      selectedChainSystemId = null;
+      mapRoutingSettings = null;
+      showingCachedFleet = false;
+      realtimeMapId = null;
+      disconnectRealtime();
+      if (selectedMapSlug) {
+        await loadFleetWorkspace();
+      }
     } catch (error) {
       mapSettingsMessage = error instanceof Error ? error.message : String(error);
     }
@@ -1054,9 +1091,12 @@
             bind:settings={mapRoutingSettings}
             message={mapSettingsMessage}
             {serverUrl}
+            mapName={maps.find((map) => map.slug === selectedMapSlug)?.name ?? ''}
             onSave={saveRoutingSettings}
             onTogglePublic={changePublicAccess}
             onChangeShareToken={changeShareToken}
+            onRename={renameCurrentMap}
+            onDelete={deleteCurrentMap}
           />
         {/if}
 

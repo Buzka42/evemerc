@@ -224,6 +224,40 @@ way the display blocks did. Gap #1's refactor is still the natural moment to als
 ownership* per-module (each module owning its own `$state`, exposed through `ModuleCtx` per
 PLAN.md §10.1) rather than continuing to peel off presentational leaves.
 
+### 6. M-maps "General"/"Access" settings: blocked by an undocumented backend contract
+
+Home system, rally point, and the access ACL are missing not from unwillingness to build them
+but because the vendored OpenAPI contract doesn't document enough to build them correctly.
+
+PLAN.md §11's M-maps module calls for a "Map Settings" dialog covering General (rename, delete,
+toggle public, share tokens — rename/delete were missing and are now fixed, see "Fixed this
+session"), **Access** (ACL for characters/corps/alliances with expiry), and **Home System** /
+**Rally Point**. Checked `src/lib/api/schema.d.ts` (the vendored OpenAPI contract) for all three:
+
+- `POST /api/v1/maps/{map_slug}/settings/home-system` (body: `{ map_solarsystem_id }`) and
+  `POST .../settings/rally-point` (body: `{ solarsystem_id }` — note the two endpoints use
+  *different* id semantics, map-solarsystem vs. raw solarsystem, which is presumably correct on
+  the backend's side but easy to get backwards if built from memory instead of the schema) both
+  exist and are write-only in the schema — grepping the entire schema for `home_system` /
+  `rally_point` / `homeSystem` / `rallyPoint` finds **zero** matches anywhere in a map's GET
+  response. There is currently no documented way to read back which system is set as home/rally,
+  which means a "set home system" UI would have no way to show its own current state — it would
+  set blind and never confirm. Did not build it; guessing a field name for the read side would be
+  exactly the kind of unverifiable assumption this project has been avoiding all session.
+- `GET /api/v1/maps/{map_slug}/access` is present in the schema but its 200-response body is
+  **entirely undocumented** — the operation's `responses` only documents the 401 error case, not
+  what a successful access-list response contains. `POST` (grant access) has a fully documented
+  request body (`entity_id`, `entity_type: character|corporation|alliance`, `permission`,
+  `expires_at`), but there is no companion `DELETE` in the schema at all — visible routes cover
+  view + grant, not revoke. Building an Access UI now would mean guessing the list-item shape.
+
+Both are one-way blocked by the *documentation*, not the *feature* — if `npm run sync:api` is
+re-run later against a backend where Scribe has fully documented these responses (and a revoke
+endpoint exists for access), building this becomes exactly as straightforward as rename/delete
+was this session: check the schema, write a thin wrapper in `lib/maps/settings.ts`, wire it into
+`MapRoutingPanel.svelte` (or a dedicated component, if the panel is getting overloaded — see the
+naming note in "Fixed this session"). Don't build a placeholder/guessed version in the meantime.
+
 ## Fixed this session
 
 - `App.svelte` `selectLayout()` called `dockWorkspace?.applyProfile(profile)` twice in a row
@@ -315,6 +349,20 @@ PLAN.md §10.1) rather than continuing to peel off presentational leaves.
   "session 1 reads a line, session 2 is a fresh `ServiceState` simulating a restart, EVE wrote
   another line while closed, session 2 must see exactly that one new line" scenario. `cargo test`
   went from 19 (start of this session) to 27.
+- **Added map rename and delete** (PLAN.md §11 M-maps "General" tab). `lib/maps/settings.ts`
+  gained `renameMap`/`deleteMap` calling `PUT`/`DELETE /api/v1/maps/{slug}` — note the path
+  param is `slug`, not `map_slug` like every other maps endpoint; checked the schema rather than
+  assuming consistency. `MapRoutingPanel.svelte` gained a name input + Rename button (gated
+  behind `settings.canManageAccess`, matching the existing public/share-token controls) and a
+  Delete button with an in-UI two-click confirm (click once to arm, click "Confirm delete?" to
+  actually call the API, or Cancel) — deliberately not `window.confirm()`, since deleting a
+  shared fleet map is a destructive, hard-to-reverse action affecting other users and deserves
+  real UI friction, not a browser-native dialog with unclear styling/behavior inside a Tauri
+  webview. `App.svelte` reuses `selectMap`'s existing reset-and-reload pattern after a delete
+  (clear fleet/chain/regional state, select the next available map or clear entirely, reconnect
+  realtime). Investigating this surfaced two related, currently-blocked settings — home
+  system/rally point and the access ACL — documented precisely as gap #6 below rather than
+  guessed at.
 
 ## Recommended order for the next session
 

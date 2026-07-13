@@ -1,20 +1,66 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { MapRoutingSettings } from './settings';
 
   interface Props {
     settings: MapRoutingSettings;
     message: string | null;
     serverUrl: string;
+    mapName: string;
     onSave: () => void;
     onTogglePublic: () => void;
     onChangeShareToken: (revoke: boolean) => void;
+    onRename: (name: string) => void;
+    onDelete: () => void;
   }
 
-  let { settings = $bindable(), message, serverUrl, onSave, onTogglePublic, onChangeShareToken }: Props = $props();
+  let { settings = $bindable(), message, serverUrl, mapName, onSave, onTogglePublic, onChangeShareToken, onRename, onDelete }: Props = $props();
+
+  let renameValue = $state(untrack(() => mapName));
+  let confirmingDelete = $state(false);
+
+  $effect(() => {
+    renameValue = mapName;
+    confirmingDelete = false;
+  });
+
+  function submitRename(): void {
+    const trimmed = renameValue.trim();
+    if (trimmed && trimmed !== mapName) onRename(trimmed);
+  }
+
+  function handleDeleteClick(): void {
+    if (confirmingDelete) {
+      confirmingDelete = false;
+      onDelete();
+    } else {
+      confirmingDelete = true;
+    }
+  }
 </script>
 
 <div class="border-t border-slate-700/70 pt-4">
   <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">MAP & ROUTING</p>
+  {#if settings.canManageAccess}
+    <div class="mt-2 flex gap-2">
+      <input
+        class="min-w-0 grow rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs"
+        aria-label="Map name"
+        bind:value={renameValue}
+      />
+      <button class="rounded border border-slate-700 px-2 py-1 text-xs disabled:opacity-40" disabled={!renameValue.trim() || renameValue.trim() === mapName} onclick={submitRename}>Rename</button>
+      <button
+        class="rounded border px-2 py-1 text-xs"
+        class:border-rose-400={confirmingDelete}
+        class:text-rose-300={confirmingDelete}
+        class:border-slate-700={!confirmingDelete}
+        onclick={handleDeleteClick}
+      >{confirmingDelete ? 'Confirm delete?' : 'Delete map'}</button>
+      {#if confirmingDelete}
+        <button class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-400" onclick={() => confirmingDelete = false}>Cancel</button>
+      {/if}
+    </div>
+  {/if}
   <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
     <select aria-label="Route preference" class="rounded border border-slate-700 bg-slate-900 px-2 py-1" bind:value={settings.routePreference}>
       <option value="shorter">Shortest</option><option value="safer">Safer</option><option value="less_secure">Less secure</option>

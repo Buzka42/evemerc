@@ -14,7 +14,9 @@ const parameters = new URLSearchParams(window.location.search);
 const requestedPanel = parameters.get('panel');
 const allowedPanels: PanelId[] = ['fleet-command', 'wormhole-chain', 'account', 'telemetry'];
 const panelId = allowedPanels.find((candidate) => candidate === requestedPanel) ?? null;
-const opacity = Math.min(1, Math.max(0.35, Number(parameters.get('opacity') ?? 0.94)));
+const opacityParam = parameters.get('opacity');
+const requestedOpacity = opacityParam ? Number(opacityParam) : NaN;
+const opacity = Math.min(1, Math.max(0.35, Number.isFinite(requestedOpacity) ? requestedOpacity : 0.94));
 
 if (parameters.get('window') === 'panel' && panelId) {
   mount(PanelWindow, { target, props: { panelId, opacity } });

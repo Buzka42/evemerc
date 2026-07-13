@@ -13,6 +13,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use discovery::{default_logs_root, text_files, validate_logs_root};
+use parser::EveLogObservation;
 use tailer::{is_chatlog, is_gamelog, normalized_path, TailState};
 
 const OBSERVATION_EVENT: &str = "eve-log://observation";
@@ -176,38 +177,7 @@ fn process_chat_path(state: &Arc<Mutex<ServiceState>>, path: &Path) {
 }
 
 fn process_path(state: &Arc<Mutex<ServiceState>>, app: &AppHandle, path: &Path) {
-    let normalized = normalized_path(path);
-    let observations = {
-        let Ok(mut state) = state.lock() else {
-            return;
-        };
-
-        if !state.tails.contains_key(&normalized) {
-            match TailState::created(path) {
-                Ok(tail) => {
-                    state.tails.insert(normalized.clone(), tail);
-                    state.status.gamelog_files += 1;
-                }
-                Err(_) => {
-                    state.status.read_errors += 1;
-                    return;
-                }
-            }
-        }
-
-        match state
-            .tails
-            .get_mut(&normalized)
-            .expect("tail was inserted")
-            .read_observations(path)
-        {
-            Ok(observations) => observations,
-            Err(_) => {
-                state.status.read_errors += 1;
-                Vec::new()
-            }
-        }
-    };
+    let observations = track_and_read_gamelog(state, path);
 
     for observation in observations {
         if app.emit(OBSERVATION_EVENT, &observation).is_ok() {
@@ -219,8 +189,115 @@ fn process_path(state: &Arc<Mutex<ServiceState>>, app: &AppHandle, path: &Path) 
     }
 }
 
+/// Tracks (creating a fresh tail on first sight) and reads newly appended, deduplicated
+/// observations from a single gamelog path. Split out from `process_path` so the file-tracking
+/// and rotation behavior — which file gets a fresh `TailState`, which keeps its existing offset —
+/// is testable without a Tauri `AppHandle`.
+fn track_and_read_gamelog(state: &Arc<Mutex<ServiceState>>, path: &Path) -> Vec<EveLogObservation> {
+    let normalized = normalized_path(path);
+    let Ok(mut state) = state.lock() else {
+        return Vec::new();
+    };
+
+    if !state.tails.contains_key(&normalized) {
+        match TailState::created(path) {
+            Ok(tail) => {
+                state.tails.insert(normalized.clone(), tail);
+                state.status.gamelog_files += 1;
+            }
+            Err(_) => {
+                state.status.read_errors += 1;
+                return Vec::new();
+            }
+        }
+    }
+
+    match state
+        .tails
+        .get_mut(&normalized)
+        .expect("tail was inserted")
+        .read_observations(path)
+    {
+        Ok(observations) => observations,
+        Err(_) => {
+            state.status.read_errors += 1;
+            Vec::new()
+        }
+    }
+}
+
 fn increment_read_error(state: &Arc<Mutex<ServiceState>>) {
     if let Ok(mut state) = state.lock() {
         state.status.read_errors += 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+
+    use tempfile::NamedTempFile;
+
+    use super::*;
+
+    #[test]
+    fn a_newly_discovered_gamelog_starts_from_the_beginning_not_eof() {
+        let mut file = NamedTempFile::new().expect("temp file");
+        writeln!(file, "[ 2026.07.13 10:00:00 ] (None) Jumping from Alpha to Beta").expect("write");
+
+        let state: Arc<Mutex<ServiceState>> = Arc::new(Mutex::new(ServiceState::default()));
+        let observations = track_and_read_gamelog(&state, file.path());
+
+        assert_eq!(observations.len(), 1);
+        assert_eq!(observations[0].from_system, "Alpha");
+        assert_eq!(observations[0].to_system, "Beta");
+    }
+
+    #[test]
+    fn switching_to_a_new_session_file_tracks_it_independently_of_the_previous_one() {
+        let mut file_a = NamedTempFile::new().expect("temp file a");
+        writeln!(file_a, "[ 2026.07.13 10:00:00 ] (None) Jumping from Alpha to Beta").expect("write a");
+
+        let state: Arc<Mutex<ServiceState>> = Arc::new(Mutex::new(ServiceState::default()));
+        let first = track_and_read_gamelog(&state, file_a.path());
+        assert_eq!(first.len(), 1);
+
+        // A new session file appears - simulates EVE creating a fresh log after a relogin. It is
+        // tracked independently and starts from its own beginning, not the prior file's offset.
+        let mut file_b = NamedTempFile::new().expect("temp file b");
+        writeln!(file_b, "[ 2026.07.13 10:05:00 ] (None) Jumping from Gamma to Delta").expect("write b");
+
+        let second = track_and_read_gamelog(&state, file_b.path());
+        assert_eq!(second.len(), 1);
+        assert_eq!(second[0].from_system, "Gamma");
+        assert_eq!(second[0].to_system, "Delta");
+
+        // The previous file's tail is untouched by the switch: replaying it with no new bytes
+        // appended yields nothing.
+        let replay_a = track_and_read_gamelog(&state, file_a.path());
+        assert!(replay_a.is_empty());
+
+        let state_guard = state.lock().expect("state lock");
+        assert_eq!(state_guard.tails.len(), 2);
+        assert_eq!(state_guard.status.gamelog_files, 2);
+    }
+
+    #[test]
+    fn rereading_the_same_file_after_growth_never_replays_a_previously_emitted_observation() {
+        let mut file = NamedTempFile::new().expect("temp file");
+        writeln!(file, "[ 2026.07.13 10:00:00 ] (None) Jumping from Alpha to Beta").expect("write first");
+
+        let state: Arc<Mutex<ServiceState>> = Arc::new(Mutex::new(ServiceState::default()));
+        let first = track_and_read_gamelog(&state, file.path());
+        assert_eq!(first.len(), 1);
+
+        let replay = track_and_read_gamelog(&state, file.path());
+        assert!(replay.is_empty(), "re-reading with no new bytes must not replay the prior observation");
+
+        writeln!(file, "[ 2026.07.13 10:01:00 ] (None) Jumping from Beta to Charlie").expect("write second");
+        let grown = track_and_read_gamelog(&state, file.path());
+        assert_eq!(grown.len(), 1);
+        assert_eq!(grown[0].from_system, "Beta");
+        assert_eq!(grown[0].to_system, "Charlie");
     }
 }

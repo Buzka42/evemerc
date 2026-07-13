@@ -20,7 +20,7 @@ npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 496 KB / 131 KB gzipped
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
-cargo test        # (src-tauri) 19/19 tests pass
+cargo test        # (src-tauri) 22/22 tests pass
 ```
 
 Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
@@ -269,6 +269,23 @@ PLAN.md §10.1) rather than continuing to peel off presentational leaves.
   guard — checked every other `Number(...)` call site in the app and all of them already guard
   correctly (`Number.isInteger(...)` before use, or the `Number(...) || fallback` idiom, which
   works because `NaN` is falsy).
+- **Closed a real, plan-mandated testing gap**: PLAN.md §14's M0 acceptance criterion explicitly
+  requires "a rotating test log produces one deduplicated typed observation," and §15's testing
+  strategy calls for rotation/multiple-character/restart-offset coverage — but
+  `src-tauri/src/eve_logs/mod.rs` (the module that handles which file gets a fresh `TailState`
+  vs. an existing one, i.e. the actual rotation/multi-session logic) had **zero** tests; only
+  `tailer.rs`'s single-file append/EOF-start behavior was covered. Extracted the file-tracking
+  logic out of `process_path` into `track_and_read_gamelog()` (pure refactor — the only thing
+  `process_path` needed an `AppHandle` for was the `app.emit(...)` call, which stayed put), which
+  is now testable without a Tauri `AppHandle` or any new dependency (no `tauri` `test` feature,
+  no mocking library — just the same `NamedTempFile` + synthetic jump-line pattern `tailer.rs`'s
+  existing tests already use). Added 3 tests: a newly-discovered file (simulating a fresh EVE
+  session after relogin) starts from byte 0, not EOF; switching to a new session file tracks it
+  independently without disturbing the previous file's offset; re-reading a file after growth
+  never replays a previously-emitted observation. `cargo test` is now 22/22 (was 19). This is
+  exactly the class of thing "just continue as defined in the plan" should surface — a specific,
+  named acceptance criterion that was quietly unverified — as opposed to the log-*parser*-template
+  gap (#2 below), which is correctly still blocked on needing real fixtures.
 
 ## Recommended order for the next session
 

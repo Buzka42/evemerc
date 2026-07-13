@@ -3,12 +3,13 @@
 
   interface Props {
     signatures: ChainSignature[];
+    newSignatureIds?: Set<number>;
     onDelete: (id: number) => void;
     onDeleteAll: () => void;
     onEdit: (id: number, update: SignatureUpdate) => void;
   }
 
-  let { signatures, onDelete, onDeleteAll, onEdit }: Props = $props();
+  let { signatures, newSignatureIds = new Set(), onDelete, onDeleteAll, onEdit }: Props = $props();
 
   let confirmingDeleteAll = $state(false);
   let editingId = $state<number | null>(null);
@@ -72,7 +73,9 @@
           <button class="text-slate-400" onclick={() => (editingId = null)}>Cancel</button>
         </div>
       {:else}
-        <div class="flex items-center justify-between rounded bg-slate-900/70 px-2 py-1 text-xs">
+        <div
+          class={`flex items-center justify-between rounded px-2 py-1 text-xs transition-colors duration-1000 ${newSignatureIds.has(signature.id) ? 'bg-emerald-900' : 'bg-slate-900/70'}`}
+        >
           <span>{signature.signatureId ?? 'unknown id'} · {signature.rawTypeName ?? 'unresolved'}</span>
           <span class="flex gap-2">
             <button class="text-cyan-300" onclick={() => startEdit(signature)}>Edit</button>

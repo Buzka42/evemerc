@@ -107,6 +107,7 @@
   let connectionFromId = $state('');
   let connectionToId = $state('');
   let signaturePaste = $state('');
+  let newSignatureIds = $state<Set<number>>(new Set());
   let trackedDestinationId = $state('');
   let chainError = $state<string | null>(null);
   let signatureCatalog = $state<SignatureCatalogEntry[]>([]);
@@ -642,9 +643,18 @@
     if (!selectedChainSystemId) return;
     try {
       chainError = null;
+      const previousIds = new Set(
+        chainSnapshot?.systems.find((system) => system.id === selectedChainSystemId)?.signatures.map((signature) => signature.id) ?? [],
+      );
       await pasteSignatures(api, selectedChainSystemId, parseProbeScanner(signaturePaste, signatureCatalog));
       signaturePaste = '';
       await refreshChain();
+      const currentIds = chainSnapshot?.systems.find((system) => system.id === selectedChainSystemId)?.signatures.map((signature) => signature.id) ?? [];
+      const added = currentIds.filter((id) => !previousIds.has(id));
+      if (added.length > 0) {
+        newSignatureIds = new Set(added);
+        setTimeout(() => { newSignatureIds = new Set(); }, 4000);
+      }
     } catch (error) {
       chainError = error instanceof Error ? error.message : String(error);
     }
@@ -1546,6 +1556,7 @@
             {#if selectedSignatureSystem}
               <SignatureList
                 signatures={selectedSignatureSystem.signatures}
+                {newSignatureIds}
                 onDelete={deleteSelectedSignature}
                 onDeleteAll={deleteAllSelectedSignatures}
                 onEdit={editSelectedSignature}

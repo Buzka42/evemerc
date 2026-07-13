@@ -1,4 +1,4 @@
-export type PanelId = 'fleet-command' | 'wormhole-chain' | 'account' | 'telemetry' | 'map-settings'
+export type PanelId = 'fleet-command' | 'wormhole-chain' | 'account' | 'telemetry' | 'map-settings' | 'system-intel'
 
 export interface LayoutPanel {
   id: PanelId
@@ -22,6 +22,7 @@ export const defaultLayoutProfiles: LayoutProfile[] = [
       { id: 'account', visible: true, weight: 20 },
       { id: 'telemetry', visible: true, weight: 20 },
       { id: 'map-settings', visible: true, weight: 20 },
+      { id: 'system-intel', visible: true, weight: 20 },
     ],
   },
   {
@@ -33,6 +34,7 @@ export const defaultLayoutProfiles: LayoutProfile[] = [
       { id: 'account', visible: false, weight: 10 },
       { id: 'telemetry', visible: true, weight: 15 },
       { id: 'map-settings', visible: false, weight: 10 },
+      { id: 'system-intel', visible: false, weight: 10 },
     ],
   },
   {
@@ -44,6 +46,7 @@ export const defaultLayoutProfiles: LayoutProfile[] = [
       { id: 'account', visible: false, weight: 10 },
       { id: 'telemetry', visible: true, weight: 20 },
       { id: 'map-settings', visible: true, weight: 15 },
+      { id: 'system-intel', visible: true, weight: 15 },
     ],
   },
 ]
@@ -90,6 +93,7 @@ export const panelModuleOwners: Record<PanelId, string | null> = {
   account: null,
   telemetry: null,
   'map-settings': null,
+  'system-intel': null,
 }
 
 /**

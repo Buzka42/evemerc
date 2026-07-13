@@ -1216,7 +1216,6 @@
             {#if fleetError}
               <p class="mt-3 text-xs text-amber-200">Live refresh failed: {fleetError}</p>
             {/if}
-            <FleetKillfeed kills={fleetKills} error={killfeedError} />
           {:else if fleetError}
             <p class="text-sm text-amber-200">{fleetError}</p>
           {:else if authState.phase === 'authenticated'}
@@ -1266,10 +1265,6 @@
           </div>
         </div>
 
-        {#if selectedRegionalSystemId}
-          <SelectedSystemIntel systemId={selectedRegionalSystemId} intel={selectedSystemIntel} error={systemIntelError} />
-        {/if}
-
         {#if panelVisible(activeLayout, 'telemetry')}
           <TelemetryStatus
             {logStatus}
@@ -1279,6 +1274,15 @@
             onApply={applyEveLogsRoot}
           />
         {/if}
+      </aside>
+
+      <aside data-dock-panel="system-intel" class="hidden h-full flex-col gap-4 overflow-auto rounded-xl border border-slate-700/70 bg-slate-950/55 p-5">
+        {#if selectedRegionalSystemId}
+          <SelectedSystemIntel systemId={selectedRegionalSystemId} intel={selectedSystemIntel} error={systemIntelError} />
+        {:else}
+          <p class="text-sm text-slate-500">Select a system on the regional map to see its intel.</p>
+        {/if}
+        <FleetKillfeed kills={fleetKills} error={killfeedError} />
       </aside>
 
       <aside data-dock-panel="map-settings" class="hidden h-full flex-col gap-4 overflow-auto rounded-xl border border-slate-700/70 bg-slate-950/55 p-5">

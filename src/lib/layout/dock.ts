@@ -7,6 +7,7 @@ const panelTitles: Record<PanelId, string> = {
   account: 'Account',
   telemetry: 'Operations',
   'map-settings': 'Map Settings',
+  'system-intel': 'System Intel',
 }
 
 export interface DockWorkspace {
@@ -99,6 +100,7 @@ export function createDockWorkspace(
     if (visible.has('telemetry')) addPanel('telemetry', { referencePanel: 'fleet-command', direction: 'right' })
     if (visible.has('account')) addPanel('account', { referencePanel: 'fleet-command', direction: 'right' })
     if (visible.has('map-settings')) addPanel('map-settings', { referencePanel: 'fleet-command', direction: 'right' })
+    if (visible.has('system-intel')) addPanel('system-intel', { referencePanel: 'fleet-command', direction: 'right' })
     if (visible.has('wormhole-chain')) addPanel('wormhole-chain', { referencePanel: 'fleet-command', direction: 'below' })
     applying = false
     saveLayout()

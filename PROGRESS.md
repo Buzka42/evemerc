@@ -22,9 +22,9 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 npm test         # 64/64 tests pass (32 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 522 KB / 137 KB gzipped
-cargo check       # (src-tauri) clean, not re-run this pass (no Rust files touched)
-cargo clippy      # (src-tauri) clean, no warnings, not re-run this pass (no Rust files touched)
-cargo test        # (src-tauri) 27/27 tests pass, not re-run this pass (no Rust files touched)
+cargo check       # (src-tauri) clean
+cargo clippy      # (src-tauri) clean, no warnings
+cargo test        # (src-tauri) 27/27 tests pass
 ```
 
 Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
@@ -133,7 +133,14 @@ not the "panels come from modules" half:
   DOM-move mechanism, see "Fixed this session". Still using the closed `PanelId` union, still not
   a `moduleRegistry.panels()`-driven `PanelDefinition`, so it doesn't close the deeper half of
   this gap — but it does shrink `telemetry` and give per-panel toggle/layout control over map
-  settings, which is real, incremental progress toward it.)
+  settings, which is real, incremental progress toward it. Same for `system-intel` —
+  `SelectedSystemIntel` + `FleetKillfeed`, previously split across `telemetry` and `fleet-command`
+  respectively despite being one coherent module in PLAN.md (M-intel: "System Info... Killfeed"),
+  are now a single real dock panel. `FleetKillfeed` was pulled out from inside `fleet-command`'s
+  `{#if fleetSnapshot}` block — verified this is safe because `fleetKills`/`killfeedError` are
+  fetched independently of `fleetSnapshot` in `loadFleetWorkspace` (tied to `selectedMapSlug`, not
+  fleet registration state), so it was never actually dependent on that guard, just visually nested
+  inside it.)
 - **`account` is now a real dock panel in the main window** (was a phantom — see the entry two
   bullets up in an earlier version of this file if you need the archaeology). It uses the exact
   same `ExistingElementRenderer` DOM-move mechanism already proven for `fleet-command`/

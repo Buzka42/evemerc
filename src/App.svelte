@@ -23,7 +23,7 @@
   import { fleetAlerts } from './lib/fleet/alerts';
   import FleetAlertsPanel from './lib/fleet/FleetAlertsPanel.svelte';
   import FleetCommandActions from './lib/fleet/FleetCommandActions.svelte';
-  import { createChainConnection, createChainSystem, deleteAllSignatures, deleteChainConnection, deleteMapLocation, deleteSignature, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, setHomeSystem, setRallyPoint, trackTransition, updateChainConnection, updateSignature, type MapStatistics } from './lib/wormhole/api';
+  import { createChainConnection, createChainSystem, deleteAllSignatures, deleteChainConnection, deleteChainSystem, deleteMapLocation, deleteSignature, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, setHomeSystem, setRallyPoint, trackTransition, updateChainConnection, updateSignature, type MapStatistics } from './lib/wormhole/api';
   import type { ChainConnectionUpdate, SignatureUpdate } from './lib/wormhole/types';
   import ConnectionEditor from './lib/wormhole/ConnectionEditor.svelte';
   import SignatureList from './lib/wormhole/SignatureList.svelte';
@@ -609,6 +609,18 @@
     }
   }
 
+  async function deleteSelectedChainSystem(): Promise<void> {
+    if (selectedChainSystemId === null) return;
+    try {
+      chainError = null;
+      await deleteChainSystem(api, selectedChainSystemId);
+      selectedChainSystemId = null;
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
   async function persistChainSystemPosition(id: number, x: number, y: number): Promise<void> {
     try {
       await moveChainSystem(api, id, x, y);
@@ -1070,6 +1082,17 @@
         paletteOpen = !paletteOpen;
       } else if (event.key === 'Escape') {
         paletteOpen = false;
+      } else if (event.key === 'Delete' || event.key === 'Backspace') {
+        const target = event.target as HTMLElement | null;
+        const isEditable = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+        if (isEditable) return;
+        if (selectedConnectionId !== null) {
+          event.preventDefault();
+          void deleteSelectedConnection();
+        } else if (selectedChainSystemId !== null) {
+          event.preventDefault();
+          void deleteSelectedChainSystem();
+        }
       }
     };
     window.addEventListener('keydown', handleShortcut);

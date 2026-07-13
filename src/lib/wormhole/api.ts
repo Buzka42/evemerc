@@ -103,6 +103,11 @@ export async function deleteChainConnection(api: EveMercApi, id: number): Promis
   if (error) throw new Error('Could not delete the wormhole connection.')
 }
 
+export async function deleteChainSystem(api: EveMercApi, id: number): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/map-solarsystems/{id}', { params: { path: { id } } })
+  if (error) throw new Error('Could not remove the solar system from the chain.')
+}
+
 export async function moveChainSystem(api: EveMercApi, id: number, positionX: number, positionY: number): Promise<void> {
   const { error } = await api.PUT('/api/v1/map-selection', {
     body: { map_solarsystems: [{ id, position_x: positionX, position_y: positionY }] },

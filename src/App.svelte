@@ -72,6 +72,7 @@
   import TelemetryStatus from './lib/telemetry/TelemetryStatus.svelte';
   import IntelChannelFeed from './lib/intel/IntelChannelFeed.svelte';
   import ToastHost from './lib/ui/ToastHost.svelte';
+  import ContextMenu from './lib/ui/ContextMenu.svelte';
   import ConnectionIndicator from './lib/realtime/ConnectionIndicator.svelte';
   import { pushToast } from './lib/ui/toast.svelte';
 
@@ -101,6 +102,8 @@
   let commandMessage = $state<string | null>(null);
   let objectiveSystemId = $state<number | null>(null);
   let hoveredSystemId = $state<number | null>(null);
+  let chainSystemMenu = $state<{ systemId: number; x: number; y: number } | null>(null);
+  let chainConnectionMenu = $state<{ connectionId: number; x: number; y: number } | null>(null);
   let regionalLayers = $state<RegionalLayerData[]>([]);
   let commanderCharacterId = $state('');
   let chainSnapshot = $state<ChainSnapshot | null>(null);
@@ -1529,7 +1532,36 @@
             onSelect={selectChainSystem}
             onMove={persistChainSystemPosition}
             onSelectConnection={selectChainConnection}
+            onContextMenuSystem={(systemId, x, y) => (chainSystemMenu = { systemId, x, y })}
+            onContextMenuConnection={(connectionId, x, y) => (chainConnectionMenu = { connectionId, x, y })}
           />
+          {#if chainSystemMenu && chainSnapshot}
+            {@const activeSnapshot = chainSnapshot}
+            {@const menuSystem = activeSnapshot.systems.find((system) => system.id === chainSystemMenu?.systemId)}
+            {#if menuSystem}
+              <ContextMenu
+                x={chainSystemMenu.x}
+                y={chainSystemMenu.y}
+                onClose={() => (chainSystemMenu = null)}
+                items={[
+                  { label: activeSnapshot.homeSolarsystemId === menuSystem.solarsystemId ? 'Clear home system' : 'Set as home', action: () => updateHomeSystem(activeSnapshot.homeSolarsystemId === menuSystem.solarsystemId ? null : menuSystem.id) },
+                  { label: activeSnapshot.rallySolarsystemId === menuSystem.solarsystemId ? 'Clear rally point' : 'Set as rally', action: () => updateRallyPoint(activeSnapshot.rallySolarsystemId === menuSystem.solarsystemId ? null : menuSystem.solarsystemId) },
+                  { label: 'Copy name', action: () => { void navigator.clipboard.writeText(menuSystem.alias ? `${menuSystem.alias} - ${menuSystem.name ?? menuSystem.solarsystemId}` : String(menuSystem.name ?? menuSystem.solarsystemId)); } },
+                  { label: 'Delete system', destructive: true, action: () => deleteSelectedChainSystem() },
+                ]}
+              />
+            {/if}
+          {/if}
+          {#if chainConnectionMenu}
+            <ContextMenu
+              x={chainConnectionMenu.x}
+              y={chainConnectionMenu.y}
+              onClose={() => (chainConnectionMenu = null)}
+              items={[
+                { label: 'Delete connection', destructive: true, action: () => deleteSelectedConnection() },
+              ]}
+            />
+          {/if}
           {#if selectedConnectionId !== null}
             {@const selectedConnection = chainSnapshot.connections.find((connection) => connection.id === selectedConnectionId)}
             {#if selectedConnection}

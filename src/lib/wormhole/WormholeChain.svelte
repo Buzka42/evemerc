@@ -8,6 +8,8 @@
     onSelect: (id: number) => void;
     onMove?: (id: number, x: number, y: number) => void;
     onSelectConnection?: (id: number) => void;
+    onContextMenuSystem?: (systemId: number, clientX: number, clientY: number) => void;
+    onContextMenuConnection?: (connectionId: number, clientX: number, clientY: number) => void;
   }
 
   let {
@@ -17,6 +19,8 @@
     onSelect,
     onMove = () => undefined,
     onSelectConnection = () => undefined,
+    onContextMenuSystem = () => undefined,
+    onContextMenuConnection = () => undefined,
   }: Props = $props();
   let positions = $state(new Map<number, { x: number; y: number }>());
   let zoom = $state(1);
@@ -111,6 +115,7 @@
               onpointerdown={(event) => event.stopPropagation()}
               onclick={(event) => { event.stopPropagation(); onSelectConnection(connection.id); }}
               onkeydown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.stopPropagation(); onSelectConnection(connection.id); } }}
+              oncontextmenu={(event) => { event.preventDefault(); event.stopPropagation(); onSelectConnection(connection.id); onContextMenuConnection(connection.id, event.clientX, event.clientY); }}
             >
               <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke="transparent" stroke-width="18" />
               <line
@@ -136,6 +141,7 @@
             onpointerdown={(event) => { event.stopPropagation(); draggingId = system.id; onSelect(system.id); }}
             onclick={() => onSelect(system.id)}
             onkeydown={(event) => (event.key === 'Enter' || event.key === ' ') && onSelect(system.id)}
+            oncontextmenu={(event) => { event.preventDefault(); event.stopPropagation(); onSelect(system.id); onContextMenuSystem(system.id, event.clientX, event.clientY); }}
           >
             <rect x="-55" y="-34" width="110" height="68" rx="9" fill={systemColor(system.status)} stroke={selectedSystemId === system.id ? '#67e8f9' : '#64748b'} stroke-width={selectedSystemId === system.id ? 3 : 2} />
             <text x="-47" y="-19" fill={system.pinned ? '#fbbf24' : '#64748b'} font-size="10">{system.pinned ? '★' : '·'}</text>

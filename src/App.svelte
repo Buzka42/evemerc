@@ -27,6 +27,7 @@
   import { parseProbeScanner } from './lib/wormhole/signatureParser';
   import type { ChainSnapshot } from './lib/wormhole/types';
   import WormholeChain from './lib/wormhole/WormholeChain.svelte';
+  import ChainEditToolbar from './lib/wormhole/ChainEditToolbar.svelte';
   import { createAccountToken, deleteAccountToken, fetchAccountCharacters, fetchAccountTokens, revokeCharacterScopes, setPreferredCharacter, type AccountCharacter, type AccountToken } from './lib/account/api';
   import AccountPanel from './lib/account/AccountPanel.svelte';
   import { defaultLayoutProfiles, panelVisible, type LayoutProfile } from './lib/layout/profiles';
@@ -1089,27 +1090,18 @@
         </div>
         {#if chainSnapshot}
           <WormholeChain snapshot={chainSnapshot} selectedSystemId={selectedChainSystemId} onSelect={selectChainSystem} onMove={persistChainSystemPosition} />
-          <div class="grid gap-3 border-t border-slate-700/70 pt-4 lg:grid-cols-3">
-            <div class="flex gap-2">
-              <input class="min-w-0 grow rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="Solar system ID" bind:value={newChainSystemId} />
-              <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={addChainSystem}>Add system</button>
-            </div>
-            <div class="flex gap-2">
-              <input class="w-24 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="From map ID" bind:value={connectionFromId} />
-              <input class="w-24 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="To map ID" bind:value={connectionToId} />
-              <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={connectChainSystems}>Connect</button>
-            </div>
-            <div class="flex gap-2">
-              <textarea class="min-h-16 min-w-0 grow rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="Paste Probe Scanner rows" bind:value={signaturePaste}></textarea>
-              <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={syncSignatures}>Sync sigs</button>
-            </div>
-          </div>
-          <div class="mt-3 flex flex-wrap gap-2 border-t border-slate-700/70 pt-3">
-            <input class="w-36 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="Tracked destination ID" bind:value={trackedDestinationId} />
-            <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={applyTrackedTransition}>Track jump</button>
-            <button class="rounded border border-violet-400/30 px-2 py-1 text-xs text-violet-200" onclick={() => importEveScout('Thera')}>Import Thera</button>
-            <button class="rounded border border-violet-400/30 px-2 py-1 text-xs text-violet-200" onclick={() => importEveScout('Turnur')}>Import Turnur</button>
-          </div>
+          <ChainEditToolbar
+            bind:newChainSystemId
+            bind:connectionFromId
+            bind:connectionToId
+            bind:signaturePaste
+            bind:trackedDestinationId
+            onAddSystem={addChainSystem}
+            onConnect={connectChainSystems}
+            onSyncSignatures={syncSignatures}
+            onTrackJump={applyTrackedTransition}
+            onImportEveScout={importEveScout}
+          />
           <SavedLocationsPanel
             savedLocations={chainSnapshot.savedLocations}
             statistics={mapStatistics}

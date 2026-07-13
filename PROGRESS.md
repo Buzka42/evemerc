@@ -181,15 +181,15 @@ continuing to peel off presentational leaves.
 - Dock panel visibility now respects module enablement, not just profile visibility (see gap #1
   above for the full detail). `wormhole-chain` correctly disappears from every layout when the
   `wormhole-map` module is disabled, including on restore from a saved dockview layout.
-- Extracted 11 presentational components out of `App.svelte`'s inline markup, each taking
-  props/callbacks rather than reaching into shared state directly (same pattern as the
-  pre-existing `RegionMap.svelte`/`WormholeChain.svelte`): `AccountPanel.svelte`,
+- Extracted 12 presentational components out of `App.svelte`'s inline markup (1323 → 1124 lines),
+  each taking props/callbacks rather than reaching into shared state directly (same pattern as
+  the pre-existing `RegionMap.svelte`/`WormholeChain.svelte`): `AccountPanel.svelte`,
   `TelemetryStatus.svelte`, `SelectedSystemIntel.svelte`, `MapRoutingPanel.svelte`,
   `FleetKillfeed.svelte`, `FleetCommanders.svelte`, `FleetAlertsPanel.svelte`,
   `FleetMemberList.svelte`, `FleetCommandActions.svelte`, `SavedLocationsPanel.svelte`,
-  `MapActivityLog.svelte`. `svelte-check` and the full test suite were re-run clean after every
-  single extraction, not just at the end. This is groundwork for gap #1's full fix, not the fix
-  itself — see gap #1 for what's still needed on top of this.
+  `MapActivityLog.svelte`, `ChainEditToolbar.svelte`. `svelte-check` and the full test suite were
+  re-run clean after every single extraction, not just at the end. This is groundwork for gap #1's
+  full fix, not the fix itself — see gap #1 for what's still needed on top of this.
 - Found and documented (did not fix) that the `account` dock panel is a phantom — see gap #1's
   new sub-bullet for detail.
 
@@ -204,7 +204,7 @@ continuing to peel off presentational leaves.
 2. If backend `api/v1` work has landed in the main `EveMerc` repo since this was written, run
    `npm run sync:api` first and re-run `npm run check` to catch any type drift.
 3. Finish gap #1: convert `createDockWorkspace` to mount `PanelDefinition[]` from
-   `moduleRegistry.panels()` instead of scanning static `data-dock-panel` DOM elements. The 11
+   `moduleRegistry.panels()` instead of scanning static `data-dock-panel` DOM elements. The 12
    components extracted this session are now easy `component: () => import('./Foo.svelte')`
    targets for `PanelDefinition.component` — wire them up as real panels instead of mounting them
    inline. The module-gating half (`panelModuleOwners`, `resolveVisiblePanels`) is already done —

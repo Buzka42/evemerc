@@ -59,7 +59,7 @@ still the current plan of record — see "Full parity initiative" below for that
 ## Verified working right now
 
 ```
-npm test         # 74/74 tests pass (33 files)
+npm test         # 77/77 tests pass (34 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 537 KB / 142 KB gzipped
 cargo check       # (src-tauri) clean
@@ -182,16 +182,55 @@ carry yet (`BuildDesktopSnapshotCommand.php` on the backend would need to embed 
 cover shortest-path correctness, wormhole shortcuts, mass/lifetime filtering, ignored-system
 routing, the Zarzakh exclusion, route-preference weighting, and the id-space translation.
 
-**3.2–3.8 — not started.** In priority order per the plan: regional map tactical-HUD upgrade
-(scale-invariant glow rings, sovereignty vulnerability countdown, kill-icon legend, fit-to-container
-zoom), wormhole chain map upgrade (right-click context menus, rally-badge glassmorphic overlay with
-marching-ants route animation, richer system node cards), real-time polish (explicit
-connection-health indicator, cross-panel hover sync — hover a pilot row, highlight their route on
-the map), signature paste diff UX (color-flash new/updated/deleted rows), fleet composition
-5-minute rolling deltas, a toast notification system (the app has none currently), access expiry
-picker presets, human-readable audit sentences, keyboard shortcuts (Delete to remove selected map
-systems, Ctrl+V to paste signatures), and — deliberately last, highest risk — the customizable
-drag/resize/hide dashboard grid to replace or extend the current fixed dockview layout.
+**3.2 Regional map tactical-HUD upgrade — done (partial).** Ported the exact node-rendering spec
+from `SystemNode.vue`/`RegionalMapLegend.vue`: node radius scales by selection/fleet-presence
+(7/9/10px), a tiered green fleet-count badge replaces the old generic glow ring, ship/NPC kill
+counts render as colored numbers flanking the node (needed a new `killCounts` channel on
+`RegionalLayerData`, separate from the existing intensity-glow `indicators` and sovereignty
+`rings` channels — same reasoning as before: distinct signals, shouldn't compete for one map
+slot), and a new `RegionalMapLegend.svelte`. **Not done**: sovereignty vulnerability countdown
+(needs live IHUB/TCU data not currently fetched anywhere) and real pan/zoom (the desktop map is
+still a fixed viewBox projection, no drag-to-pan/wheel-to-zoom — "scale-invariant" labels aren't
+meaningful without zoom to be invariant against; this is a separate, larger interaction feature).
+
+**3.4 Real-time polish — half done.** Added a proper connection-health indicator
+(`lib/realtime/ConnectionIndicator.svelte`: Wifi/WifiOff icon + colored dot + tooltip, matching
+the web app's spec) using `@lucide/svelte`, which was installed as a dependency but unused
+anywhere until now. **Not done**: cross-panel hover sync (hover a pilot row → highlight their
+route on the map) — needs a shared "highlighted path" reactive state threaded through
+`FleetMemberList`/`RegionMap`, not yet built.
+
+**3.6 Access expiry picker — done.** `setMapAccess()` already accepted an `expiresAt` parameter
+but nothing in the UI ever set it. New `lib/maps/AccessExpiryPicker.svelte` (preset buttons, custom
+datetime-local input, live relative countdown, "Remove expiry"), wired into `MapAccessPanel.svelte`.
+
+**3.7 Toast notification system — done (one use wired).** The app had no toast system at all. New
+`lib/ui/toast.svelte.ts` (a minimal reactive store using Svelte 5 runes at module scope, not a
+library port) + `ToastHost.svelte`, mounted once at the app root. First real use: fleet waypoint
+broadcasts now surface as a toast in addition to the existing inline `commandMessage` text,
+matching the web app's exact wording. **Not done**: routing more events through it (layout
+actions, load failures, signature-paste results) — the infrastructure exists, adoption is partial.
+
+**3.8 Keyboard shortcuts — half done.** `Delete`/`Backspace` now removes the selected connection or
+chain system (connection takes priority when both could be considered selected, matching the web
+app), guarded against firing while an input/textarea/contenteditable has focus. This also required
+adding `deleteChainSystem()` — `DELETE /api/v1/map-solarsystems/{id}` was fully documented in
+`schema.d.ts` but had zero callers; there was previously no way to remove a system from the chain
+map at all. **Not done**: `Ctrl+V` paste-signatures-from-clipboard — needs the Tauri
+clipboard-manager plugin as a new dependency, deliberately not added without being asked to extend
+the app's dependency surface (`CLAUDE.md`'s "don't change dependencies without approval" spirit
+applies here even though it's not explicitly about the desktop repo).
+
+**3.3 Wormhole chain map upgrade, 3.5 signature paste diff UX, fleet composition rolling deltas,
+audit sentences — not started.** The customizable drag/resize/hide dashboard grid remains
+deliberately last, highest risk, not started.
+
+Cross-cutting lesson from this pass: a real layout bug in the freshly-built `RouteFinder.svelte`
+(3-column settings grid truncating badly at the app's narrow default panel width — "shorter"
+rendered as "shorf") was only caught by actually loading the app in the browser preview and
+looking at it, exactly the failure mode flagged earlier in this document. `npm run
+check`/`test`/`build` all stayed green through the bug. Keep verifying new UI in a real browser
+before considering it done, not just before considering it *shippable*.
 
 ## What is actually implemented
 

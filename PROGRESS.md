@@ -192,6 +192,26 @@ the main repo's `DESKTOP_REBUILD_PLAN.md` Appendix A actually exist yet on the s
 points to by default (`https://wormhole.systems`). If backend endpoints are added or changed,
 re-run `npm run sync:api` before trusting `schema.d.ts`.
 
+**Update, same day, later session:** checked `C:\Users\Arawn\FZ\EveMerc` (the backend repo,
+read-only — did not modify anything there) and found `routes/api.php` now has a substantial,
+**uncommitted** `api/v1` implementation (`AccountController`, `DesktopAuthController`,
+`FleetStatusController`, `LocationObservationController`, `SdeSnapshotController`,
+`RealtimeConfigController`, etc.) that closely matches Appendix A, plus matching migrations and
+several `tests/Feature/*`/`tests/Unit/*` files. It also has a handful of stray untracked scratch
+files (`test.js`, `newLayout.js`, `decoded_layout.json`, a file literally named `toArray())`)
+suggesting active, possibly messy, in-progress work of unknown provenance and readiness. **Did
+not** start the backend server, run `scribe:generate`, or run `npm run sync:api` against it —
+this is someone else's uncommitted work in a different repo with no context on whether it's
+stable, so touching it (or trusting it enough to sync against it) needs the project owner's
+go-ahead first, not an assumption. One concrete mismatch spotted just from reading the route
+file: the backend's fleet-status route is `maps/{map}/fleet/status` (Laravel route parameter
+named `map`), while the desktop's `lib/fleet/status.ts` calls
+`/api/v1/maps/{map_slug}/fleet/status` (expects a `map_slug` path parameter) — if Scribe
+generates the OpenAPI spec from the literal route pattern, that parameter-name mismatch alone
+would make a straight `npm run sync:api` regenerate a client that doesn't match hand-written call
+sites like this one. Don't assume `sync:api` is a mechanical no-think step once the backend is
+ready — expect to reconcile naming mismatches like this one by hand.
+
 ### 5. `App.svelte` size (much improved this session, not resolved)
 
 Started at ~1323 lines with ~50 top-level `$state` variables. This session extracted 12

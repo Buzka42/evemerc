@@ -4,15 +4,21 @@
 
   interface Props {
     snapshot: FleetSnapshot;
+    onHoverMember?: (systemId: number | null) => void;
   }
 
-  let { snapshot }: Props = $props();
+  let { snapshot, onHoverMember = () => undefined }: Props = $props();
 </script>
 
 <div class="mt-3 grid max-h-36 gap-2 overflow-y-auto sm:grid-cols-2">
   {#each snapshot.members as member}
     {@const freshness = memberFreshness(member, Date.now(), snapshot.freshness.staleAfterSeconds)}
-    <div class="rounded-md bg-slate-900/80 p-3 text-xs">
+    <div
+      class="rounded-md bg-slate-900/80 p-3 text-xs"
+      role="presentation"
+      onmouseenter={() => onHoverMember(member.solar_system_id ?? null)}
+      onmouseleave={() => onHoverMember(null)}
+    >
       <div class="flex items-center justify-between gap-2">
         <p class="font-medium text-slate-200">{member.character_name ?? `Pilot ${member.character_id ?? 'unknown'}`}</p>
         <span

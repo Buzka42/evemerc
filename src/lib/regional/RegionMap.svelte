@@ -9,12 +9,13 @@
     topology: RegionTopology;
     members: FleetMember[];
     highlightedSystemId?: number | null;
+    hoveredSystemId?: number | null;
     layers?: RegionalLayerData[];
     regionName?: string | null;
     onSelectSystem?: (systemId: number) => void;
   }
 
-  let { topology, members, highlightedSystemId = null, layers = [], regionName = null, onSelectSystem = () => undefined }: Props = $props();
+  let { topology, members, highlightedSystemId = null, hoveredSystemId = null, layers = [], regionName = null, onSelectSystem = () => undefined }: Props = $props();
 
   const model = $derived(buildRegionalMapModel(topology, members, layers));
 
@@ -57,6 +58,7 @@
       {@const sov = model.sovereignty.get(system.id)}
       {@const kills = model.killCounts.get(system.id)}
       {@const isSelected = highlightedSystemId === system.id}
+      {@const isHovered = hoveredSystemId === system.id}
       {@const radius = nodeRadius(isSelected, pilots > 0)}
       {#if position}
         <g
@@ -71,6 +73,9 @@
             <circle r={10 + intel.intensity * 20} fill={intel.color} fill-opacity="0.12" stroke={intel.color} stroke-opacity="0.75">
               <title>{system.name}: {intel.label}</title>
             </circle>
+          {/if}
+          {#if isHovered}
+            <circle r={radius + 9} fill="none" stroke="#22d3ee" stroke-width="2" stroke-dasharray="3 2" opacity="0.85" />
           {/if}
           {#if isSelected}
             <circle r={radius + 6} fill="none" stroke="#60a5fa" stroke-width="1.5" opacity="0.6" />

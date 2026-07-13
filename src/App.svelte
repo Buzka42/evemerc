@@ -100,6 +100,7 @@
   let waypointSystemId = $state('');
   let commandMessage = $state<string | null>(null);
   let objectiveSystemId = $state<number | null>(null);
+  let hoveredSystemId = $state<number | null>(null);
   let regionalLayers = $state<RegionalLayerData[]>([]);
   let commanderCharacterId = $state('');
   let chainSnapshot = $state<ChainSnapshot | null>(null);
@@ -1345,12 +1346,13 @@
                 topology={regionTopology}
                 members={fleetSnapshot.members}
                 highlightedSystemId={objectiveSystemId}
+                {hoveredSystemId}
                 layers={regionalLayers}
                 regionName={regions.find((region) => region.id === selectedRegionId)?.name ?? null}
                 onSelectSystem={selectRegionalSystem}
               />
             {/if}
-            <FleetMemberList snapshot={fleetSnapshot} />
+            <FleetMemberList snapshot={fleetSnapshot} onHoverMember={(systemId) => (hoveredSystemId = systemId)} />
             <FleetComposition entries={compositionHistory.composition(fleetSnapshot.members)} />
             {@const alerts = fleetAlerts(fleetSnapshot)}
             <FleetAlertsPanel {alerts} onFocusSystem={(solarSystemId) => objectiveSystemId = solarSystemId} />

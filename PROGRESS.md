@@ -111,17 +111,23 @@ not the "panels come from modules" half:
   independently toggled, popped out, or owned by a module yet. Extracting them into components
   was a prerequisite step, not the fix itself — the remaining work is wiring
   `moduleRegistry.panels()` to actually place them as their own dock panels.
-- **The `account` panel is a phantom.** `PanelId`, `panelTitles`, `panelModuleOwners`, and every
-  `LayoutProfile.panels` array declare an `'account'` entry as if it were a real dock panel, but
-  no `data-dock-panel="account"` element has ever existed and `dock.ts`'s `loadProfile` never
-  calls `addPanel('account', ...)`. In practice `'account'` is consumed by exactly one call site
-  — `panelVisible(activeLayout, 'account')` inside the `telemetry` panel — where it gates whether
-  the "EVE Account" section (now `AccountPanel.svelte`) renders at all. It works for that narrow
-  purpose (e.g. `compact-fleet`/`scanning` profiles hide it), but the type modeling is
-  misleading. Pre-existing, not introduced this session. When doing the full panel-sourcing
-  refactor, either make `account` a real dock panel (natural now that it's `AccountPanel.svelte`)
-  or rename the concept to something that doesn't imply it's dockable (e.g. a plain
-  `showAccountSection: boolean` on the profile).
+- **The `account` panel is a phantom in the main window, but the intent to make it real is
+  already visible elsewhere in the codebase** — this is unfinished scaffolding, not just sloppy
+  typing, so don't "clean it up" by deleting it. Evidence: `dock.ts`'s `loadProfile` never calls
+  `addPanel('account', ...)` and no `data-dock-panel="account"` element exists in `App.svelte`,
+  so in the main window `'account'` is consumed by exactly one call site —
+  `panelVisible(activeLayout, 'account')` inside the `telemetry` panel — gating whether the "EVE
+  Account" section (now `AccountPanel.svelte`) renders inline. **But** `src/main.ts`'s
+  `allowedPanels` list and `src/windows/PanelWindow.svelte`'s title switch both already treat
+  `'account'` as a legitimate popout target (`PanelWindow.svelte:45` gives it the title "EVE
+  account"), and popping it out today lands on the generic placeholder branch
+  (`PanelWindow.svelte:70-71`, "This compact panel remains synchronized...") because
+  `AccountPanel.svelte` is never actually rendered there. Two independent parts of the codebase
+  agree `account` should be a first-class panel; only the wiring is missing. When doing the full
+  panel-sourcing refactor, make it real (add the `data-dock-panel="account"` wrapper + `addPanel`
+  call in the main window, and render `AccountPanel` in `PanelWindow.svelte`'s `account` branch)
+  rather than renaming it away — that's what both existing call sites already assume.
+  Pre-existing, not introduced this session; investigated further to correct my own initial read.
 
 **To fully fix**: make `createDockWorkspace` accept `PanelDefinition[]` instead of reading
 `data-dock-panel` elements, using `component()` to mount panels via Svelte's

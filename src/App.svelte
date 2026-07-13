@@ -18,6 +18,8 @@
   import { createModuleRegistry } from './lib/modules';
   import type { RegionalLayerData } from './lib/modules/types';
   import FleetMemberList from './lib/fleet/FleetMemberList.svelte';
+  import FleetComposition from './lib/fleet/FleetComposition.svelte';
+  import { CompositionHistory } from './lib/fleet/composition';
   import { applyLocalJump, applyLocationObservation } from './lib/fleet/localJump';
   import { appointFleetCommander, deregisterFleet, registerFleet, removeFleetCommander, setFleetWaypoint } from './lib/fleet/actions';
   import { fleetAlerts } from './lib/fleet/alerts';
@@ -166,6 +168,7 @@
   let api = createEveMercApi({ baseUrl: 'https://evemerc.test', tokenStore });
   let authFlow = createAuthFlow();
   const moduleRegistry = createModuleRegistry();
+  const compositionHistory = new CompositionHistory();
 
   function schedulePanelStatePublish(): void {
     if (panelPublishTimer !== null) window.clearTimeout(panelPublishTimer);
@@ -205,6 +208,10 @@
     fleetKills;
     intelMessages;
     schedulePanelStatePublish();
+  });
+
+  $effect(() => {
+    if (fleetSnapshot) compositionHistory.record(fleetSnapshot.members);
   });
 
   function createAuthFlow(): DesktopAuthFlow {
@@ -1344,6 +1351,7 @@
               />
             {/if}
             <FleetMemberList snapshot={fleetSnapshot} />
+            <FleetComposition entries={compositionHistory.composition(fleetSnapshot.members)} />
             {@const alerts = fleetAlerts(fleetSnapshot)}
             <FleetAlertsPanel {alerts} onFocusSystem={(solarSystemId) => objectiveSystemId = solarSystemId} />
             <FleetCommanders

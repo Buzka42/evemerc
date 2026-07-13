@@ -34,6 +34,7 @@
   import { parseProbeScanner } from './lib/wormhole/signatureParser';
   import type { ChainSnapshot } from './lib/wormhole/types';
   import WormholeChain from './lib/wormhole/WormholeChain.svelte';
+  import RallyBadge from './lib/wormhole/RallyBadge.svelte';
   import ChainEditToolbar from './lib/wormhole/ChainEditToolbar.svelte';
   import { createAccountToken, deleteAccountToken, fetchAccountCharacters, fetchAccountTokens, fetchMissingScopeCharacters, removeCharacter, revokeCharacterScopes, setPreferredCharacter, type AccountCharacter, type AccountToken } from './lib/account/api';
   import AccountPanel from './lib/account/AccountPanel.svelte';
@@ -1525,16 +1526,19 @@
           <button class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-300" onclick={() => openPanelWindow('wormhole-chain')}>Pop out</button>
         </div>
         {#if chainSnapshot}
-          <WormholeChain
-            snapshot={chainSnapshot}
-            selectedSystemId={selectedChainSystemId}
-            {selectedConnectionId}
-            onSelect={selectChainSystem}
-            onMove={persistChainSystemPosition}
-            onSelectConnection={selectChainConnection}
-            onContextMenuSystem={(systemId, x, y) => (chainSystemMenu = { systemId, x, y })}
-            onContextMenuConnection={(connectionId, x, y) => (chainConnectionMenu = { connectionId, x, y })}
-          />
+          <div class="relative">
+            <WormholeChain
+              snapshot={chainSnapshot}
+              selectedSystemId={selectedChainSystemId}
+              {selectedConnectionId}
+              onSelect={selectChainSystem}
+              onMove={persistChainSystemPosition}
+              onSelectConnection={selectChainConnection}
+              onContextMenuSystem={(systemId, x, y) => (chainSystemMenu = { systemId, x, y })}
+              onContextMenuConnection={(connectionId, x, y) => (chainConnectionMenu = { connectionId, x, y })}
+            />
+            <RallyBadge snapshot={chainSnapshot} fromMapSolarsystemId={selectedChainSystemId} />
+          </div>
           {#if chainSystemMenu && chainSnapshot}
             {@const activeSnapshot = chainSnapshot}
             {@const menuSystem = activeSnapshot.systems.find((system) => system.id === chainSystemMenu?.systemId)}

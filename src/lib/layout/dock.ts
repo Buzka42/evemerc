@@ -96,6 +96,7 @@ export function createDockWorkspace(
 
     if (visible.has('fleet-command')) addPanel('fleet-command')
     if (visible.has('telemetry')) addPanel('telemetry', { referencePanel: 'fleet-command', direction: 'right' })
+    if (visible.has('account')) addPanel('account', { referencePanel: 'fleet-command', direction: 'right' })
     if (visible.has('wormhole-chain')) addPanel('wormhole-chain', { referencePanel: 'fleet-command', direction: 'below' })
     applying = false
     saveLayout()

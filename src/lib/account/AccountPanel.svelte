@@ -32,7 +32,7 @@
   }: Props = $props();
 </script>
 
-<div class="border-t border-slate-700/70 pt-4">
+<div>
   <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">EVE ACCOUNT</p>
   <div class="mt-2 flex gap-2">
     <button class="rounded border border-slate-700 px-2 py-1 text-xs text-cyan-200" onclick={onAddScopes}>Add ESI scopes</button>

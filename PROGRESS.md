@@ -8,8 +8,9 @@
 Last updated: 2026-07-13, by a Claude Code session that pushed the initial scaffold to
 [github.com/Buzka42/evemerc](https://github.com/Buzka42/evemerc), ran graphify
 (`graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`), did a first correctness pass,
-partially closed gap #1 (module-driven dock), and extracted 11 presentational components out of
-`App.svelte` (see "Fixed this session" below).
+partially closed gap #1 (module-driven dock: module-gating logic, 12 presentational component
+extractions out of `App.svelte`, and finally making `account` a real dock panel — see "Fixed
+this session" below).
 
 ## Verified working right now
 
@@ -65,8 +66,10 @@ This is far along relative to PLAN.md's M0–M3 milestones. Rough map:
   (`PanelWindow.svelte`).
 - **Everything else PLAN.md §11 lists as a module** is present as *inline logic in `App.svelte`*
   rather than a registered `FeatureModule`: map switching/settings, signatures, routing/ignore
-  list, EVE-Scout import, saved locations, audits, account/tokens, killfeed, system intel,
-  command palette, release-check banner. See gap #1 below — this matters.
+  list, EVE-Scout import, saved locations, audits, killfeed, system intel, command palette,
+  release-check banner. (Account/tokens is the one exception — it's now a real, independently
+  toggleable dock panel, just not yet owned by a `FeatureModule`.) See gap #1 below — this
+  matters.
 
 Almost everything above has a co-located `*.test.ts` and the tests are real (they exercise
 actual logic, not snapshot-only). `App.svelte` owns all cross-cutting UI state as flat `$state`
@@ -114,29 +117,27 @@ not the "panels come from modules" half:
   command palette's `filterPaletteCommands` works off the static `paletteCommands` array in
   `lib/commands/palette.ts`, not the registry. Keep this in mind before assuming any extension
   point beyond `regionalLayers` is load-bearing.
-- The signatures/routing/audits/account/killfeed/system-intel *sections* still aren't panels at
-  all — they're now standalone `.svelte` components (see "Fixed this session"), but they're
-  still mounted inline inside the `fleet-command` and `telemetry` dock panels, so they can't be
+- The signatures/routing/audits/killfeed/system-intel *sections* still aren't panels at all —
+  they're now standalone `.svelte` components (see "Fixed this session"), but they're still
+  mounted inline inside the `fleet-command` and `telemetry` dock panels, so they can't be
   independently toggled, popped out, or owned by a module yet. Extracting them into components
   was a prerequisite step, not the fix itself — the remaining work is wiring
-  `moduleRegistry.panels()` to actually place them as their own dock panels.
-- **The `account` panel is a phantom in the main window, but the intent to make it real is
-  already visible elsewhere in the codebase** — this is unfinished scaffolding, not just sloppy
-  typing, so don't "clean it up" by deleting it. Evidence: `dock.ts`'s `loadProfile` never calls
-  `addPanel('account', ...)` and no `data-dock-panel="account"` element exists in `App.svelte`,
-  so in the main window `'account'` is consumed by exactly one call site —
-  `panelVisible(activeLayout, 'account')` inside the `telemetry` panel — gating whether the "EVE
-  Account" section (now `AccountPanel.svelte`) renders inline. **But** `src/main.ts`'s
-  `allowedPanels` list and `src/windows/PanelWindow.svelte`'s title switch both already treat
-  `'account'` as a legitimate popout target (`PanelWindow.svelte:45` gives it the title "EVE
-  account"), and popping it out today lands on the generic placeholder branch
-  (`PanelWindow.svelte:70-71`, "This compact panel remains synchronized...") because
-  `AccountPanel.svelte` is never actually rendered there. Two independent parts of the codebase
-  agree `account` should be a first-class panel; only the wiring is missing. When doing the full
-  panel-sourcing refactor, make it real (add the `data-dock-panel="account"` wrapper + `addPanel`
-  call in the main window, and render `AccountPanel` in `PanelWindow.svelte`'s `account` branch)
-  rather than renaming it away — that's what both existing call sites already assume.
-  Pre-existing, not introduced this session; investigated further to correct my own initial read.
+  `moduleRegistry.panels()` to actually place them as their own dock panels. (`account` used to
+  be in this list too — see below, it's fixed now.)
+- **`account` is now a real dock panel in the main window** (was a phantom — see the entry two
+  bullets up in an earlier version of this file if you need the archaeology). It uses the exact
+  same `ExistingElementRenderer` DOM-move mechanism already proven for `fleet-command`/
+  `telemetry`/`wormhole-chain` — `AccountPanel.svelte` now lives in its own top-level
+  `<aside data-dock-panel="account">` in `App.svelte` (previously nested inside `telemetry`,
+  gated only by a template `{#if}`), and `dock.ts`'s `loadProfile` calls
+  `addPanel('account', { referencePanel: 'fleet-command', direction: 'right' })` when
+  `resolveVisiblePanels` includes it. Deliberately did **not** attempt the harder half of this
+  gap (Svelte-`mount()`-based dynamic panels with live-reactive props) in the same pass — that
+  needs real browser verification of Svelte 5's prop-reactivity-through-`mount()` semantics,
+  which isn't available in this environment, so it stayed out of scope. `PanelWindow.svelte`'s
+  popout branch for `account` still falls through to the generic placeholder — wiring that up
+  requires extending the cross-window action-dispatch mechanism (PLAN.md §10.4) to carry account
+  mutations back to the main window, which doesn't exist yet; out of scope for this fix.
 
 **To fully fix**: make `createDockWorkspace` accept `PanelDefinition[]` instead of reading
 `data-dock-panel` elements, using `component()` to mount panels via Svelte's
@@ -210,8 +211,9 @@ continuing to peel off presentational leaves.
   `MapActivityLog.svelte`, `ChainEditToolbar.svelte`. `svelte-check` and the full test suite were
   re-run clean after every single extraction, not just at the end. This is groundwork for gap #1's
   full fix, not the fix itself — see gap #1 for what's still needed on top of this.
-- Found and documented (did not fix) that the `account` dock panel is a phantom — see gap #1's
-  new sub-bullet for detail.
+- Wired `account` up as a real, independently-toggleable dock panel using the same DOM-move
+  renderer as the other three panels — see gap #1's sub-bullet for the full detail on scope and
+  what's still out (the popout-window branch, and Svelte-`mount()`-based dynamic panels).
 
 ## Recommended order for the next session
 
@@ -225,11 +227,16 @@ continuing to peel off presentational leaves.
    `npm run sync:api` first and re-run `npm run check` to catch any type drift.
 3. Finish gap #1: convert `createDockWorkspace` to mount `PanelDefinition[]` from
    `moduleRegistry.panels()` instead of scanning static `data-dock-panel` DOM elements. The 12
-   components extracted this session are now easy `component: () => import('./Foo.svelte')`
-   targets for `PanelDefinition.component` — wire them up as real panels instead of mounting them
-   inline. The module-gating half (`panelModuleOwners`, `resolveVisiblePanels`) is already done —
-   reuse it, don't re-derive it. Resolve the `account` phantom-panel question (above) as part of
-   this, not before it — the answer depends on how panel sourcing ends up working.
+   components extracted this session (plus `account`, now a real panel) are easy
+   `component: () => import('./Foo.svelte')` targets for `PanelDefinition.component` — wire them
+   up as real panels instead of mounting them inline. The module-gating half
+   (`panelModuleOwners`, `resolveVisiblePanels`) is already done — reuse it, don't re-derive it.
+   Before assuming dockview's `ExistingElementRenderer` (DOM-move) approach should be replaced
+   wholesale with Svelte's `mount()`/`unmount()`, verify in a real browser whether `mount()`
+   gives you live-reactive props when the parent's `$state` changes after the initial mount —
+   this session deliberately avoided guessing at that because it's unverifiable without one.
+   If it doesn't work as hoped, the DOM-move pattern this session extended to `account` is a
+   legitimate permanent approach, not just a stopgap — don't assume it must be replaced.
 4. Only touch gap #2 (log parser templates) once real gamelog fixtures are available; add them
    under a `src-tauri/src/eve_logs/fixtures/` (or similar) directory and write the property/fuzz
    tests PLAN.md §15 calls for alongside the new templates.

@@ -1050,7 +1050,19 @@
           />
         {/if}
 
-        {#if authState.phase === 'authenticated' && panelVisible(activeLayout, 'account')}
+        {#if panelVisible(activeLayout, 'telemetry')}
+          <TelemetryStatus
+            {logStatus}
+            {watcherError}
+            {lastObservation}
+            bind:eveLogsRoot
+            onApply={applyEveLogsRoot}
+          />
+        {/if}
+      </aside>
+
+      <aside data-dock-panel="account" class="hidden h-full flex-col gap-4 overflow-auto rounded-xl border border-slate-700/70 bg-slate-950/55 p-5">
+        {#if authState.phase === 'authenticated'}
           <AccountPanel
             characters={accountCharacters}
             tokens={accountTokens}
@@ -1065,16 +1077,8 @@
             onDismissSecret={() => createdTokenSecret = null}
             onAddScopes={() => openUrl(`${serverUrl}/scopes/add`)}
           />
-        {/if}
-
-        {#if panelVisible(activeLayout, 'telemetry')}
-          <TelemetryStatus
-            {logStatus}
-            {watcherError}
-            {lastObservation}
-            bind:eveLogsRoot
-            onApply={applyEveLogsRoot}
-          />
+        {:else}
+          <p class="text-sm text-slate-500">Log in to manage EVE characters and API tokens.</p>
         {/if}
       </aside>
 

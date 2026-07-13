@@ -15,7 +15,7 @@ this session" below).
 ## Verified working right now
 
 ```
-npm test         # 49/49 tests pass (28 files)
+npm test         # 51/51 tests pass (29 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
 npm run build    # vite build succeeds; main JS bundle 496 KB / 131 KB gzipped
 cargo check       # (src-tauri) clean
@@ -194,13 +194,14 @@ re-run `npm run sync:api` before trusting `schema.d.ts`.
 
 ### 5. `App.svelte` size (much improved this session, not resolved)
 
-Started at ~1323 lines with ~50 top-level `$state` variables. This session extracted 11
-presentational components (see "Fixed this session"), bringing it to ~1132 lines. The remaining
-size is orchestration: auth flow, map/fleet/chain data loading, realtime wiring, and the dock
-host itself — all cross-cutting, so it doesn't decompose the same way the display blocks did.
-Gap #1's refactor is still the natural moment to also split *state ownership* per-module (each
-module owning its own `$state`, exposed through `ModuleCtx` per PLAN.md §10.1) rather than
-continuing to peel off presentational leaves.
+Started at ~1323 lines with ~50 top-level `$state` variables. This session extracted 12
+presentational components (see "Fixed this session") and split the `account` section into its
+own top-level dock panel, netting out at ~1138 lines (the account/telemetry popout wiring added
+a few lines back). The remaining size is orchestration: auth flow, map/fleet/chain data loading,
+realtime wiring, and the dock host itself — all cross-cutting, so it doesn't decompose the same
+way the display blocks did. Gap #1's refactor is still the natural moment to also split *state
+ownership* per-module (each module owning its own `$state`, exposed through `ModuleCtx` per
+PLAN.md §10.1) rather than continuing to peel off presentational leaves.
 
 ## Fixed this session
 

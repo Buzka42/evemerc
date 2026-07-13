@@ -21,7 +21,7 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 ```
 npm test         # 61/61 tests pass (32 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 520 KB / 137 KB gzipped
+npm run build    # vite build succeeds; main JS bundle 521 KB / 137 KB gzipped
 cargo check       # (src-tauri) clean, not re-run this pass (no Rust files touched)
 cargo clippy      # (src-tauri) clean, no warnings, not re-run this pass (no Rust files touched)
 cargo test        # (src-tauri) 27/27 tests pass, not re-run this pass (no Rust files touched)
@@ -576,6 +576,21 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   briefly visible to whoever logged in next in the same session; small, low-risk fix bundled in
   since it was directly adjacent to the state this change already touches. 61/61 tests, 0 type
   errors, clean build.
+
+- **Added a dedicated Ignore List panel** (PLAN.md M-navigation: "ignore-list management
+  [add/remove/clear via ignore endpoints]"). `lib/routing/api.ts` already had full
+  `fetchIgnoredSystems`/`addIgnoredSystem`/`removeIgnoredSystem` coverage against
+  `/api/v1/ignore-systems` and `/api/v1/ignore-system/{solarsystem_id}` — those were already
+  correct and complete, nothing to add there — but the only *UI* for it was a single toggle tied
+  to whichever system happened to be selected on the regional map (`onToggleIgnored` in
+  `FleetCommandActions`), with no way to see the full ignored list or remove an entry that wasn't
+  currently selected. New `lib/routing/IgnoreListPanel.svelte` (add-by-ID input + a removable chip
+  per ignored system, matching the existing `SavedLocationsPanel.svelte` chip-list convention) was
+  added to the `map-settings` panel created earlier this session, next to routing settings and
+  access — a natural home since it's routing configuration, not fleet-command state. No backend
+  "clear all" endpoint exists (only per-system add/remove) so the panel doesn't offer one; clearing
+  is click-each-chip, which is fine at the sizes this list realistically reaches. 61/61 tests, 0
+  type errors, clean build.
 
 ## Recommended order for the next session
 

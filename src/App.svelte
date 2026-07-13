@@ -54,6 +54,7 @@
   import { deleteMap, fetchMapRoutingSettings, generateMapShareToken, renameMap, revokeMapShareToken, toggleMapPublic, updateMapRoutingSettings, type MapRoutingSettings } from './lib/maps/settings';
   import { fetchMapAccess, setMapAccess, type EntityType, type MapAccessList, type MapPermission } from './lib/maps/access';
   import MapAccessPanel from './lib/maps/MapAccessPanel.svelte';
+  import IgnoreListPanel from './lib/routing/IgnoreListPanel.svelte';
   import MapRoutingPanel from './lib/maps/MapRoutingPanel.svelte';
   import {
     onEveLogObservation,
@@ -124,6 +125,7 @@
   let fleetKills = $state<FleetKill[]>([]);
   let killfeedError = $state<string | null>(null);
   let ignoredSystemIds = $state<number[]>([]);
+  let ignoreListInput = $state('');
   let routeSystemInput = $state('');
   let mapRoutingSettings = $state<MapRoutingSettings | null>(null);
   let mapSettingsMessage = $state<string | null>(null);
@@ -278,6 +280,25 @@
         ? await removeIgnoredSystem(api, selectedRegionalSystemId)
         : await addIgnoredSystem(api, selectedRegionalSystemId);
       commandMessage = ignoredSystemIds.includes(selectedRegionalSystemId) ? 'System added to route exclusions.' : 'System removed from route exclusions.';
+    } catch (error) {
+      commandMessage = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function removeIgnoredSystemById(systemId: number): Promise<void> {
+    try {
+      ignoredSystemIds = await removeIgnoredSystem(api, systemId);
+    } catch (error) {
+      commandMessage = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function addIgnoredSystemById(): Promise<void> {
+    const systemId = Number(ignoreListInput);
+    if (!Number.isInteger(systemId)) return;
+    try {
+      ignoredSystemIds = await addIgnoredSystem(api, systemId);
+      ignoreListInput = '';
     } catch (error) {
       commandMessage = error instanceof Error ? error.message : String(error);
     }
@@ -1274,6 +1295,15 @@
 
         {#if mapAccess}
           <MapAccessPanel access={mapAccess} message={mapAccessMessage} onSetAccess={setSelectedMapAccess} />
+        {/if}
+
+        {#if selectedMapSlug}
+          <IgnoreListPanel
+            {ignoredSystemIds}
+            bind:input={ignoreListInput}
+            onAdd={addIgnoredSystemById}
+            onRemove={removeIgnoredSystemById}
+          />
         {/if}
 
         {#if !mapRoutingSettings && !mapAccess}

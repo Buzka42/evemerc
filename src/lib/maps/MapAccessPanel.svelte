@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { EntityType, MapAccessList, MapPermission } from './access';
+  import type { EntityType, MapAccessEntry, MapAccessList, MapPermission } from './access';
+  import AccessExpiryPicker from './AccessExpiryPicker.svelte';
 
   interface Props {
     access: MapAccessList;
@@ -14,6 +15,11 @@
   function handlePermissionChange(entityId: number, entityType: EntityType, value: string): void {
     onSetAccess(entityId, entityType, value === 'none' ? null : (value as MapPermission), null);
   }
+
+  function handleExpiryChange(entry: MapAccessEntry, expiresAt: string | null): void {
+    if (entry.permission === null) return;
+    onSetAccess(entry.id, entry.type, entry.permission, expiresAt);
+  }
 </script>
 
 <div class="border-t border-slate-700/70 pt-4">
@@ -25,16 +31,19 @@
         {#if entry.isOwner}
           <span class="text-amber-300">owner</span>
         {:else}
-          <select
-            class="rounded border border-slate-700 bg-slate-950 px-1 py-0.5 text-[10px]"
-            value={entry.permission ?? 'none'}
-            onchange={(event) => handlePermissionChange(entry.id, entry.type, (event.currentTarget as HTMLSelectElement).value)}
-          >
-            <option value="none">Revoked</option>
-            <option value="viewer">Viewer</option>
-            <option value="member">Member</option>
-            <option value="manager">Manager</option>
-          </select>
+          <div class="flex items-center gap-1">
+            <AccessExpiryPicker expiresAt={entry.expiresAt} onSetExpiry={(expiresAt) => handleExpiryChange(entry, expiresAt)} />
+            <select
+              class="rounded border border-slate-700 bg-slate-950 px-1 py-0.5 text-[10px]"
+              value={entry.permission ?? 'none'}
+              onchange={(event) => handlePermissionChange(entry.id, entry.type, (event.currentTarget as HTMLSelectElement).value)}
+            >
+              <option value="none">Revoked</option>
+              <option value="viewer">Viewer</option>
+              <option value="member">Member</option>
+              <option value="manager">Manager</option>
+            </select>
+          </div>
         {/if}
       </div>
     {/each}

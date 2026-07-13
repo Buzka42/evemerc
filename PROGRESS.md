@@ -7,8 +7,9 @@
 
 Last updated: 2026-07-13, by a Claude Code session that pushed the initial scaffold to
 [github.com/Buzka42/evemerc](https://github.com/Buzka42/evemerc), ran graphify
-(`graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`), did a first correctness pass, and
-then partially closed gap #1 (module-driven dock — see "Fixed this session" below).
+(`graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`), did a first correctness pass,
+partially closed gap #1 (module-driven dock), and extracted 11 presentational components out of
+`App.svelte` (see "Fixed this session" below).
 
 ## Verified working right now
 
@@ -60,11 +61,15 @@ This is far along relative to PLAN.md's M0–M3 milestones. Rough map:
 - **Everything else PLAN.md §11 lists as a module** is present as *inline logic in `App.svelte`*
   rather than a registered `FeatureModule`: map switching/settings, signatures, routing/ignore
   list, EVE-Scout import, saved locations, audits, account/tokens, killfeed, system intel,
-  command palette, release-check banner. See the gap below — this matters.
+  command palette, release-check banner. See gap #1 below — this matters.
 
 Almost everything above has a co-located `*.test.ts` and the tests are real (they exercise
-actual logic, not snapshot-only). `App.svelte` is one large file (~1300 lines) that owns all UI
-state as flat `$state` variables and orchestrates every feature inline.
+actual logic, not snapshot-only). `App.svelte` owns all cross-cutting UI state as flat `$state`
+variables and orchestrates every feature inline, but its *markup* is no longer monolithic — see
+"Fixed this session" for the presentational components pulled out of it. Components with
+dedicated tests still follow the codebase convention of testing pure logic modules, not the
+`.svelte` files themselves (no `*.svelte.test.ts` files exist anywhere, including for the
+pre-existing `RegionMap.svelte`/`WormholeChain.svelte`) — this is consistent, not an oversight.
 
 ## Known gaps (found this session, not yet fixed)
 
@@ -95,9 +100,23 @@ not the "panels come from modules" half:
 - `lib/layout/dock.ts` still reads DOM elements tagged `data-dock-panel="..."` out of a static
   template in `App.svelte` — it never calls `moduleRegistry.panels()`. `PanelDefinition` objects
   (with `component: () => Promise<...>`) are still never consumed anywhere.
-- The inline signatures/routing/audits/account/killfeed/system-intel blocks in `App.svelte`
-  still aren't panels at all — they're embedded inside the `fleet-command` and `telemetry`
-  blocks, so they can't be independently toggled, popped out, or owned by a module.
+- The signatures/routing/audits/account/killfeed/system-intel *sections* still aren't panels at
+  all — they're now standalone `.svelte` components (see "Fixed this session"), but they're
+  still mounted inline inside the `fleet-command` and `telemetry` dock panels, so they can't be
+  independently toggled, popped out, or owned by a module yet. Extracting them into components
+  was a prerequisite step, not the fix itself — the remaining work is wiring
+  `moduleRegistry.panels()` to actually place them as their own dock panels.
+- **The `account` panel is a phantom.** `PanelId`, `panelTitles`, `panelModuleOwners`, and every
+  `LayoutProfile.panels` array declare an `'account'` entry as if it were a real dock panel, but
+  no `data-dock-panel="account"` element has ever existed and `dock.ts`'s `loadProfile` never
+  calls `addPanel('account', ...)`. In practice `'account'` is consumed by exactly one call site
+  — `panelVisible(activeLayout, 'account')` inside the `telemetry` panel — where it gates whether
+  the "EVE Account" section (now `AccountPanel.svelte`) renders at all. It works for that narrow
+  purpose (e.g. `compact-fleet`/`scanning` profiles hide it), but the type modeling is
+  misleading. Pre-existing, not introduced this session. When doing the full panel-sourcing
+  refactor, either make `account` a real dock panel (natural now that it's `AccountPanel.svelte`)
+  or rename the concept to something that doesn't imply it's dockable (e.g. a plain
+  `showAccountSection: boolean` on the profile).
 
 **To fully fix**: make `createDockWorkspace` accept `PanelDefinition[]` instead of reading
 `data-dock-panel` elements, using `component()` to mount panels via Svelte's
@@ -145,12 +164,15 @@ the main repo's `DESKTOP_REBUILD_PLAN.md` Appendix A actually exist yet on the s
 points to by default (`https://wormhole.systems`). If backend endpoints are added or changed,
 re-run `npm run sync:api` before trusting `schema.d.ts`.
 
-### 5. `App.svelte` size
+### 5. `App.svelte` size (much improved this session, not resolved)
 
-At ~1300 lines with ~50 top-level `$state` variables, it is past the point where a human or
-model can safely reason about it in one read. Not urgent to fix in isolation, but gap #1's
-refactor is the natural moment to also split state ownership per-module (each module owning its
-own `$state`, exposed through `ModuleCtx` per PLAN.md §10.1) rather than doing a cosmetic split.
+Started at ~1323 lines with ~50 top-level `$state` variables. This session extracted 11
+presentational components (see "Fixed this session"), bringing it to ~1132 lines. The remaining
+size is orchestration: auth flow, map/fleet/chain data loading, realtime wiring, and the dock
+host itself — all cross-cutting, so it doesn't decompose the same way the display blocks did.
+Gap #1's refactor is still the natural moment to also split *state ownership* per-module (each
+module owning its own `$state`, exposed through `ModuleCtx` per PLAN.md §10.1) rather than
+continuing to peel off presentational leaves.
 
 ## Fixed this session
 
@@ -159,20 +181,35 @@ own `$state`, exposed through `ModuleCtx` per PLAN.md §10.1) rather than doing 
 - Dock panel visibility now respects module enablement, not just profile visibility (see gap #1
   above for the full detail). `wormhole-chain` correctly disappears from every layout when the
   `wormhole-map` module is disabled, including on restore from a saved dockview layout.
+- Extracted 11 presentational components out of `App.svelte`'s inline markup, each taking
+  props/callbacks rather than reaching into shared state directly (same pattern as the
+  pre-existing `RegionMap.svelte`/`WormholeChain.svelte`): `AccountPanel.svelte`,
+  `TelemetryStatus.svelte`, `SelectedSystemIntel.svelte`, `MapRoutingPanel.svelte`,
+  `FleetKillfeed.svelte`, `FleetCommanders.svelte`, `FleetAlertsPanel.svelte`,
+  `FleetMemberList.svelte`, `FleetCommandActions.svelte`, `SavedLocationsPanel.svelte`,
+  `MapActivityLog.svelte`. `svelte-check` and the full test suite were re-run clean after every
+  single extraction, not just at the end. This is groundwork for gap #1's full fix, not the fix
+  itself — see gap #1 for what's still needed on top of this.
+- Found and documented (did not fix) that the `account` dock panel is a phantom — see gap #1's
+  new sub-bullet for detail.
 
 ## Recommended order for the next session
 
 1. **Read this file and `graphify-out/GRAPH_REPORT.md`** before making changes — the report's
    "Suggested Questions" section flags real ambiguous edges worth a second look (e.g. whether
    `parseProbeScanner()`'s inferred connections to `pasteSignatures()`/`getSignatureCatalog()`
-   are structurally sound).
+   are structurally sound). The graph predates this session's component extractions, so treat its
+   file-level claims about `App.svelte` as stale; re-run `/graphify --update` if you want it
+   current before relying on it for anything App.svelte-specific.
 2. If backend `api/v1` work has landed in the main `EveMerc` repo since this was written, run
    `npm run sync:api` first and re-run `npm run check` to catch any type drift.
 3. Finish gap #1: convert `createDockWorkspace` to mount `PanelDefinition[]` from
-   `moduleRegistry.panels()` instead of scanning static `data-dock-panel` DOM elements, and
-   split the inline signatures/routing/audits/account/killfeed/system-intel blocks in
-   `App.svelte` into real panel components. The module-gating half (`panelModuleOwners`,
-   `resolveVisiblePanels`) is already done — reuse it, don't re-derive it.
+   `moduleRegistry.panels()` instead of scanning static `data-dock-panel` DOM elements. The 11
+   components extracted this session are now easy `component: () => import('./Foo.svelte')`
+   targets for `PanelDefinition.component` — wire them up as real panels instead of mounting them
+   inline. The module-gating half (`panelModuleOwners`, `resolveVisiblePanels`) is already done —
+   reuse it, don't re-derive it. Resolve the `account` phantom-panel question (above) as part of
+   this, not before it — the answer depends on how panel sourcing ends up working.
 4. Only touch gap #2 (log parser templates) once real gamelog fixtures are available; add them
    under a `src-tauri/src/eve_logs/fixtures/` (or similar) directory and write the property/fuzz
    tests PLAN.md §15 calls for alongside the new templates.

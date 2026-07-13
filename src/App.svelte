@@ -16,15 +16,19 @@
   import { assertAllowedServerUrl, normalizeServerUrl } from './lib/auth/pkce';
   import { createModuleRegistry } from './lib/modules';
   import type { RegionalLayerData } from './lib/modules/types';
-  import { memberFreshness } from './lib/fleet/freshness';
+  import FleetMemberList from './lib/fleet/FleetMemberList.svelte';
   import { applyLocalJump, applyLocationObservation } from './lib/fleet/localJump';
   import { appointFleetCommander, deregisterFleet, registerFleet, removeFleetCommander, setFleetWaypoint } from './lib/fleet/actions';
   import { fleetAlerts } from './lib/fleet/alerts';
+  import FleetAlertsPanel from './lib/fleet/FleetAlertsPanel.svelte';
+  import FleetCommandActions from './lib/fleet/FleetCommandActions.svelte';
   import { createChainConnection, createChainSystem, deleteMapLocation, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, trackTransition, type MapStatistics } from './lib/wormhole/api';
+  import SavedLocationsPanel from './lib/wormhole/SavedLocationsPanel.svelte';
   import { parseProbeScanner } from './lib/wormhole/signatureParser';
   import type { ChainSnapshot } from './lib/wormhole/types';
   import WormholeChain from './lib/wormhole/WormholeChain.svelte';
   import { createAccountToken, deleteAccountToken, fetchAccountCharacters, fetchAccountTokens, revokeCharacterScopes, setPreferredCharacter, type AccountCharacter, type AccountToken } from './lib/account/api';
+  import AccountPanel from './lib/account/AccountPanel.svelte';
   import { defaultLayoutProfiles, panelVisible, type LayoutProfile } from './lib/layout/profiles';
   import { controlMainWindow, openPanelWindow } from './lib/layout/windows';
   import { onPanelStateRequest, publishPanelState } from './lib/layout/panelBridge';
@@ -34,16 +38,22 @@
   import type { TranquilityStatus } from './lib/realtime/serverStatus';
   import { createDockWorkspace, type DockWorkspace } from './lib/layout/dock';
   import { fetchSystemIntel, type SystemIntel } from './lib/intel/system';
+  import SelectedSystemIntel from './lib/intel/SelectedSystemIntel.svelte';
   import { fetchSelectedSystemDetails, type SelectedSystemDetails } from './lib/audits/api';
-  import { fetchFleetKills, zkillUrl, type FleetKill } from './lib/intel/killfeed';
+  import MapActivityLog from './lib/audits/MapActivityLog.svelte';
+  import { fetchFleetKills, type FleetKill } from './lib/intel/killfeed';
+  import FleetKillfeed from './lib/intel/FleetKillfeed.svelte';
+  import FleetCommanders from './lib/fleet/FleetCommanders.svelte';
   import { addIgnoredSystem, fetchIgnoredSystems, parseRouteSystemIds, removeIgnoredSystem, sendRouteWaypoints } from './lib/routing/api';
   import { fetchMapRoutingSettings, generateMapShareToken, revokeMapShareToken, toggleMapPublic, updateMapRoutingSettings, type MapRoutingSettings } from './lib/maps/settings';
+  import MapRoutingPanel from './lib/maps/MapRoutingPanel.svelte';
   import {
     onEveLogObservation,
     startEveLogWatcher,
     type EveLogObservation,
     type EveLogStatus,
   } from './lib/telemetry/eveLogs';
+  import TelemetryStatus from './lib/telemetry/TelemetryStatus.svelte';
 
   const foundations = [
     'Regional fleet command workspace',
@@ -928,28 +938,18 @@
           Live fleet positions, freshness, command state, and regional intel will remain at the center of every built-in layout.
         </p>
         {#if authState.phase === 'authenticated' && selectedMapSlug}
-          <div class="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
-            <button class="rounded-md bg-cyan-300 px-3 py-2 text-xs font-semibold text-slate-950" onclick={toggleFleetRegistration}>
-              {fleetSnapshot?.registration ? 'Unlink fleet' : 'Link current fleet'}
-            </button>
-            <input
-              class="w-36 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200"
-              inputmode="numeric"
-              placeholder="System ID"
-              bind:value={waypointSystemId}
-            />
-            <button class="rounded-md border border-cyan-300/30 px-3 py-2 text-xs text-cyan-100" onclick={sendFleetWaypoint}>
-              Set fleet destination
-            </button>
-            <input class="w-56 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-xs" placeholder="Route system IDs: 1 > 2 > 3" bind:value={routeSystemInput} />
-            <button class="rounded-md border border-cyan-300/30 px-3 py-2 text-xs text-cyan-100" onclick={sendPlannedRoute}>Send route</button>
-            <button
-              class="rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-300 disabled:opacity-40"
-              disabled={selectedRegionalSystemId === null}
-              onclick={toggleSelectedSystemIgnored}
-            >{selectedRegionalSystemId !== null && ignoredSystemIds.includes(selectedRegionalSystemId) ? 'Unignore selected' : 'Ignore selected'}</button>
-            {#if commandMessage}<span class="text-xs text-amber-200">{commandMessage}</span>{/if}
-          </div>
+          <FleetCommandActions
+            fleetLinked={Boolean(fleetSnapshot?.registration)}
+            bind:waypointSystemId
+            bind:routeSystemInput
+            selectedSystemId={selectedRegionalSystemId}
+            isSelectedSystemIgnored={selectedRegionalSystemId !== null && ignoredSystemIds.includes(selectedRegionalSystemId)}
+            {commandMessage}
+            onToggleRegistration={toggleFleetRegistration}
+            onSendWaypoint={sendFleetWaypoint}
+            onSendRoute={sendPlannedRoute}
+            onToggleIgnored={toggleSelectedSystemIgnored}
+          />
         {/if}
         <div class="mt-6 min-h-64 rounded-lg border border-cyan-300/20 bg-cyan-950/10 p-4">
           {#if fleetSnapshot}
@@ -972,80 +972,19 @@
                 onSelectSystem={selectRegionalSystem}
               />
             {/if}
-            <div class="mt-3 grid max-h-36 gap-2 overflow-y-auto sm:grid-cols-2">
-              {#each fleetSnapshot.members as member}
-                {@const freshness = memberFreshness(member, Date.now(), fleetSnapshot.freshness.staleAfterSeconds)}
-                <div class="rounded-md bg-slate-900/80 p-3 text-xs">
-                  <div class="flex items-center justify-between gap-2">
-                    <p class="font-medium text-slate-200">{member.character_name ?? `Pilot ${member.character_id ?? 'unknown'}`}</p>
-                    <span
-                      class:text-emerald-300={freshness.state === 'current'}
-                      class:text-amber-300={freshness.state === 'stale'}
-                      class="text-slate-500"
-                    >{freshness.ageSeconds === null ? 'unknown' : `${freshness.ageSeconds}s`}</span>
-                  </div>
-                  <p class="mt-1 text-slate-500">System {member.solar_system_id ?? 'unknown'} · {member.ship_type_name ?? `Ship ${member.ship_type_id ?? 'unknown'}`}</p>
-                  <p class="mt-1 text-slate-600">{member.role ?? 'role unknown'} · {member.source ?? 'source unknown'} · {member.location_state ?? 'confirmed'}</p>
-                </div>
-              {/each}
-              {#if fleetSnapshot.members.length === 0}
-                <p class="text-sm text-slate-500">No active fleet registration for this map.</p>
-              {/if}
-            </div>
+            <FleetMemberList snapshot={fleetSnapshot} />
             {@const alerts = fleetAlerts(fleetSnapshot)}
-            {#if alerts.length > 0}
-              <div class="mt-3 flex flex-col gap-2 border-t border-slate-700/70 pt-3">
-                <p class="text-xs font-semibold tracking-[0.14em] text-amber-300">FLEET ALERTS · {alerts.length}</p>
-                {#each alerts.slice(0, 6) as alert}
-                  <button
-                    class="flex items-center justify-between rounded-md bg-amber-300/10 px-3 py-2 text-left text-xs text-amber-100"
-                    onclick={() => objectiveSystemId = alert.solarSystemId}
-                  >
-                    <span>{alert.title}</span>
-                    <span>{alert.solarSystemId ?? 'no position'}</span>
-                  </button>
-                {/each}
-              </div>
-            {/if}
-            <div class="mt-3 border-t border-slate-700/70 pt-3">
-              <div class="flex items-center gap-2">
-                <p class="grow text-xs font-semibold tracking-[0.14em] text-slate-400">FLEET COMMANDERS</p>
-                <input class="w-32 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs" placeholder="Character ID" bind:value={commanderCharacterId} />
-                <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={addCommander}>Appoint</button>
-              </div>
-              <div class="mt-2 flex flex-wrap gap-2">
-                {#each fleetSnapshot.commanders as commander}
-                  {#if typeof commander.id === 'number'}
-                    <button class="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300" onclick={() => deleteCommander(commander.id as number)}>
-                      {String(commander.character_name ?? commander.character_id ?? commander.id)} ×
-                    </button>
-                  {/if}
-                {/each}
-              </div>
-            </div>
+            <FleetAlertsPanel {alerts} onFocusSystem={(solarSystemId) => objectiveSystemId = solarSystemId} />
+            <FleetCommanders
+              commanders={fleetSnapshot.commanders}
+              bind:commanderCharacterId
+              onAppoint={addCommander}
+              onRemove={deleteCommander}
+            />
             {#if fleetError}
               <p class="mt-3 text-xs text-amber-200">Live refresh failed: {fleetError}</p>
             {/if}
-            <div class="mt-3 border-t border-slate-700/70 pt-3">
-              <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold tracking-[0.14em] text-slate-400">FLEET KILLFEED</p>
-                <span class="text-[10px] text-slate-600">zKillboard · 2 min cache</span>
-              </div>
-              <div class="mt-2 grid max-h-40 gap-1 overflow-y-auto">
-                {#each fleetKills as kill}
-                  <button
-                    class="grid grid-cols-[3.5rem_1fr_auto] items-center gap-2 rounded bg-slate-900/70 px-2 py-1.5 text-left text-xs hover:bg-slate-800"
-                    onclick={() => openUrl(zkillUrl(kill.id))}
-                  >
-                    <span class:text-rose-300={kill.involvement === 'loss'} class="font-semibold text-emerald-300">{kill.involvement.toUpperCase()}</span>
-                    <span class="min-w-0 truncate"><strong>{kill.victimShip}</strong> · {kill.victimName}</span>
-                    <span class="text-slate-500">{kill.value === null ? `${kill.attackerCount} atk` : `${(kill.value / 1_000_000).toFixed(1)}m`}</span>
-                  </button>
-                {/each}
-                {#if fleetKills.length === 0}<p class="text-xs text-slate-500">No recent roster kills or losses.</p>{/if}
-                {#if killfeedError}<p class="text-xs text-amber-200">{killfeedError}</p>{/if}
-              </div>
-            </div>
+            <FleetKillfeed kills={fleetKills} error={killfeedError} />
           {:else if fleetError}
             <p class="text-sm text-amber-200">{fleetError}</p>
           {:else if authState.phase === 'authenticated'}
@@ -1096,143 +1035,45 @@
         </div>
 
         {#if selectedRegionalSystemId}
-          <div class="border-t border-slate-700/70 pt-4">
-            <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">SELECTED SYSTEM · {selectedRegionalSystemId}</p>
-            {#if selectedSystemIntel?.systemId === selectedRegionalSystemId}
-              <dl class="mt-2 grid grid-cols-2 gap-2 text-xs">
-                <div class="rounded bg-slate-900/70 p-2"><dt class="text-slate-500">Jumps (1h)</dt><dd class="text-lg">{selectedSystemIntel.jumps}</dd></div>
-                <div class="rounded bg-slate-900/70 p-2"><dt class="text-slate-500">Kills (24h)</dt><dd class="text-lg">{selectedSystemIntel.totalKills24h ?? '—'}</dd></div>
-                <div class="rounded bg-slate-900/70 p-2"><dt class="text-slate-500">Recent feed</dt><dd class="text-lg">{selectedSystemIntel.recentKills}</dd></div>
-                <div class="rounded bg-slate-900/70 p-2"><dt class="text-slate-500">Sov structures</dt><dd class="text-lg">{selectedSystemIntel.sovereigntyStructures}</dd></div>
-              </dl>
-            {:else if systemIntelError}<p class="mt-2 text-xs text-amber-200">{systemIntelError}</p>
-            {:else}<p class="mt-2 text-xs text-slate-500">Loading system intel…</p>{/if}
-          </div>
+          <SelectedSystemIntel systemId={selectedRegionalSystemId} intel={selectedSystemIntel} error={systemIntelError} />
         {/if}
 
         {#if mapRoutingSettings}
-          <div class="border-t border-slate-700/70 pt-4">
-            <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">MAP & ROUTING</p>
-            <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
-              <select aria-label="Route preference" class="rounded border border-slate-700 bg-slate-900 px-2 py-1" bind:value={mapRoutingSettings.routePreference}>
-                <option value="shorter">Shortest</option><option value="safer">Safer</option><option value="less_secure">Less secure</option>
-              </select>
-              <label class="flex items-center gap-2 rounded bg-slate-900/70 px-2 py-1">Security penalty <input class="w-14 bg-transparent text-right" type="number" min="0" max="100" bind:value={mapRoutingSettings.securityPenalty} /></label>
-              <label class="flex items-center gap-2"><input type="checkbox" bind:checked={mapRoutingSettings.routeUseEveScout} /> EVE Scout routes</label>
-              <label class="flex items-center gap-2"><input type="checkbox" bind:checked={mapRoutingSettings.trackingAllowed} /> Position tracking</label>
-            </div>
-            <div class="mt-2 flex flex-wrap gap-2">
-              <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={saveRoutingSettings}>Save routing</button>
-              {#if mapRoutingSettings.canManageAccess}
-                <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={changePublicAccess}>{mapRoutingSettings.isPublic ? 'Make private' : 'Make public'}</button>
-                <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={() => changeShareToken(mapRoutingSettings?.shareToken !== null)}>{mapRoutingSettings.shareToken ? 'Revoke share link' : 'Create share link'}</button>
-              {/if}
-            </div>
-            {#if mapRoutingSettings.shareToken}<code class="mt-2 block select-all break-all text-[10px] text-cyan-200">{serverUrl}/maps/shared/{mapRoutingSettings.shareToken}</code>{/if}
-            {#if mapSettingsMessage}<p class="mt-2 text-xs text-amber-200">{mapSettingsMessage}</p>{/if}
-          </div>
+          <MapRoutingPanel
+            bind:settings={mapRoutingSettings}
+            message={mapSettingsMessage}
+            {serverUrl}
+            onSave={saveRoutingSettings}
+            onTogglePublic={changePublicAccess}
+            onChangeShareToken={changeShareToken}
+          />
         {/if}
 
         {#if authState.phase === 'authenticated' && panelVisible(activeLayout, 'account')}
-          <div class="border-t border-slate-700/70 pt-4">
-            <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">EVE ACCOUNT</p>
-            <div class="mt-2 flex gap-2">
-              <button class="rounded border border-slate-700 px-2 py-1 text-xs text-cyan-200" onclick={() => openUrl(`${serverUrl}/scopes/add`)}>Add ESI scopes</button>
-              <button class="rounded border border-slate-700 px-2 py-1 text-xs text-slate-400" onclick={async () => accountCharacters = await fetchAccountCharacters(api)}>Refresh</button>
-            </div>
-            <div class="mt-3 flex flex-col gap-2">
-              {#each accountCharacters as character}
-                <div class="rounded-md bg-slate-900/70 p-3 text-xs">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="text-slate-200">{character.name}</span>
-                    {#if character.isPreferred}
-                      <span class="text-emerald-300">preferred</span>
-                    {:else}
-                      <button class="text-cyan-200" onclick={() => preferCharacter(character.id)}>Use</button>
-                    {/if}
-                  </div>
-                  <div class="mt-2 flex items-center justify-between gap-2 text-slate-500">
-                    <span>{character.esiScopes.length} ESI scopes</span>
-                    {#if character.esiScopes.length > 0}
-                      <button class="text-amber-200" onclick={() => removeScopes(character.id)}>Revoke</button>
-                    {/if}
-                  </div>
-                  <p class="mt-1 text-slate-400">{character.isOnline ? 'online' : 'offline'} · {character.solarSystemName ?? 'location unknown'} · {character.shipName ?? 'ship unknown'}</p>
-                  <p class="mt-1 text-slate-600">{character.locationSource ?? 'no source'} · {character.locationState ?? 'unknown'}</p>
-                </div>
-              {/each}
-              {#if accountCharacters.length === 0}<p class="text-xs text-slate-500">Loading characters…</p>{/if}
-              {#if accountError}<p class="text-xs text-amber-200">{accountError}</p>{/if}
-            </div>
-            <div class="mt-3 border-t border-slate-700/70 pt-3">
-              <p class="text-[10px] font-semibold tracking-[0.14em] text-slate-500">API TOKENS</p>
-              <div class="mt-2 flex gap-2">
-                <input class="min-w-0 grow rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs" placeholder="Token name" bind:value={newTokenName} />
-                <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={issueToken}>Create</button>
-              </div>
-              {#if createdTokenSecret}
-                <div class="mt-2 rounded border border-amber-300/30 bg-amber-300/10 p-2 text-xs text-amber-100">
-                  <p>Copy now; this token will not be shown again.</p>
-                  <code class="mt-1 block select-all break-all">{createdTokenSecret}</code>
-                  <button class="mt-1 text-slate-400" onclick={() => createdTokenSecret = null}>Dismiss</button>
-                </div>
-              {/if}
-              <div class="mt-2 flex flex-col gap-1">
-                {#each accountTokens as token}
-                  <div class="flex items-center justify-between rounded bg-slate-900/70 px-2 py-1 text-xs">
-                    <span>{token.name}</span>
-                    <button class="text-amber-200" onclick={() => revokeToken(token.id)}>Revoke</button>
-                  </div>
-                {/each}
-              </div>
-            </div>
-          </div>
+          <AccountPanel
+            characters={accountCharacters}
+            tokens={accountTokens}
+            bind:newTokenName
+            {createdTokenSecret}
+            error={accountError}
+            onRefresh={async () => accountCharacters = await fetchAccountCharacters(api)}
+            onPreferCharacter={preferCharacter}
+            onRemoveScopes={removeScopes}
+            onIssueToken={issueToken}
+            onRevokeToken={revokeToken}
+            onDismissSecret={() => createdTokenSecret = null}
+            onAddScopes={() => openUrl(`${serverUrl}/scopes/add`)}
+          />
         {/if}
 
         {#if panelVisible(activeLayout, 'telemetry')}
-        <div class="mt-2 border-t border-slate-700/70 pt-4">
-          <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold tracking-[0.15em] text-slate-500">EVE LOG TELEMETRY</p>
-            <span class:!bg-emerald-300={logStatus?.watching} class="size-2 rounded-full bg-slate-600"></span>
-          </div>
-
-          {#if watcherError}
-            <p class="mt-2 text-xs leading-5 text-amber-300">{watcherError}</p>
-          {:else if logStatus}
-            <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
-              <dt class="text-slate-500">Gamelogs</dt>
-              <dd class="text-right text-slate-300">{logStatus.gamelogFiles}</dd>
-              <dt class="text-slate-500">Chatlogs</dt>
-              <dd class="text-right text-slate-300">{logStatus.chatlogFiles}</dd>
-              <dt class="text-slate-500">Read errors</dt>
-              <dd class="text-right text-slate-300">{logStatus.readErrors}</dd>
-              <dt class="text-slate-500">New chat lines</dt>
-              <dd class="text-right text-slate-300">{logStatus.chatLinesRead}</dd>
-            </dl>
-          {:else}
-            <p class="mt-2 text-xs text-slate-500">Discovering the EVE logs folder…</p>
-          {/if}
-
-          {#if lastObservation}
-            <div class="mt-3 rounded-md border border-cyan-300/15 bg-cyan-950/20 p-3 text-xs">
-              <p class="text-cyan-200">Jump observed</p>
-              <p class="mt-1 text-slate-300">{lastObservation.fromSystem} → {lastObservation.toSystem}</p>
-              <p class="mt-1 text-slate-500">Awaiting SDE resolution and ESI confirmation</p>
-            </div>
-          {/if}
-
-          <div class="mt-3 flex gap-2">
-            <input
-              class="min-w-0 grow rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-300"
-              aria-label="EVE logs root override"
-              placeholder="Auto-discover EVE/logs"
-              bind:value={eveLogsRoot}
-            />
-            <button class="rounded-md border border-slate-700 px-2 py-1.5 text-xs text-slate-300" onclick={applyEveLogsRoot}>
-              Apply
-            </button>
-          </div>
-        </div>
+          <TelemetryStatus
+            {logStatus}
+            {watcherError}
+            {lastObservation}
+            bind:eveLogsRoot
+            onApply={applyEveLogsRoot}
+          />
         {/if}
       </aside>
 
@@ -1269,46 +1110,16 @@
             <button class="rounded border border-violet-400/30 px-2 py-1 text-xs text-violet-200" onclick={() => importEveScout('Thera')}>Import Thera</button>
             <button class="rounded border border-violet-400/30 px-2 py-1 text-xs text-violet-200" onclick={() => importEveScout('Turnur')}>Import Turnur</button>
           </div>
-          <div class="mt-3 grid gap-3 border-t border-slate-700/70 pt-3 lg:grid-cols-2">
-            <div>
-              <p class="text-xs font-semibold tracking-[0.14em] text-slate-400">SAVED LOCATIONS</p>
-              <div class="mt-2 flex gap-2">
-                <input class="w-32 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="System ID" bind:value={savedLocationSystemId} />
-                <input class="min-w-0 grow rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="Note" bind:value={savedLocationNote} />
-                <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={addSavedLocation}>Save</button>
-              </div>
-              <div class="mt-2 flex flex-wrap gap-2">
-                {#each chainSnapshot.savedLocations as location}
-                  <button class="rounded-full bg-slate-800 px-3 py-1 text-xs" onclick={() => removeSavedLocation(location.id)}>
-                    {location.note ?? location.solarsystemId} ×
-                  </button>
-                {/each}
-              </div>
-            </div>
-            {#if mapStatistics}
-              <dl class="grid grid-cols-5 gap-2 text-center text-xs">
-                <div><dt class="text-slate-500">Systems</dt><dd class="mt-1 text-lg">{mapStatistics.systems}</dd></div>
-                <div><dt class="text-slate-500">Links</dt><dd class="mt-1 text-lg">{mapStatistics.connections}</dd></div>
-                <div><dt class="text-slate-500">Sigs</dt><dd class="mt-1 text-lg">{mapStatistics.signatures}</dd></div>
-                <div><dt class="text-slate-500">Saved</dt><dd class="mt-1 text-lg">{mapStatistics.savedLocations}</dd></div>
-                <div><dt class="text-slate-500">Fleet</dt><dd class="mt-1 text-lg">{mapStatistics.fleetMembers}</dd></div>
-              </dl>
-            {/if}
-          </div>
+          <SavedLocationsPanel
+            savedLocations={chainSnapshot.savedLocations}
+            statistics={mapStatistics}
+            bind:systemId={savedLocationSystemId}
+            bind:note={savedLocationNote}
+            onSave={addSavedLocation}
+            onRemove={removeSavedLocation}
+          />
           {#if selectedSystemDetails?.id === selectedChainSystemId}
-            <div class="mt-3 border-t border-slate-700/70 pt-3">
-              <p class="text-xs font-semibold tracking-[0.14em] text-slate-400">MAP ACTIVITY</p>
-              <div class="mt-2 max-h-40 overflow-y-auto text-xs">
-                {#each selectedSystemDetails.audits.slice(0, 50) as audit}
-                  <div class="grid grid-cols-[8rem_1fr_auto] gap-2 border-b border-slate-800 py-1">
-                    <span class="text-slate-500">{audit.characterName ?? 'system'}</span>
-                    <span>{audit.event} · {Object.keys(audit.newValues).join(', ') || 'record'}</span>
-                    <time class="text-slate-600">{audit.createdAt ?? ''}</time>
-                  </div>
-                {/each}
-                {#if selectedSystemDetails.audits.length === 0}<p class="text-slate-500">No recorded activity for this system.</p>{/if}
-              </div>
-            </div>
+            <MapActivityLog audits={selectedSystemDetails.audits} />
           {/if}
           {#if chainError}<p class="mt-3 text-xs text-amber-200">{chainError}</p>{/if}
         {:else}

@@ -260,6 +260,15 @@ PLAN.md §10.1) rather than continuing to peel off presentational leaves.
   its own header; `fleet-command` only has the palette command; `account`/`telemetry` had
   neither). Matches the exact existing pattern (`lib/commands/palette.ts` + `App.svelte`'s
   `executeCommand`), no new mechanism introduced.
+- Fixed `main.ts`'s popout-window `opacity` query-param parsing: a non-numeric value produced
+  `Number("...")` = `NaN`, which `Math.max`/`Math.min` silently propagate through the clamp,
+  landing an invalid `rgba(2, 6, 23, NaN)` background in `PanelWindow.svelte`. Not reachable
+  through the app's own UI today (`windows.rs`'s `open_panel_window` always clamps opacity to
+  `[0.35, 1.0]` before building the URL it hands to `main.ts`), but cheap to close since it's
+  the one place in the codebase parsing a URL-shaped string without an `isFinite`/`isInteger`
+  guard — checked every other `Number(...)` call site in the app and all of them already guard
+  correctly (`Number.isInteger(...)` before use, or the `Number(...) || fallback` idiom, which
+  works because `NaN` is falsy).
 
 ## Recommended order for the next session
 

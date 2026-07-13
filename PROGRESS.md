@@ -16,13 +16,18 @@ partially closed gap #1 (module-driven dock), and extracted 11 presentational co
 ```
 npm test         # 49/49 tests pass (28 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
+npm run build    # vite build succeeds; main JS bundle 496 KB / 131 KB gzipped
 cargo check       # (src-tauri) clean
 cargo clippy      # (src-tauri) clean, no warnings
+cargo test        # (src-tauri) 19/19 tests pass
 ```
 
-Nothing here is aspirational — all four were re-run and confirmed clean as of this update.
+Nothing here is aspirational — all six were re-run and confirmed clean as of this update. The
+131 KB gzipped bundle is comfortably under PLAN.md §13's <400 KB initial-bundle budget.
 `npm run tauri dev` / `npm run tauri build` have **not** been exercised in this session (no
-Tauri runtime available in this environment) — treat that as unverified.
+Tauri runtime available in this environment) — treat those as unverified. `vite build` only
+proves the web bundle compiles; it does not prove the Tauri shell, IPC commands, or any native
+window behavior work.
 
 ## What is actually implemented
 

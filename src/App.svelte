@@ -69,6 +69,8 @@
   } from './lib/telemetry/eveLogs';
   import TelemetryStatus from './lib/telemetry/TelemetryStatus.svelte';
   import IntelChannelFeed from './lib/intel/IntelChannelFeed.svelte';
+  import ToastHost from './lib/ui/ToastHost.svelte';
+  import { pushToast } from './lib/ui/toast.svelte';
 
   const foundations = [
     'Regional fleet command workspace',
@@ -1017,6 +1019,7 @@
         onFleetWaypointSet: (payload) => {
           objectiveSystemId = payload.destination_solarsystem_id;
           commandMessage = `${payload.destination_name} set by ${payload.set_by_character_name} for ${payload.character_count} pilots.`;
+          pushToast(`Waypoint: ${payload.destination_name} — set by ${payload.set_by_character_name} for ${payload.character_count} pilots`, 'info');
         },
         onChainInvalidated: () => {
           scheduleChainRefresh();
@@ -1157,6 +1160,7 @@
 </svelte:head>
 
 <main class="min-h-screen bg-[radial-gradient(circle_at_top,#102a42_0%,#07111d_48%,#03070d_100%)] px-8 py-10 text-slate-100">
+  <ToastHost />
   {#if paletteOpen}
     <div class="fixed inset-0 z-50 flex justify-center bg-black/65 px-4 pt-[12vh]">
       <dialog open class="relative h-fit w-full max-w-xl rounded-xl border border-cyan-300/20 bg-slate-950 p-3 text-slate-100 shadow-2xl" aria-label="Command palette">

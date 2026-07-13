@@ -53,28 +53,28 @@
     >Closest of type</button>
   </div>
 
-  <div class="mt-2 flex gap-2">
-    <input class="w-28 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="From ID" bind:value={fromId} />
+  <div class="mt-2 flex flex-wrap gap-2">
+    <input class="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="From ID" bind:value={fromId} />
     {#if mode === 'point-to-point'}
-      <input class="w-28 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="To ID" bind:value={toId} />
-      <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={onFindRoute}>Find route</button>
+      <input class="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" placeholder="To ID" bind:value={toId} />
+      <button class="w-full rounded border border-slate-700 px-2 py-1 text-xs" onclick={onFindRoute}>Find route</button>
     {:else}
-      <select class="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" bind:value={condition}>
+      <select class="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs" bind:value={condition}>
         {#each conditions as c}<option value={c}>{c}</option>{/each}
       </select>
-      <button class="rounded border border-slate-700 px-2 py-1 text-xs" onclick={onFindClosest}>Search</button>
+      <button class="w-full rounded border border-slate-700 px-2 py-1 text-xs" onclick={onFindClosest}>Search</button>
     {/if}
   </div>
 
-  <div class="mt-2 grid grid-cols-3 gap-2 text-[11px]">
-    <select class="rounded border border-slate-700 bg-slate-900 px-1 py-1" bind:value={settings.routePreference}>
+  <div class="mt-2 flex flex-col gap-1.5 text-[11px]">
+    <select class="w-full rounded border border-slate-700 bg-slate-900 px-1.5 py-1" bind:value={settings.routePreference}>
       {#each routePreferences as p}<option value={p}>{p.replace('_', ' ')}</option>{/each}
     </select>
-    <select class="rounded border border-slate-700 bg-slate-900 px-1 py-1" bind:value={settings.massStatus}>
+    <select class="w-full rounded border border-slate-700 bg-slate-900 px-1.5 py-1" bind:value={settings.massStatus}>
       {#each massStatuses as m}<option value={m}>mass: {m}</option>{/each}
     </select>
-    <select class="rounded border border-slate-700 bg-slate-900 px-1 py-1" bind:value={settings.lifetimeStatus}>
-      {#each lifetimeStatuses as l}<option value={l}>life: {l}</option>{/each}
+    <select class="w-full rounded border border-slate-700 bg-slate-900 px-1.5 py-1" bind:value={settings.lifetimeStatus}>
+      {#each lifetimeStatuses as l}<option value={l}>lifetime: {l}</option>{/each}
     </select>
   </div>
   {#if settings.routePreference !== 'shorter'}

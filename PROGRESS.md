@@ -19,9 +19,9 @@ diffing the vendored OpenAPI schema against what actually has client code callin
 ## Verified working right now
 
 ```
-npm test         # 53/53 tests pass (30 files)
+npm test         # 59/59 tests pass (31 files)
 npm run check    # svelte-check: 0 errors, 0 warnings
-npm run build    # vite build succeeds; main JS bundle 517 KB / 136 KB gzipped
+npm run build    # vite build succeeds; main JS bundle 518 KB / 137 KB gzipped
 cargo check       # (src-tauri) clean, not re-run this pass (no Rust files touched)
 cargo clippy      # (src-tauri) clean, no warnings, not re-run this pass (no Rust files touched)
 cargo test        # (src-tauri) 27/27 tests pass, not re-run this pass (no Rust files touched)
@@ -517,6 +517,44 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   writes back to the main window doesn't exist yet for any panel; a stripped read-only version
   wouldn't be useful for a settings panel the way it is for account/telemetry, so it was correctly
   left out rather than half-built.
+
+- **Added a sovereignty overlay to the Regional Map** (PLAN.md §M-regional names "sovereignty
+  context" as an explicit requirement, fed by the `reference-intel` module's regional-layer
+  extension point — this is exactly the "future intel modules add toggleable overlays through the
+  module registry" mechanism PLAN.md describes, not a bolt-on). Investigated two candidate data
+  sources before picking one: the `maps/{map_slug}/region/{id}` response (already fetched for
+  kill-activity) embeds a `sovereignty` field per system, but reading
+  `RegionalMapController.php` directly shows it's **hardcoded to `null`** ("live sov data not
+  available from static files") — building against it would show nothing, ever, right now. The
+  standalone `GET /api/v1/sovereignties` endpoint is real and populated (`SovereigntyController`
+  reads the actual `Sovereignty` model with `alliance`/`corporation`/`faction` relations), so that's
+  what's used instead. Response is a JSON *object* keyed by `solarsystem_id`
+  (`{"30000142": {...}}`), not an array — confirmed from `SovereigntyController::index()`'s
+  `mapWithKeys()` call, since `schema.d.ts` wrongly types this operation's response as
+  `Record<string, never>[]` (an empty-object array) — the third or fourth time this session a
+  `schema.d.ts` shape has been wrong/incomplete and had to be checked against source, not guessed.
+  Bypassed the incorrect generated type with an explicit cast, same pattern as `updateSignature`.
+  New `lib/modules/reference-intel/sovereignty.ts`: `normalizeSovereigntyRing()` (id-keyed object
+  → `Record<systemId, {label, color}>`, preferring alliance > corporation > faction, deterministic
+  HSL color hashed from the ticker/name so the same holder always renders the same color without a
+  hardcoded palette) and `loadSovereigntyLayer()`, registered as a second `regionalLayers` entry
+  on the `reference-intel` module (alongside the existing `kill-activity` layer) — no new module
+  needed, this is exactly what that module already exists for. **Extended the regional-layer
+  contract itself**: `RegionalLayerData` gained an optional `rings` field (ownership-style
+  `{label, color}` per system) alongside the existing `indicators` field (intensity-glow style, used
+  by kill-activity) — kept these as two separate visual channels rather than reusing `indicators`
+  for both, because the existing `intelIndicators` merge in `regional/model.ts` is last-write-wins
+  per system, so stacking sovereignty into the same map would have silently hidden kill-activity's
+  glow on any system with sovereignty (i.e. almost all null-sec) depending on layer order — a real
+  bug that was caught by reasoning through the existing merge semantics before writing code, not
+  found after the fact. `regional/model.ts` gained a parallel `sovereignty` map built the same way;
+  `RegionMap.svelte` renders it as a thin colored ring around the system dot (distinct from the
+  glow circle), with the holder name/ticker as an SVG `<title>` tooltip. Covered by
+  `sovereignty.test.ts` (normalization, malformed-payload/array fallback, color determinism, the
+  public layer contract) and two new cases in `model.test.ts` (indicators and rings stay on
+  separate channels; rings stay empty when no layer contributes any). 59/59 tests, 0 type errors,
+  clean build (the new module code-splits into its own ~0.7 KB lazy chunk, matching the existing
+  `kill-activity`/`provider.ts` pattern).
 
 ## Recommended order for the next session
 

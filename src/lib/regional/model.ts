@@ -11,6 +11,7 @@ export interface RegionalMapModel {
   positions: Map<number, MapPoint>
   pilotCounts: Map<number, number>
   intelIndicators: Map<number, { intensity: number; label: string; color: string }>
+  sovereignty: Map<number, { label: string; color: string }>
 }
 
 export function buildRegionalMapModel(
@@ -39,11 +40,15 @@ export function buildRegionalMapModel(
   }
 
   const intelIndicators = new Map<number, { intensity: number; label: string; color: string }>()
+  const sovereignty = new Map<number, { label: string; color: string }>()
   for (const layer of layers) {
     for (const [systemId, indicator] of Object.entries(layer.indicators)) {
       intelIndicators.set(Number(systemId), indicator)
     }
+    for (const [systemId, ring] of Object.entries(layer.rings ?? {})) {
+      sovereignty.set(Number(systemId), ring)
+    }
   }
 
-  return { positions, pilotCounts, intelIndicators }
+  return { positions, pilotCounts, intelIndicators, sovereignty }
 }

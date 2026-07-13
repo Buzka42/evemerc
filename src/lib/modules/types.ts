@@ -30,6 +30,8 @@ export interface RegionalLayerContext {
 export interface RegionalLayerData {
   layerId: string;
   indicators: Record<number, { intensity: number; label: string; color: string }>;
+  /** A distinct visual channel (a colored ring around the system dot) for ownership-style overlays that shouldn't compete with `indicators`' intensity glow. */
+  rings?: Record<number, { label: string; color: string }>;
 }
 
 export interface FleetWidgetDefinition {

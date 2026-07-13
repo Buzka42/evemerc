@@ -37,6 +37,7 @@
     {@const position = model.positions.get(system.id)}
     {@const pilots = model.pilotCounts.get(system.id) ?? 0}
     {@const intel = model.intelIndicators.get(system.id)}
+    {@const sov = model.sovereignty.get(system.id)}
     {#if position}
       <g
         transform={`translate(${position.x} ${position.y})`}
@@ -56,6 +57,11 @@
         {/if}
         {#if pilots > 0}
           <circle r="15" fill="#22d3ee" fill-opacity="0.18" stroke="#22d3ee" stroke-width="2" />
+        {/if}
+        {#if sov}
+          <circle r="8" fill="none" stroke={sov.color} stroke-width="1.75">
+            <title>{system.name}: {sov.label}</title>
+          </circle>
         {/if}
         <circle r="5" fill={securityColor(system.security)} />
         <text y="-9" text-anchor="middle" fill="#cbd5e1" font-size="10">{system.name}</text>

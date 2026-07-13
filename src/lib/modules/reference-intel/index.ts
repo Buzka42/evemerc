@@ -14,5 +14,12 @@ export const referenceIntelModule: FeatureModule = {
       const provider = await import('./provider')
       return provider.loadKillActivityLayer(context)
     },
+  }, {
+    id: 'sovereignty',
+    title: 'Sovereignty',
+    load: async (context) => {
+      const provider = await import('./sovereignty')
+      return provider.loadSovereigntyLayer(context.api)
+    },
   }],
 }

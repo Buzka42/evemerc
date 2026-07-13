@@ -228,36 +228,35 @@ way the display blocks did. Gap #1's refactor is still the natural moment to als
 ownership* per-module (each module owning its own `$state`, exposed through `ModuleCtx` per
 PLAN.md §10.1) rather than continuing to peel off presentational leaves.
 
-### 6. M-maps "General"/"Access" settings: blocked by an undocumented backend contract
+### 6. M-maps "Access" (ACL) settings: blocked by an undocumented backend contract
 
-Home system, rally point, and the access ACL are missing not from unwillingness to build them
-but because the vendored OpenAPI contract doesn't document enough to build them correctly.
+**Correction to this entry's original version**: it previously also listed Home System and Rally
+Point as blocked, on the claim that grepping the schema for `home_system`/`rally_point` found
+"zero matches anywhere in a map's GET response." That was wrong — a narrow grep missed it. The
+map show response (`getApiV1MapsSlug`, ~line 2670 of `schema.d.ts`) does document
+`home_solarsystem_id`/`rally_solarsystem_id` on the map object; the example value
+(`"home_solarsystem_id": 30000142`) is Jita's real EVE solar system ID, confirming both read-side
+fields are raw solarsystem ids — **not** the same id space as the home-system *write* endpoint,
+which takes `map_solarsystem_id` (a map_solarsystem row id, different from the raw solarsystem
+id the read side reports). That asymmetry is real and both sides are now implemented correctly
+against it — see "Fixed this session." Leaving this note here rather than deleting it silently:
+the original claim was a real research mistake, not a doc-only nit, and it's worth remembering
+that a narrow/quick schema grep can miss a field that a fuller read of the relevant response
+object would have found — check the whole object, not just a grep for the exact field name you
+expect.
 
-PLAN.md §11's M-maps module calls for a "Map Settings" dialog covering General (rename, delete,
-toggle public, share tokens — rename/delete were missing and are now fixed, see "Fixed this
-session"), **Access** (ACL for characters/corps/alliances with expiry), and **Home System** /
-**Rally Point**. Checked `src/lib/api/schema.d.ts` (the vendored OpenAPI contract) for all three:
+Access (ACL) remains genuinely blocked, unchanged from the original finding: PLAN.md §11's
+M-maps module calls for an Access ACL tab (characters/corps/alliances with expiry).
+`GET /api/v1/maps/{map_slug}/access` is present in the schema but its 200-response body is
+**entirely undocumented** — the operation's `responses` only documents the 401 error case, not
+what a successful access-list response contains. `POST` (grant access) has a fully documented
+request body (`entity_id`, `entity_type: character|corporation|alliance`, `permission`,
+`expires_at`), but there is no companion `DELETE` in the schema at all — visible routes cover
+view + grant, not revoke. Building an Access UI now would mean guessing the list-item shape.
 
-- `POST /api/v1/maps/{map_slug}/settings/home-system` (body: `{ map_solarsystem_id }`) and
-  `POST .../settings/rally-point` (body: `{ solarsystem_id }` — note the two endpoints use
-  *different* id semantics, map-solarsystem vs. raw solarsystem, which is presumably correct on
-  the backend's side but easy to get backwards if built from memory instead of the schema) both
-  exist and are write-only in the schema — grepping the entire schema for `home_system` /
-  `rally_point` / `homeSystem` / `rallyPoint` finds **zero** matches anywhere in a map's GET
-  response. There is currently no documented way to read back which system is set as home/rally,
-  which means a "set home system" UI would have no way to show its own current state — it would
-  set blind and never confirm. Did not build it; guessing a field name for the read side would be
-  exactly the kind of unverifiable assumption this project has been avoiding all session.
-- `GET /api/v1/maps/{map_slug}/access` is present in the schema but its 200-response body is
-  **entirely undocumented** — the operation's `responses` only documents the 401 error case, not
-  what a successful access-list response contains. `POST` (grant access) has a fully documented
-  request body (`entity_id`, `entity_type: character|corporation|alliance`, `permission`,
-  `expires_at`), but there is no companion `DELETE` in the schema at all — visible routes cover
-  view + grant, not revoke. Building an Access UI now would mean guessing the list-item shape.
-
-Both are one-way blocked by the *documentation*, not the *feature* — if `npm run sync:api` is
-re-run later against a backend where Scribe has fully documented these responses (and a revoke
-endpoint exists for access), building this becomes exactly as straightforward as rename/delete
+This is one-way blocked by the *documentation*, not the *feature* — if `npm run sync:api` is
+re-run later against a backend where Scribe has fully documented the access-list response (and a
+revoke endpoint exists), building this becomes exactly as straightforward as rename/delete
 was this session: check the schema, write a thin wrapper in `lib/maps/settings.ts`, wire it into
 `MapRoutingPanel.svelte` (or a dedicated component, if the panel is getting overloaded — see the
 naming note in "Fixed this session"). Don't build a placeholder/guessed version in the meantime.
@@ -419,6 +418,21 @@ found gap #6, both in `PLAN.md` §11's M-signatures and M-navigation modules:
   the selected chain system's signatures (already present in `ChainMapSolarsystem.signatures`,
   no new fetch needed) with a per-row Delete and a two-click-confirm "Clear all." Signature
   *editing* is separately blocked — see gap #7.
+- **Implemented home system and rally point** (PLAN.md §11 M-maps). Turned out these were *not*
+  blocked the way gap #6 originally (and wrongly) claimed — the map show response does document
+  `home_solarsystem_id`/`rally_solarsystem_id`, a narrower earlier grep just missed it. Confirmed
+  both are raw solarsystem ids on the read side (the `home_solarsystem_id` example value in the
+  schema, 30000142, is Jita's real system ID) — but the home-system *write* endpoint takes a
+  `map_solarsystem_id` instead (a map_solarsystem row id, a different id space from what it
+  reports back on read). `ChainSnapshot` gained `homeSolarsystemId`/`rallySolarsystemId`;
+  `wormhole/api.ts` gained `setHomeSystem`/`setRallyPoint`. New `HomeRallyControls.svelte` shows
+  "Set as home"/"Set as rally" or a badge + clear button for the selected chain system, comparing
+  against `chainSnapshot.homeSolarsystemId`/`rallySolarsystemId` using the *system's* raw
+  solarsystem id (not its map_solarsystem row id) on both sides of the comparison — the
+  home-system id-space mismatch would have made the "is this the home system" check silently
+  wrong if built by symmetry with rally point instead of reading the schema's example values.
+  Gap #6 corrected to reflect this rather than silently deleted, since the original mistake (a
+  narrow grep missing a documented field) is itself worth remembering for next time.
 
 ## Recommended order for the next session
 

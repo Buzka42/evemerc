@@ -14,6 +14,8 @@ export async function fetchChainSnapshot(api: EveMercApi, mapSlug: string): Prom
   return {
     mapId: map.id ?? 0,
     mapSlug: map.slug ?? mapSlug,
+    homeSolarsystemId: map.home_solarsystem_id ?? null,
+    rallySolarsystemId: map.rally_solarsystem_id ?? null,
     systems: (map.map_solarsystems ?? []).flatMap((system, index) => {
       if (typeof system.id !== 'number' || typeof system.solarsystem_id !== 'number') return []
       return [{
@@ -113,6 +115,28 @@ export async function pasteSignatures(api: EveMercApi, mapSolarsystemId: number,
     body: { map_solarsystem_id: mapSolarsystemId, signatures },
   })
   if (error) throw new Error('Could not synchronize the pasted signatures.')
+}
+
+/**
+ * Sets or clears the map's home system. The backend expects the map_solarsystems row id here
+ * (NOT the raw solarsystem id the map's read side reports back as home_solarsystem_id) — the
+ * two sides of this setting use different identifier spaces per the OpenAPI contract.
+ */
+export async function setHomeSystem(api: EveMercApi, mapSlug: string, mapSolarsystemId: number | null): Promise<void> {
+  const { error } = await api.POST('/api/v1/maps/{map_slug}/settings/home-system', {
+    params: { path: { map_slug: mapSlug } },
+    body: { map_solarsystem_id: mapSolarsystemId },
+  })
+  if (error) throw new Error('Could not update the home system.')
+}
+
+/** Sets or clears the map's rally point, identified by raw solarsystem id on both sides. */
+export async function setRallyPoint(api: EveMercApi, mapSlug: string, solarsystemId: number | null): Promise<void> {
+  const { error } = await api.POST('/api/v1/maps/{map_slug}/settings/rally-point', {
+    params: { path: { map_slug: mapSlug } },
+    body: { solarsystem_id: solarsystemId },
+  })
+  if (error) throw new Error('Could not update the rally point.')
 }
 
 export async function deleteSignature(api: EveMercApi, signatureId: number): Promise<void> {

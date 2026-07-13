@@ -38,6 +38,8 @@ export interface ChainConnectionUpdate {
 export interface ChainSnapshot {
   mapId: number
   mapSlug: string
+  homeSolarsystemId: number | null
+  rallySolarsystemId: number | null
   systems: ChainMapSolarsystem[]
   connections: ChainConnection[]
   savedLocations: Array<{ id: number; solarsystemId: number; note: string | null }>

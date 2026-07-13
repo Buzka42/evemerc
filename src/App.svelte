@@ -22,10 +22,11 @@
   import { fleetAlerts } from './lib/fleet/alerts';
   import FleetAlertsPanel from './lib/fleet/FleetAlertsPanel.svelte';
   import FleetCommandActions from './lib/fleet/FleetCommandActions.svelte';
-  import { createChainConnection, createChainSystem, deleteAllSignatures, deleteChainConnection, deleteMapLocation, deleteSignature, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, trackTransition, updateChainConnection, type MapStatistics } from './lib/wormhole/api';
+  import { createChainConnection, createChainSystem, deleteAllSignatures, deleteChainConnection, deleteMapLocation, deleteSignature, enrichChainSnapshot, fetchChainSnapshot, fetchMapStatistics, importEveScoutConnections, moveChainSystem, pasteSignatures, saveMapLocation, setHomeSystem, setRallyPoint, trackTransition, updateChainConnection, type MapStatistics } from './lib/wormhole/api';
   import type { ChainConnectionUpdate } from './lib/wormhole/types';
   import ConnectionEditor from './lib/wormhole/ConnectionEditor.svelte';
   import SignatureList from './lib/wormhole/SignatureList.svelte';
+  import HomeRallyControls from './lib/wormhole/HomeRallyControls.svelte';
   import SavedLocationsPanel from './lib/wormhole/SavedLocationsPanel.svelte';
   import { parseProbeScanner } from './lib/wormhole/signatureParser';
   import type { ChainSnapshot } from './lib/wormhole/types';
@@ -517,6 +518,28 @@
     try {
       chainError = null;
       await deleteAllSignatures(api, selectedChainSystemId);
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function updateHomeSystem(mapSolarsystemId: number | null): Promise<void> {
+    if (!selectedMapSlug) return;
+    try {
+      chainError = null;
+      await setHomeSystem(api, selectedMapSlug, mapSolarsystemId);
+      await refreshChain();
+    } catch (error) {
+      chainError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  async function updateRallyPoint(solarsystemId: number | null): Promise<void> {
+    if (!selectedMapSlug) return;
+    try {
+      chainError = null;
+      await setRallyPoint(api, selectedMapSlug, solarsystemId);
       await refreshChain();
     } catch (error) {
       chainError = error instanceof Error ? error.message : String(error);
@@ -1243,6 +1266,14 @@
                 signatures={selectedSignatureSystem.signatures}
                 onDelete={deleteSelectedSignature}
                 onDeleteAll={deleteAllSelectedSignatures}
+              />
+              <HomeRallyControls
+                isHome={selectedSignatureSystem.solarsystemId === chainSnapshot.homeSolarsystemId}
+                isRally={selectedSignatureSystem.solarsystemId === chainSnapshot.rallySolarsystemId}
+                onSetHome={() => updateHomeSystem(selectedSignatureSystem.id)}
+                onClearHome={() => updateHomeSystem(null)}
+                onSetRally={() => updateRallyPoint(selectedSignatureSystem.solarsystemId)}
+                onClearRally={() => updateRallyPoint(null)}
               />
             {/if}
           {/if}

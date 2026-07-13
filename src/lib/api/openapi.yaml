@@ -1,0 +1,4054 @@
+openapi: 3.0.3
+info:
+  title: 'FleetZone Intel Tool API Documentation'
+  description: 'RESTful API for managing wormhole maps and solar system data in EVE Online. Access and manipulate collaborative mapping data for navigating wormhole space.'
+  version: 1.0.0
+servers:
+  -
+    url: 'https://wormhole.systems'
+tags:
+  -
+    name: Endpoints
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'You can retrieve your personal access token by logging into the application, navigating to your account settings, and creating a new API token in the <b>API Tokens</b> section.'
+security:
+  -
+    default: []
+paths:
+  /api/sovereignties:
+    get:
+      summary: ''
+      operationId: getApiSovereignties
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                example: []
+      tags:
+        - Endpoints
+  /api/maps:
+    get:
+      summary: ''
+      operationId: getApiMaps
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Maps accessible to the authenticated user.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: 'Fleet Operations'
+                      slug: fleet-operations-1
+                      default_region_id: 10000002
+                      home_solarsystem_id: 30000142
+                      rally_solarsystem_id: null
+                      map_solarsystems: []
+                      map_connections: []
+                      owner:
+                        id: 1
+                        character_name: 'Example Commander'
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'Fleet Operations'
+                        slug: fleet-operations-1
+                        default_region_id: 10000002
+                        home_solarsystem_id: 30000142
+                        rally_solarsystem_id: null
+                        map_solarsystems: []
+                        map_connections: []
+                        owner:
+                          id: 1
+                          character_name: 'Example Commander'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'Fleet Operations'
+                        slug:
+                          type: string
+                          example: fleet-operations-1
+                        default_region_id:
+                          type: integer
+                          example: 10000002
+                        home_solarsystem_id:
+                          type: integer
+                          example: 30000142
+                        rally_solarsystem_id:
+                          type: string
+                          example: null
+                          nullable: true
+                        map_solarsystems:
+                          type: array
+                          example: []
+                        map_connections:
+                          type: array
+                          example: []
+                        owner:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            character_name:
+                              type: string
+                              example: 'Example Commander'
+      tags:
+        - Endpoints
+  '/api/maps/{slug}':
+    get:
+      summary: ''
+      operationId: getApiMapsSlug
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Complete map snapshot for chain rendering and reconciliation.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Wormhole Operations'
+                    slug: wormhole-operations-1
+                    default_region_id: 10000002
+                    home_solarsystem_id: 31000005
+                    rally_solarsystem_id: 30000142
+                    map_solarsystems:
+                      -
+                        id: 10
+                        map_id: 1
+                        alias: Home
+                        status: scanned
+                        occupier_alias: null
+                        position:
+                          x: 100
+                          'y': 100
+                        pinned: true
+                        solarsystem_id: 31000005
+                        signatures_count: 1
+                        wormhole_signatures_count: 1
+                        map_connections_count: 1
+                        threat_level: null
+                        signatures:
+                          -
+                            id: 100
+                            signature_id: ABC-123
+                            map_solarsystem_id: 10
+                            target_class: null
+                            extra: null
+                            wormhole: null
+                            signature_category: null
+                            signature_type: null
+                            raw_type_name: 'Unresolved site'
+                            created_at: '2026-07-12T20:00:00Z'
+                            updated_at: '2026-07-12T20:00:00Z'
+                            lifetime_status: healthy
+                            lifetime_status_updated_at: null
+                            mass_status: null
+                            map_connection_id: null
+                    map_connections:
+                      -
+                        id: 20
+                        from_map_solarsystem_id: 10
+                        to_map_solarsystem_id: 11
+                        mass_status: fresh
+                        lifetime_status: healthy
+                        lifetime_status_updated_at: null
+                        signatures: []
+                        ship_size: large
+                        created_at: '2026-07-12T20:00:00Z'
+                        updated_at: '2026-07-12T20:00:00Z'
+                    saved_locations:
+                      -
+                        id: 30
+                        map_id: 1
+                        solarsystem_id: 30000142
+                        note: 'Fleet rally'
+                        created_at: '2026-07-12T20:00:00Z'
+                        updated_at: '2026-07-12T20:00:00Z'
+                    owner:
+                      id: 1
+                      character_name: 'Example Commander'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Wormhole Operations'
+                      slug:
+                        type: string
+                        example: wormhole-operations-1
+                      default_region_id:
+                        type: integer
+                        example: 10000002
+                      home_solarsystem_id:
+                        type: integer
+                        example: 31000005
+                      rally_solarsystem_id:
+                        type: integer
+                        example: 30000142
+                      map_solarsystems:
+                        type: array
+                        example:
+                          -
+                            id: 10
+                            map_id: 1
+                            alias: Home
+                            status: scanned
+                            occupier_alias: null
+                            position:
+                              x: 100
+                              'y': 100
+                            pinned: true
+                            solarsystem_id: 31000005
+                            signatures_count: 1
+                            wormhole_signatures_count: 1
+                            map_connections_count: 1
+                            threat_level: null
+                            signatures:
+                              -
+                                id: 100
+                                signature_id: ABC-123
+                                map_solarsystem_id: 10
+                                target_class: null
+                                extra: null
+                                wormhole: null
+                                signature_category: null
+                                signature_type: null
+                                raw_type_name: 'Unresolved site'
+                                created_at: '2026-07-12T20:00:00Z'
+                                updated_at: '2026-07-12T20:00:00Z'
+                                lifetime_status: healthy
+                                lifetime_status_updated_at: null
+                                mass_status: null
+                                map_connection_id: null
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 10
+                            map_id:
+                              type: integer
+                              example: 1
+                            alias:
+                              type: string
+                              example: Home
+                            status:
+                              type: string
+                              example: scanned
+                            occupier_alias:
+                              type: string
+                              example: null
+                              nullable: true
+                            position:
+                              type: object
+                              properties:
+                                x:
+                                  type: integer
+                                  example: 100
+                                'y':
+                                  type: integer
+                                  example: 100
+                            pinned:
+                              type: boolean
+                              example: true
+                            solarsystem_id:
+                              type: integer
+                              example: 31000005
+                            signatures_count:
+                              type: integer
+                              example: 1
+                            wormhole_signatures_count:
+                              type: integer
+                              example: 1
+                            map_connections_count:
+                              type: integer
+                              example: 1
+                            threat_level:
+                              type: string
+                              example: null
+                              nullable: true
+                            signatures:
+                              type: array
+                              example:
+                                -
+                                  id: 100
+                                  signature_id: ABC-123
+                                  map_solarsystem_id: 10
+                                  target_class: null
+                                  extra: null
+                                  wormhole: null
+                                  signature_category: null
+                                  signature_type: null
+                                  raw_type_name: 'Unresolved site'
+                                  created_at: '2026-07-12T20:00:00Z'
+                                  updated_at: '2026-07-12T20:00:00Z'
+                                  lifetime_status: healthy
+                                  lifetime_status_updated_at: null
+                                  mass_status: null
+                                  map_connection_id: null
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                    example: 100
+                                  signature_id:
+                                    type: string
+                                    example: ABC-123
+                                  map_solarsystem_id:
+                                    type: integer
+                                    example: 10
+                                  target_class:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  extra:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  wormhole:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  signature_category:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  signature_type:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  raw_type_name:
+                                    type: string
+                                    example: 'Unresolved site'
+                                  created_at:
+                                    type: string
+                                    example: '2026-07-12T20:00:00Z'
+                                  updated_at:
+                                    type: string
+                                    example: '2026-07-12T20:00:00Z'
+                                  lifetime_status:
+                                    type: string
+                                    example: healthy
+                                  lifetime_status_updated_at:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  mass_status:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  map_connection_id:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                      map_connections:
+                        type: array
+                        example:
+                          -
+                            id: 20
+                            from_map_solarsystem_id: 10
+                            to_map_solarsystem_id: 11
+                            mass_status: fresh
+                            lifetime_status: healthy
+                            lifetime_status_updated_at: null
+                            signatures: []
+                            ship_size: large
+                            created_at: '2026-07-12T20:00:00Z'
+                            updated_at: '2026-07-12T20:00:00Z'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 20
+                            from_map_solarsystem_id:
+                              type: integer
+                              example: 10
+                            to_map_solarsystem_id:
+                              type: integer
+                              example: 11
+                            mass_status:
+                              type: string
+                              example: fresh
+                            lifetime_status:
+                              type: string
+                              example: healthy
+                            lifetime_status_updated_at:
+                              type: string
+                              example: null
+                              nullable: true
+                            signatures:
+                              type: array
+                              example: []
+                            ship_size:
+                              type: string
+                              example: large
+                            created_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                            updated_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                      saved_locations:
+                        type: array
+                        example:
+                          -
+                            id: 30
+                            map_id: 1
+                            solarsystem_id: 30000142
+                            note: 'Fleet rally'
+                            created_at: '2026-07-12T20:00:00Z'
+                            updated_at: '2026-07-12T20:00:00Z'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 30
+                            map_id:
+                              type: integer
+                              example: 1
+                            solarsystem_id:
+                              type: integer
+                              example: 30000142
+                            note:
+                              type: string
+                              example: 'Fleet rally'
+                            created_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                            updated_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                      owner:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          character_name:
+                            type: string
+                            example: 'Example Commander'
+      tags:
+        - Endpoints
+    put:
+      summary: ''
+      operationId: putApiMapsSlug
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+              required:
+                - name
+    parameters:
+      -
+        in: path
+        name: slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  /api/map-solarsystems:
+    post:
+      summary: ''
+      operationId: postApiMapSolarsystems
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the maps table.'
+                  example: architecto
+                solarsystem_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the solarsystems table.'
+                  example: architecto
+                alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'n'
+                  nullable: true
+                occupier_alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                position_x:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 3980.'
+                  example: 16
+                  nullable: true
+                position_y:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 1980.'
+                  example: 17
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: friendly
+                  enum:
+                    - active
+                    - unknown
+                    - unscanned
+                    - hostile
+                    - friendly
+                    - empty
+                  nullable: true
+                pinned:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - map_id
+                - solarsystem_id
+  '/api/map-solarsystems/{id}':
+    get:
+      summary: ''
+      operationId: getApiMapSolarsystemsId
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    put:
+      summary: ''
+      operationId: putApiMapSolarsystemsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+                  nullable: true
+                occupier_alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'n'
+                  nullable: true
+                position_x:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 3980.'
+                  example: 7
+                  nullable: true
+                position_y:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 1980.'
+                  example: 16
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: empty
+                  enum:
+                    - active
+                    - unknown
+                    - unscanned
+                    - hostile
+                    - friendly
+                    - empty
+                  nullable: true
+                pinned:
+                  type: boolean
+                  description: ''
+                  example: true
+                notes:
+                  type: string
+                  description: 'Must not be greater than 65535 characters.'
+                  example: m
+                  nullable: true
+    delete:
+      summary: ''
+      operationId: deleteApiMapSolarsystemsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the map solarsystem.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/sde/version:
+    get:
+      summary: ''
+      operationId: getApiV1SdeVersion
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Current desktop SDE snapshot version and download location.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  version: 77f27a1560a881749765944bab471492d3f2e1c72dc5f74574b5d86e9b797e06
+                  size_bytes: 1048576
+                  generated_at: '2026-07-12T20:00:00.000000Z'
+                  url: 'https://wormhole.systems/api/v1/sde/snapshot'
+                properties:
+                  version:
+                    type: string
+                    example: 77f27a1560a881749765944bab471492d3f2e1c72dc5f74574b5d86e9b797e06
+                  size_bytes:
+                    type: integer
+                    example: 1048576
+                  generated_at:
+                    type: string
+                    example: '2026-07-12T20:00:00.000000Z'
+                  url:
+                    type: string
+                    example: 'https://wormhole.systems/api/v1/sde/snapshot'
+      tags:
+        - Endpoints
+  /api/v1/sde/snapshot:
+    get:
+      summary: ''
+      operationId: getApiV1SdeSnapshot
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ''
+      tags:
+        - Endpoints
+  /api/v1/regions:
+    get:
+      summary: 'Return all k-space regions for the region selector dropdown.'
+      operationId: returnAllKSpaceRegionsForTheRegionSelectorDropdown
+      description: 'Reads from the static JSON file so no DB seeding is required.'
+      parameters: []
+      responses:
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Internal Server Error'
+                  status: 500
+                properties:
+                  message:
+                    type: string
+                    example: 'Internal Server Error'
+                  status:
+                    type: integer
+                    example: 500
+      tags:
+        - Endpoints
+  /api/v1/sovereignties:
+    get:
+      summary: ''
+      operationId: getApiV1Sovereignties
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                example: []
+      tags:
+        - Endpoints
+  '/api/v1/system/{solarsystemId}/sov-structures':
+    get:
+      summary: 'Return sovereignty structures in a solar system (ESI), cached globally for 5 minutes.'
+      operationId: returnSovereigntyStructuresInASolarSystemESICachedGloballyFor5Minutes
+      description: ''
+      parameters: []
+      responses:
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Internal Server Error'
+                  status: 500
+                properties:
+                  message:
+                    type: string
+                    example: 'Internal Server Error'
+                  status:
+                    type: integer
+                    example: 500
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: solarsystemId
+        description: ''
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/v1/desktop/latest-version:
+    get:
+      summary: ''
+      operationId: getApiV1DesktopLatestVersion
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Latest supported EVEMerc Desktop release.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  version: 0.1.0
+                  download_url: 'https://wormhole.systems/downloads/evemerc-desktop'
+                properties:
+                  version:
+                    type: string
+                    example: 0.1.0
+                  download_url:
+                    type: string
+                    example: 'https://wormhole.systems/downloads/evemerc-desktop'
+      tags:
+        - Endpoints
+  '/api/v1/share/{token}':
+    get:
+      summary: ''
+      operationId: getApiV1ShareToken
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Not Found'
+                  status: 404
+                properties:
+                  message:
+                    type: string
+                    example: 'Not Found'
+                  status:
+                    type: integer
+                    example: 404
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: token
+        description: ''
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/v1/auth/token:
+    post:
+      summary: ''
+      operationId: postApiV1AuthToken
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Desktop access token issued.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  token: 1|example-plain-text-token
+                properties:
+                  token:
+                    type: string
+                    example: 1|example-plain-text-token
+        422:
+          description: 'Invalid, expired, or already consumed authorization code.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The given data was invalid.'
+                  errors:
+                    code:
+                      - 'The desktop authorization code is invalid or has expired.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The given data was invalid.'
+                  errors:
+                    type: object
+                    properties:
+                      code:
+                        type: array
+                        example:
+                          - 'The desktop authorization code is invalid or has expired.'
+                        items:
+                          type: string
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 'Single-use authorization code returned to the desktop callback. Must contain only letters and numbers. Must be 64 characters.'
+                  example: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                code_verifier:
+                  type: string
+                  description: 'Original PKCE verifier used to create the login challenge. Must match the regex /^[A-Za-z0-9._~-]+$/. Must be at least 43 characters. Must not be greater than 128 characters.'
+                  example: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                device_name:
+                  type: string
+                  description: 'Human-readable device name shown for the issued token. Must not be greater than 120 characters.'
+                  example: 'Fleet Command Laptop'
+              required:
+                - code
+                - code_verifier
+                - device_name
+    delete:
+      summary: ''
+      operationId: deleteApiV1AuthToken
+      description: ''
+      parameters: []
+      responses:
+        204:
+          description: 'The current desktop access token was revoked.'
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+      tags:
+        - Endpoints
+  /api/v1/me:
+    get:
+      summary: ''
+      operationId: getApiV1Me
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+  /api/v1/account/characters:
+    get:
+      summary: ''
+      operationId: getApiV1AccountCharacters
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+  '/api/v1/account/characters/{character_id}/active':
+    put:
+      summary: ''
+      operationId: putApiV1AccountCharactersCharacter_idActive
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: character_id
+        description: 'The ID of the character.'
+        example: 94497449
+        required: true
+        schema:
+          type: integer
+  '/api/v1/account/characters/{character_id}/preferred':
+    put:
+      summary: ''
+      operationId: putApiV1AccountCharactersCharacter_idPreferred
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: character_id
+        description: 'The ID of the character.'
+        example: 94497449
+        required: true
+        schema:
+          type: integer
+  '/api/v1/account/characters/{id}':
+    delete:
+      summary: ''
+      operationId: deleteApiV1AccountCharactersId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the character.'
+        example: 94497449
+        required: true
+        schema:
+          type: integer
+  '/api/v1/account/characters/{character_id}/scopes':
+    delete:
+      summary: ''
+      operationId: deleteApiV1AccountCharactersCharacter_idScopes
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: character_id
+        description: 'The ID of the character.'
+        example: 94497449
+        required: true
+        schema:
+          type: integer
+  /api/v1/account/tokens:
+    get:
+      summary: ''
+      operationId: getApiV1AccountTokens
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    post:
+      summary: ''
+      operationId: postApiV1AccountTokens
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+              required:
+                - name
+  '/api/v1/account/tokens/{id}':
+    delete:
+      summary: ''
+      operationId: deleteApiV1AccountTokensId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the token.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  /api/v1/tokens:
+    get:
+      summary: ''
+      operationId: getApiV1Tokens
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    post:
+      summary: ''
+      operationId: postApiV1Tokens
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+              required:
+                - name
+  '/api/v1/tokens/{id}':
+    delete:
+      summary: ''
+      operationId: deleteApiV1TokensId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the token.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  '/api/v1/user-characters/{character_id}':
+    put:
+      summary: ''
+      operationId: putApiV1UserCharactersCharacter_id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    delete:
+      summary: ''
+      operationId: deleteApiV1UserCharactersCharacter_id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: character_id
+        description: 'The ID of the character.'
+        example: 94497449
+        required: true
+        schema:
+          type: integer
+  '/api/v1/preferred-character/{character_id}':
+    post:
+      summary: ''
+      operationId: postApiV1PreferredCharacterCharacter_id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: character_id
+        description: 'The ID of the character.'
+        example: 94497449
+        required: true
+        schema:
+          type: integer
+  /api/v1/scopes:
+    get:
+      summary: ''
+      operationId: getApiV1Scopes
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+  '/api/v1/scopes/{character_id}':
+    delete:
+      summary: ''
+      operationId: deleteApiV1ScopesCharacter_id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: character_id
+        description: 'The ID of the character.'
+        example: 94497449
+        required: true
+        schema:
+          type: integer
+  /api/v1/realtime/config:
+    get:
+      summary: ''
+      operationId: getApiV1RealtimeConfig
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Authenticated Reverb client configuration.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  key: evemerc-app-key
+                  host: wormhole.systems
+                  port: 443
+                  scheme: https
+                  auth_endpoint: 'https://wormhole.systems/api/v1/broadcasting/auth'
+                properties:
+                  key:
+                    type: string
+                    example: evemerc-app-key
+                  host:
+                    type: string
+                    example: wormhole.systems
+                  port:
+                    type: integer
+                    example: 443
+                  scheme:
+                    type: string
+                    example: https
+                  auth_endpoint:
+                    type: string
+                    example: 'https://wormhole.systems/api/v1/broadcasting/auth'
+      tags:
+        - Endpoints
+  /api/v1/maps:
+    get:
+      summary: ''
+      operationId: getApiV1Maps
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Maps accessible to the authenticated user.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: 'Fleet Operations'
+                      slug: fleet-operations-1
+                      default_region_id: 10000002
+                      home_solarsystem_id: 30000142
+                      rally_solarsystem_id: null
+                      map_solarsystems: []
+                      map_connections: []
+                      owner:
+                        id: 1
+                        character_name: 'Example Commander'
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'Fleet Operations'
+                        slug: fleet-operations-1
+                        default_region_id: 10000002
+                        home_solarsystem_id: 30000142
+                        rally_solarsystem_id: null
+                        map_solarsystems: []
+                        map_connections: []
+                        owner:
+                          id: 1
+                          character_name: 'Example Commander'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'Fleet Operations'
+                        slug:
+                          type: string
+                          example: fleet-operations-1
+                        default_region_id:
+                          type: integer
+                          example: 10000002
+                        home_solarsystem_id:
+                          type: integer
+                          example: 30000142
+                        rally_solarsystem_id:
+                          type: string
+                          example: null
+                          nullable: true
+                        map_solarsystems:
+                          type: array
+                          example: []
+                        map_connections:
+                          type: array
+                          example: []
+                        owner:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            character_name:
+                              type: string
+                              example: 'Example Commander'
+      tags:
+        - Endpoints
+    post:
+      summary: ''
+      operationId: postApiV1Maps
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+                default_region_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the regions table.'
+                  example: 16
+                  nullable: true
+                bind_to_alliance:
+                  type: boolean
+                  description: ''
+                  example: false
+                ends_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>today</code>.'
+                  example: '2052-08-05'
+                  nullable: true
+              required:
+                - name
+  '/api/v1/maps/{slug}':
+    get:
+      summary: ''
+      operationId: getApiV1MapsSlug
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Complete map snapshot for chain rendering and reconciliation.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Wormhole Operations'
+                    slug: wormhole-operations-1
+                    default_region_id: 10000002
+                    home_solarsystem_id: 31000005
+                    rally_solarsystem_id: 30000142
+                    map_solarsystems:
+                      -
+                        id: 10
+                        map_id: 1
+                        alias: Home
+                        status: scanned
+                        occupier_alias: null
+                        position:
+                          x: 100
+                          'y': 100
+                        pinned: true
+                        solarsystem_id: 31000005
+                        signatures_count: 1
+                        wormhole_signatures_count: 1
+                        map_connections_count: 1
+                        threat_level: null
+                        signatures:
+                          -
+                            id: 100
+                            signature_id: ABC-123
+                            map_solarsystem_id: 10
+                            target_class: null
+                            extra: null
+                            wormhole: null
+                            signature_category: null
+                            signature_type: null
+                            raw_type_name: 'Unresolved site'
+                            created_at: '2026-07-12T20:00:00Z'
+                            updated_at: '2026-07-12T20:00:00Z'
+                            lifetime_status: healthy
+                            lifetime_status_updated_at: null
+                            mass_status: null
+                            map_connection_id: null
+                    map_connections:
+                      -
+                        id: 20
+                        from_map_solarsystem_id: 10
+                        to_map_solarsystem_id: 11
+                        mass_status: fresh
+                        lifetime_status: healthy
+                        lifetime_status_updated_at: null
+                        signatures: []
+                        ship_size: large
+                        created_at: '2026-07-12T20:00:00Z'
+                        updated_at: '2026-07-12T20:00:00Z'
+                    saved_locations:
+                      -
+                        id: 30
+                        map_id: 1
+                        solarsystem_id: 30000142
+                        note: 'Fleet rally'
+                        created_at: '2026-07-12T20:00:00Z'
+                        updated_at: '2026-07-12T20:00:00Z'
+                    owner:
+                      id: 1
+                      character_name: 'Example Commander'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Wormhole Operations'
+                      slug:
+                        type: string
+                        example: wormhole-operations-1
+                      default_region_id:
+                        type: integer
+                        example: 10000002
+                      home_solarsystem_id:
+                        type: integer
+                        example: 31000005
+                      rally_solarsystem_id:
+                        type: integer
+                        example: 30000142
+                      map_solarsystems:
+                        type: array
+                        example:
+                          -
+                            id: 10
+                            map_id: 1
+                            alias: Home
+                            status: scanned
+                            occupier_alias: null
+                            position:
+                              x: 100
+                              'y': 100
+                            pinned: true
+                            solarsystem_id: 31000005
+                            signatures_count: 1
+                            wormhole_signatures_count: 1
+                            map_connections_count: 1
+                            threat_level: null
+                            signatures:
+                              -
+                                id: 100
+                                signature_id: ABC-123
+                                map_solarsystem_id: 10
+                                target_class: null
+                                extra: null
+                                wormhole: null
+                                signature_category: null
+                                signature_type: null
+                                raw_type_name: 'Unresolved site'
+                                created_at: '2026-07-12T20:00:00Z'
+                                updated_at: '2026-07-12T20:00:00Z'
+                                lifetime_status: healthy
+                                lifetime_status_updated_at: null
+                                mass_status: null
+                                map_connection_id: null
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 10
+                            map_id:
+                              type: integer
+                              example: 1
+                            alias:
+                              type: string
+                              example: Home
+                            status:
+                              type: string
+                              example: scanned
+                            occupier_alias:
+                              type: string
+                              example: null
+                              nullable: true
+                            position:
+                              type: object
+                              properties:
+                                x:
+                                  type: integer
+                                  example: 100
+                                'y':
+                                  type: integer
+                                  example: 100
+                            pinned:
+                              type: boolean
+                              example: true
+                            solarsystem_id:
+                              type: integer
+                              example: 31000005
+                            signatures_count:
+                              type: integer
+                              example: 1
+                            wormhole_signatures_count:
+                              type: integer
+                              example: 1
+                            map_connections_count:
+                              type: integer
+                              example: 1
+                            threat_level:
+                              type: string
+                              example: null
+                              nullable: true
+                            signatures:
+                              type: array
+                              example:
+                                -
+                                  id: 100
+                                  signature_id: ABC-123
+                                  map_solarsystem_id: 10
+                                  target_class: null
+                                  extra: null
+                                  wormhole: null
+                                  signature_category: null
+                                  signature_type: null
+                                  raw_type_name: 'Unresolved site'
+                                  created_at: '2026-07-12T20:00:00Z'
+                                  updated_at: '2026-07-12T20:00:00Z'
+                                  lifetime_status: healthy
+                                  lifetime_status_updated_at: null
+                                  mass_status: null
+                                  map_connection_id: null
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                    example: 100
+                                  signature_id:
+                                    type: string
+                                    example: ABC-123
+                                  map_solarsystem_id:
+                                    type: integer
+                                    example: 10
+                                  target_class:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  extra:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  wormhole:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  signature_category:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  signature_type:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  raw_type_name:
+                                    type: string
+                                    example: 'Unresolved site'
+                                  created_at:
+                                    type: string
+                                    example: '2026-07-12T20:00:00Z'
+                                  updated_at:
+                                    type: string
+                                    example: '2026-07-12T20:00:00Z'
+                                  lifetime_status:
+                                    type: string
+                                    example: healthy
+                                  lifetime_status_updated_at:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  mass_status:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                                  map_connection_id:
+                                    type: string
+                                    example: null
+                                    nullable: true
+                      map_connections:
+                        type: array
+                        example:
+                          -
+                            id: 20
+                            from_map_solarsystem_id: 10
+                            to_map_solarsystem_id: 11
+                            mass_status: fresh
+                            lifetime_status: healthy
+                            lifetime_status_updated_at: null
+                            signatures: []
+                            ship_size: large
+                            created_at: '2026-07-12T20:00:00Z'
+                            updated_at: '2026-07-12T20:00:00Z'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 20
+                            from_map_solarsystem_id:
+                              type: integer
+                              example: 10
+                            to_map_solarsystem_id:
+                              type: integer
+                              example: 11
+                            mass_status:
+                              type: string
+                              example: fresh
+                            lifetime_status:
+                              type: string
+                              example: healthy
+                            lifetime_status_updated_at:
+                              type: string
+                              example: null
+                              nullable: true
+                            signatures:
+                              type: array
+                              example: []
+                            ship_size:
+                              type: string
+                              example: large
+                            created_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                            updated_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                      saved_locations:
+                        type: array
+                        example:
+                          -
+                            id: 30
+                            map_id: 1
+                            solarsystem_id: 30000142
+                            note: 'Fleet rally'
+                            created_at: '2026-07-12T20:00:00Z'
+                            updated_at: '2026-07-12T20:00:00Z'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 30
+                            map_id:
+                              type: integer
+                              example: 1
+                            solarsystem_id:
+                              type: integer
+                              example: 30000142
+                            note:
+                              type: string
+                              example: 'Fleet rally'
+                            created_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                            updated_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                      owner:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          character_name:
+                            type: string
+                            example: 'Example Commander'
+      tags:
+        - Endpoints
+    put:
+      summary: ''
+      operationId: putApiV1MapsSlug
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+              required:
+                - name
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapsSlug
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/ping':
+    get:
+      summary: ''
+      operationId: getApiV1MapsMap_slugPing
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/settings/toggle-public':
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugSettingsTogglePublic
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/settings/generate-share-token':
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugSettingsGenerateShareToken
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/settings/revoke-share-token':
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapsMap_slugSettingsRevokeShareToken
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/settings/home-system':
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugSettingsHomeSystem
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_solarsystem_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                  nullable: true
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/settings/rally-point':
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugSettingsRallyPoint
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                solarsystem_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the solarsystems table.'
+                  example: 16
+                  nullable: true
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/routing-settings':
+    get:
+      summary: ''
+      operationId: getApiV1MapsMap_slugRoutingSettings
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/access':
+    get:
+      summary: ''
+      operationId: getApiV1MapsMap_slugAccess
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugAccess
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                entity_type:
+                  type: string
+                  description: ''
+                  example: corporation
+                  enum:
+                    - character
+                    - corporation
+                    - alliance
+                permission:
+                  type: string
+                  description: ''
+                  example: member
+                  enum:
+                    - viewer
+                    - member
+                    - manager
+                  nullable: true
+                expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>now</code>.'
+                  example: '2052-08-05'
+                  nullable: true
+              required:
+                - entity_id
+                - entity_type
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/user-settings':
+    put:
+      summary: ''
+      operationId: putApiV1MapsMap_slugUserSettings
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tracking_allowed:
+                  type: boolean
+                  description: ''
+                  example: true
+                is_tracking:
+                  type: boolean
+                  description: ''
+                  example: true
+                route_allow_lifetime_status:
+                  type: string
+                  description: ''
+                  example: architecto
+                  enum:
+                    - healthy
+                    - eol
+                    - critical
+                  nullable: true
+                route_allow_mass_status:
+                  type: string
+                  description: ''
+                  example: architecto
+                  enum:
+                    - fresh
+                    - reduced
+                    - critical
+                    - unknown
+                  nullable: true
+                route_use_evescout:
+                  type: boolean
+                  description: ''
+                  example: false
+                route_preference:
+                  type: string
+                  description: ''
+                  example: architecto
+                  enum:
+                    - shorter
+                    - safer
+                    - less_secure
+                  nullable: true
+                security_penalty:
+                  type: integer
+                  description: 'Must be at least 0. Must not be greater than 100.'
+                  example: 22
+                  nullable: true
+                killmail_filter:
+                  type: string
+                  description: ''
+                  example: architecto
+                  enum:
+                    - all
+                    - jspace
+                    - kspace
+                  nullable: true
+                introduction_confirmed_at:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-07-13T00:17:18'
+                  nullable: true
+                prompt_for_signature_enabled:
+                  type: boolean
+                  description: ''
+                  example: false
+                  nullable: true
+                layout_breakpoints:
+                  type: object
+                  description: ''
+                  example: null
+                  properties: {  }
+                  nullable: true
+                hidden_cards:
+                  type: array
+                  description: ''
+                  example:
+                    - architecto
+                  items:
+                    type: string
+                    enum:
+                      - audits
+                      - current-ships
+                      - characters
+                      - eve-scout
+                      - fleet-composition
+                      - signatures
+                      - fleet-controls
+                      - fleet-commanders
+                      - regional-map
+                      - system-info
+                      - wormhole-chain
+                      - killfeed
+                      - saved-locations
+                show_threat_level:
+                  type: boolean
+                  description: ''
+                  example: true
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  /api/v1/map-solarsystems:
+    post:
+      summary: ''
+      operationId: postApiV1MapSolarsystems
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the maps table.'
+                  example: architecto
+                solarsystem_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the solarsystems table.'
+                  example: architecto
+                alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'n'
+                  nullable: true
+                occupier_alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                position_x:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 3980.'
+                  example: 16
+                  nullable: true
+                position_y:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 1980.'
+                  example: 17
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: unscanned
+                  enum:
+                    - active
+                    - unknown
+                    - unscanned
+                    - hostile
+                    - friendly
+                    - empty
+                  nullable: true
+                pinned:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - map_id
+                - solarsystem_id
+  '/api/v1/map-solarsystems/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1MapSolarsystemsId
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    put:
+      summary: ''
+      operationId: putApiV1MapSolarsystemsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+                  nullable: true
+                occupier_alias:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'n'
+                  nullable: true
+                position_x:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 3980.'
+                  example: 7
+                  nullable: true
+                position_y:
+                  type: number
+                  description: 'Must be at least 20. Must not be greater than 1980.'
+                  example: 16
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: empty
+                  enum:
+                    - active
+                    - unknown
+                    - unscanned
+                    - hostile
+                    - friendly
+                    - empty
+                  nullable: true
+                pinned:
+                  type: boolean
+                  description: ''
+                  example: false
+                notes:
+                  type: string
+                  description: 'Must not be greater than 65535 characters.'
+                  example: m
+                  nullable: true
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapSolarsystemsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the map solarsystem.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/map-connections:
+    post:
+      summary: ''
+      operationId: postApiV1MapConnections
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 20
+                  from_map_solarsystem_id: 10
+                  to_map_solarsystem_id: 11
+                  mass_status: fresh
+                  lifetime_status: healthy
+                  signatures: []
+                  ship_size: large
+                properties:
+                  id:
+                    type: integer
+                    example: 20
+                  from_map_solarsystem_id:
+                    type: integer
+                    example: 10
+                  to_map_solarsystem_id:
+                    type: integer
+                    example: 11
+                  mass_status:
+                    type: string
+                    example: fresh
+                  lifetime_status:
+                    type: string
+                    example: healthy
+                  signatures:
+                    type: array
+                    example: []
+                  ship_size:
+                    type: string
+                    example: large
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from_map_solarsystem_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the map_solarsystems table.'
+                  example: architecto
+                to_map_solarsystem_id:
+                  type: string
+                  description: 'The value and <code>from_map_solarsystem_id</code> must be different. The <code>id</code> of an existing record in the map_solarsystems table.'
+                  example: architecto
+                wormhole_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the wormholes table.'
+                  example: 16
+                  nullable: true
+                mass_status:
+                  type: string
+                  description: ''
+                  example: architecto
+                  enum:
+                    - fresh
+                    - reduced
+                    - critical
+                    - unknown
+                  nullable: true
+                ship_size:
+                  type: string
+                  description: ''
+                  example: architecto
+                  enum:
+                    - frigate
+                    - medium
+                    - large
+                  nullable: true
+                lifetime:
+                  type: string
+                  description: ''
+                  example: healthy
+                  enum:
+                    - healthy
+                    - eol
+                    - critical
+                  nullable: true
+              required:
+                - from_map_solarsystem_id
+                - to_map_solarsystem_id
+  '/api/v1/map-connections/{id}':
+    put:
+      summary: ''
+      operationId: putApiV1MapConnectionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wormhole_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the wormholes table.'
+                  example: 16
+                  nullable: true
+                mass_status:
+                  type: string
+                  description: ''
+                  example: critical
+                  enum:
+                    - fresh
+                    - reduced
+                    - critical
+                    - unknown
+                  nullable: true
+                ship_size:
+                  type: string
+                  description: ''
+                  example: frigate
+                  enum:
+                    - frigate
+                    - medium
+                    - large
+                  nullable: true
+                lifetime:
+                  type: string
+                  description: ''
+                  example: critical
+                  enum:
+                    - healthy
+                    - eol
+                    - critical
+                  nullable: true
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapConnectionsId
+      description: ''
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the map connection.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  /api/v1/map-selection:
+    put:
+      summary: ''
+      operationId: putApiV1MapSelection
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_solarsystems:
+                  type: array
+                  description: ''
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: 'The <code>id</code> of an existing record in the map_solarsystems table.'
+                        example: 16
+                      position_x:
+                        type: number
+                        description: 'Must be at least 40. Must not be greater than 4000.'
+                        example: 22
+                      position_y:
+                        type: number
+                        description: 'Must be at least 20. Must not be greater than 1600.'
+                        example: 7
+                    required:
+                      - id
+                      - position_x
+                      - position_y
+              required:
+                - map_solarsystems
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapSelection
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_solarsystem_ids:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the map_solarsystems table.'
+                  example:
+                    - 16
+                  items:
+                    type: integer
+              required:
+                - map_solarsystem_ids
+  '/api/v1/map-solarsystems/{map_solarsystem_id}/signatures':
+    post:
+      summary: ''
+      operationId: postApiV1MapSolarsystemsMap_solarsystem_idSignatures
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 100
+                  signature_id: ABC-123
+                  map_solarsystem_id: 10
+                  raw_type_name: 'Unresolved site'
+                  lifetime_status: healthy
+                  mass_status: null
+                properties:
+                  id:
+                    type: integer
+                    example: 100
+                  signature_id:
+                    type: string
+                    example: ABC-123
+                  map_solarsystem_id:
+                    type: integer
+                    example: 10
+                  raw_type_name:
+                    type: string
+                    example: 'Unresolved site'
+                  lifetime_status:
+                    type: string
+                    example: healthy
+                  mass_status:
+                    type: string
+                    example: null
+                    nullable: true
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_solarsystem_id
+        description: 'The ID of the map solarsystem.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/signatures/{id}':
+    put:
+      summary: ''
+      operationId: putApiV1SignaturesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    delete:
+      summary: ''
+      operationId: deleteApiV1SignaturesId
+      description: ''
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the signature.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  '/api/v1/map-solarsystems/{mapSolarsystem_id}/signatures':
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapSolarsystemsMapSolarsystem_idSignatures
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: mapSolarsystem_id
+        description: 'The ID of the mapSolarsystem.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/paste-signatures:
+    post:
+      summary: ''
+      operationId: postApiV1PasteSignatures
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_solarsystem_id:
+                  type: integer
+                  description: 'Map solar system receiving the scanner snapshot.'
+                  example: 10
+                signatures:
+                  type: array
+                  description: 'Normalized EVE Probe Scanner rows.'
+                  example:
+                    -
+                      signature_id: ABC-123
+                      signature_category_id: null
+                      signature_type_id: null
+                      raw_type_name: 'Unresolved site'
+                  items:
+                    type: object
+                    properties:
+                      signature_id:
+                        type: string
+                        description: 'Seven-character EVE signature identifier.'
+                        example: ABC-123
+                      signature_category_id:
+                        type: integer
+                        description: 'Resolved signature category ID.'
+                        example: 16
+                        nullable: true
+                      signature_type_id:
+                        type: integer
+                        description: 'Resolved signature type ID.'
+                        example: 16
+                        nullable: true
+                      raw_type_name:
+                        type: string
+                        description: 'Unresolved scanner type label retained locally and on the map.'
+                        example: 'Unresolved site'
+                        nullable: true
+                    required:
+                      - signature_id
+              required:
+                - map_solarsystem_id
+                - signatures
+  /api/v1/tracking:
+    post:
+      summary: ''
+      operationId: postApiV1Tracking
+      description: ''
+      parameters: []
+      responses:
+        202:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Tracking observation applied.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Tracking observation applied.'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from_map_solarsystem_id:
+                  type: integer
+                  description: 'Origin map solar-system record ID.'
+                  example: 10
+                to_solarsystem_id:
+                  type: integer
+                  description: 'Observed destination EVE solar-system ID.'
+                  example: 31000005
+                signature_id:
+                  type: integer
+                  description: 'Optional source signature record to link.'
+                  example: 16
+                  nullable: true
+              required:
+                - from_map_solarsystem_id
+                - to_solarsystem_id
+  /api/v1/eve-scout-connections:
+    post:
+      summary: ''
+      operationId: postApiV1EveScoutConnections
+      description: ''
+      parameters: []
+      responses:
+        202:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'EVE-Scout connections added.'
+                properties:
+                  message:
+                    type: string
+                    example: 'EVE-Scout connections added.'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the maps table.'
+                  example: 16
+                solarsystem_name:
+                  type: string
+                  description: ''
+                  example: Turnur
+                  enum:
+                    - Thera
+                    - Turnur
+              required:
+                - map_id
+                - solarsystem_name
+  /api/v1/waypoints:
+    post:
+      summary: ''
+      operationId: postApiV1Waypoints
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Waypoint set successfully.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Waypoint set successfully.'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The selected character is missing waypoint ESI permissions.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The selected character is missing waypoint ESI permissions.'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                character_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the characters table.'
+                  example: 16
+                destination_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the solarsystems table.'
+                  example: 16
+                clear_other_waypoints:
+                  type: boolean
+                  description: ''
+                  example: true
+                add_to_beginning:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - character_id
+                - destination_id
+  /api/v1/waypoints/bulk:
+    post:
+      summary: ''
+      operationId: postApiV1WaypointsBulk
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destination_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the solarsystems table.'
+                  example: 16
+                clear_other_waypoints:
+                  type: boolean
+                  description: ''
+                  example: true
+                add_to_beginning:
+                  type: boolean
+                  description: ''
+                  example: true
+              required:
+                - destination_id
+  /api/v1/map-route-solarsystems:
+    post:
+      summary: ''
+      operationId: postApiV1MapRouteSolarsystems
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the maps table.'
+                  example: 16
+                solarsystem_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the solarsystems table.'
+                  example: 16
+                is_pinned:
+                  type: boolean
+                  description: ''
+                  example: true
+                  nullable: true
+              required:
+                - map_id
+                - solarsystem_id
+  '/api/v1/map-route-solarsystems/{id}':
+    put:
+      summary: ''
+      operationId: putApiV1MapRouteSolarsystemsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_pinned:
+                  type: boolean
+                  description: ''
+                  example: false
+                  nullable: true
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapRouteSolarsystemsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the map route solarsystem.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  /api/v1/ignore-systems:
+    get:
+      summary: ''
+      operationId: getApiV1IgnoreSystems
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    post:
+      summary: 'Add a system to the ignore list'
+      operationId: addASystemToTheIgnoreList
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                solarsystem_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the solarsystems table.'
+                  example: 16
+              required:
+                - solarsystem_id
+    delete:
+      summary: 'Clear all ignored systems'
+      operationId: clearAllIgnoredSystems
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/v1/ignore-system/{solarsystem_id}':
+    delete:
+      summary: 'Remove a system from the ignore list'
+      operationId: removeASystemFromTheIgnoreList
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: solarsystem_id
+        description: 'The ID of the solarsystem.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/saved-locations':
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugSavedLocations
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 30
+                  map_id: 1
+                  solarsystem_id: 30000142
+                  note: 'Fleet rally'
+                  created_at: '2026-07-12T20:00:00Z'
+                  updated_at: '2026-07-12T20:00:00Z'
+                properties:
+                  id:
+                    type: integer
+                    example: 30
+                  map_id:
+                    type: integer
+                    example: 1
+                  solarsystem_id:
+                    type: integer
+                    example: 30000142
+                  note:
+                    type: string
+                    example: 'Fleet rally'
+                  created_at:
+                    type: string
+                    example: '2026-07-12T20:00:00Z'
+                  updated_at:
+                    type: string
+                    example: '2026-07-12T20:00:00Z'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                solarsystem_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                note:
+                  type: string
+                  description: 'Must not be greater than 2000 characters.'
+                  example: 'n'
+                  nullable: true
+              required:
+                - solarsystem_id
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/saved-locations/{savedLocation_id}':
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapsMap_slugSavedLocationsSavedLocation_id
+      description: ''
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: savedLocation_id
+        description: 'The ID of the savedLocation.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/statistics:
+    post:
+      summary: ''
+      operationId: postApiV1Statistics
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Current operational counts for the selected map.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  map_id: 1
+                  generated_at: '2026-07-12T20:00:00Z'
+                  systems: 14
+                  connections: 13
+                  signatures: 28
+                  saved_locations: 3
+                  fleet_members: 42
+                properties:
+                  map_id:
+                    type: integer
+                    example: 1
+                  generated_at:
+                    type: string
+                    example: '2026-07-12T20:00:00Z'
+                  systems:
+                    type: integer
+                    example: 14
+                  connections:
+                    type: integer
+                    example: 13
+                  signatures:
+                    type: integer
+                    example: 28
+                  saved_locations:
+                    type: integer
+                    example: 3
+                  fleet_members:
+                    type: integer
+                    example: 42
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                map_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the maps table.'
+                  example: 16
+                map_solarsystem_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the map_solarsystems table.'
+                  example: 16
+                  nullable: true
+                top:
+                  type: integer
+                  description: 'Must be at least 0. Must not be greater than 10.'
+                  example: 2
+                  nullable: true
+                active_threshold:
+                  type: integer
+                  description: 'Must be at least 0. Must not be greater than 1000.'
+                  example: 7
+                  nullable: true
+                hostile_threshold:
+                  type: integer
+                  description: 'Must be at least 0. Must not be greater than 1000.'
+                  example: 16
+                  nullable: true
+                days_active:
+                  type: integer
+                  description: 'Must be at least 0. Must not be greater than 365.'
+                  example: 17
+                  nullable: true
+                days:
+                  type: integer
+                  description: 'Must be at least 0. Must not be greater than 365.'
+                  example: 15
+                  nullable: true
+              required:
+                - map_id
+  '/api/v1/zkillboard/system/{solarsystemId}/kills':
+    get:
+      summary: "Return the last 10 kills for a solar system, enriched with full ESI killmail data\n(victim ship, attacker ships, kill time, attacker count)."
+      operationId: returnTheLast10KillsForASolarSystemEnrichedWithFullESIKillmailDatavictimShipAttackerShipsKillTimeAttackerCount
+      description: 'Results are cached for 2 minutes.'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: solarsystemId
+        description: ''
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/fleet-kills':
+    get:
+      summary: 'Recent kills and losses involving roster characters on this map (zKill + ESI).'
+      operationId: recentKillsAndLossesInvolvingRosterCharactersOnThisMapzKill+ESI
+      description: 'Cached for 2 minutes per map.'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/system/{solarsystemId}/jumps':
+    get:
+      summary: 'Return jumps for a specific solar system (last hour from ESI).'
+      operationId: returnJumpsForASpecificSolarSystemlastHourFromESI
+      description: "The ESI endpoint returns data for all active systems; we cache the full list\nfor 5 minutes and look up the requested system."
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: solarsystemId
+        description: ''
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/system/{solarsystemId}/stats24h':
+    get:
+      summary: 'Return 24-hour kill counts for a solar system from zKillboard.'
+      operationId: return24HourKillCountsForASolarSystemFromZKillboard
+      description: 'Cached per system for 10 minutes.'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: solarsystemId
+        description: ''
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/fleet/status':
+    get:
+      summary: ''
+      operationId: getApiV1MapsMap_slugFleetStatus
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Current revisioned fleet snapshot and freshness metadata.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    map_id: 1
+                    revision: 42
+                    generated_at: '2026-07-12T20:00:00.000000Z'
+                    observed_at: '2026-07-12T19:59:55.000000Z'
+                    freshness:
+                      age_seconds: 5
+                      is_stale: false
+                      stale_after_seconds: 30
+                    source:
+                      name: esi_fleet
+                      observation_interval_seconds: 10
+                    registration:
+                      id: 7
+                      fleet_id: 90000001
+                      fleet_boss_id: 123
+                      fleet_boss_name: 'Example Commander'
+                      registered_at: '2026-07-12T19:00:00.000000Z'
+                    commanders: []
+                    members: []
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      map_id:
+                        type: integer
+                        example: 1
+                      revision:
+                        type: integer
+                        example: 42
+                      generated_at:
+                        type: string
+                        example: '2026-07-12T20:00:00.000000Z'
+                      observed_at:
+                        type: string
+                        example: '2026-07-12T19:59:55.000000Z'
+                      freshness:
+                        type: object
+                        properties:
+                          age_seconds:
+                            type: integer
+                            example: 5
+                          is_stale:
+                            type: boolean
+                            example: false
+                          stale_after_seconds:
+                            type: integer
+                            example: 30
+                      source:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            example: esi_fleet
+                          observation_interval_seconds:
+                            type: integer
+                            example: 10
+                      registration:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 7
+                          fleet_id:
+                            type: integer
+                            example: 90000001
+                          fleet_boss_id:
+                            type: integer
+                            example: 123
+                          fleet_boss_name:
+                            type: string
+                            example: 'Example Commander'
+                          registered_at:
+                            type: string
+                            example: '2026-07-12T19:00:00.000000Z'
+                      commanders:
+                        type: array
+                        example: []
+                      members:
+                        type: array
+                        example: []
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/fleet/register':
+    post:
+      summary: "Register the FC's current fleet to this map via ESI."
+      operationId: registerTheFCsCurrentFleetToThisMapViaESI
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Fleet linked successfully.'
+                  data:
+                    id: 1
+                    map_id: 1
+                    fleet_id: 90000001
+                    fleet_boss_id: 90000002
+                    registered_at: '2026-07-12T20:00:00Z'
+                properties:
+                  message:
+                    type: string
+                    example: 'Fleet linked successfully.'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      map_id:
+                        type: integer
+                        example: 1
+                      fleet_id:
+                        type: integer
+                        example: 90000001
+                      fleet_boss_id:
+                        type: integer
+                        example: 90000002
+                      registered_at:
+                        type: string
+                        example: '2026-07-12T20:00:00Z'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The active character is missing the Fleet Access ESI scope.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The active character is missing the Fleet Access ESI scope.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/fleet/deregister':
+    delete:
+      summary: 'Deregister the active fleet from this map.'
+      operationId: deregisterTheActiveFleetFromThisMap
+      description: ''
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/fleet/waypoint':
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugFleetWaypoint
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Fleet destination set successfully.'
+                  data:
+                    destination_id: 30000142
+                    destination_name: Jita
+                    character_count: 12
+                properties:
+                  message:
+                    type: string
+                    example: 'Fleet destination set successfully.'
+                  data:
+                    type: object
+                    properties:
+                      destination_id:
+                        type: integer
+                        example: 30000142
+                      destination_name:
+                        type: string
+                        example: Jita
+                      character_count:
+                        type: integer
+                        example: 12
+        403:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Only fleet commanders and map managers can set fleet destinations.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Only fleet commanders and map managers can set fleet destinations.'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destination_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                clear_other_waypoints:
+                  type: boolean
+                  description: ''
+                  example: false
+                add_to_beginning:
+                  type: boolean
+                  description: ''
+                  example: true
+              required:
+                - destination_id
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/fleet/commanders':
+    post:
+      summary: ''
+      operationId: postApiV1MapsMap_slugFleetCommanders
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Commander appointed successfully.'
+                  data:
+                    id: 1
+                    character_id: 90000001
+                    character_name: 'Example Commander'
+                    can_set_destination: true
+                    can_manage_fleet: false
+                properties:
+                  message:
+                    type: string
+                    example: 'Commander appointed successfully.'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      character_id:
+                        type: integer
+                        example: 90000001
+                      character_name:
+                        type: string
+                        example: 'Example Commander'
+                      can_set_destination:
+                        type: boolean
+                        example: true
+                      can_manage_fleet:
+                        type: boolean
+                        example: false
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                character_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the characters table.'
+                  example: 16
+                can_set_destination:
+                  type: boolean
+                  description: ''
+                  example: false
+                can_manage_fleet:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - character_id
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+  '/api/v1/maps/{map_slug}/fleet/commanders/{id}':
+    delete:
+      summary: ''
+      operationId: deleteApiV1MapsMap_slugFleetCommandersId
+      description: ''
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: id
+        description: 'The ID of the commander.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  '/api/v1/maps/{map_slug}/region/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1MapsMap_slugRegionId
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: 'Regional topology, fleet positions, and current intel overlays.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  region_id: 10000002
+                  region_name: 'The Forge'
+                  systems:
+                    -
+                      id: 30000142
+                      name: Jita
+                      security: 0.9
+                      pos_2d_x: 5000
+                      pos_2d_y: 5000
+                      constellation_id: 20000020
+                      constellation_name: Kimotoro
+                      sovereignty: null
+                      kill_stats:
+                        ship_kills: 12
+                        pod_kills: 3
+                        npc_kills: 100
+                        fetched_at: '2026-07-12T20:00:00Z'
+                      fleet_members: []
+                  connections:
+                    -
+                      from: 30000142
+                      to: 30000144
+                  fleet_active: true
+                properties:
+                  region_id:
+                    type: integer
+                    example: 10000002
+                  region_name:
+                    type: string
+                    example: 'The Forge'
+                  systems:
+                    type: array
+                    example:
+                      -
+                        id: 30000142
+                        name: Jita
+                        security: 0.9
+                        pos_2d_x: 5000
+                        pos_2d_y: 5000
+                        constellation_id: 20000020
+                        constellation_name: Kimotoro
+                        sovereignty: null
+                        kill_stats:
+                          ship_kills: 12
+                          pod_kills: 3
+                          npc_kills: 100
+                          fetched_at: '2026-07-12T20:00:00Z'
+                        fleet_members: []
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 30000142
+                        name:
+                          type: string
+                          example: Jita
+                        security:
+                          type: number
+                          example: 0.9
+                        pos_2d_x:
+                          type: integer
+                          example: 5000
+                        pos_2d_y:
+                          type: integer
+                          example: 5000
+                        constellation_id:
+                          type: integer
+                          example: 20000020
+                        constellation_name:
+                          type: string
+                          example: Kimotoro
+                        sovereignty:
+                          type: string
+                          example: null
+                          nullable: true
+                        kill_stats:
+                          type: object
+                          properties:
+                            ship_kills:
+                              type: integer
+                              example: 12
+                            pod_kills:
+                              type: integer
+                              example: 3
+                            npc_kills:
+                              type: integer
+                              example: 100
+                            fetched_at:
+                              type: string
+                              example: '2026-07-12T20:00:00Z'
+                        fleet_members:
+                          type: array
+                          example: []
+                  connections:
+                    type: array
+                    example:
+                      -
+                        from: 30000142
+                        to: 30000144
+                    items:
+                      type: object
+                      properties:
+                        from:
+                          type: integer
+                          example: 30000142
+                        to:
+                          type: integer
+                          example: 30000144
+                  fleet_active:
+                    type: boolean
+                    example: true
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: map_slug
+        description: 'The slug of the map.'
+        example: scumlords-1
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: id
+        description: 'The ID of the region.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/v1/location-observations:
+    post:
+      summary: ''
+      operationId: postApiV1LocationObservations
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: 'The normalized location observation was stored.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 101
+                  character_id: 90000001
+                  solar_system_id: 30000142
+                  state: in_transit
+                  source: eve_gamelog
+                  observed_at: '2026-07-12T20:00:00.000000Z'
+                  applied: true
+                  revision: 8
+                properties:
+                  id:
+                    type: integer
+                    example: 101
+                  character_id:
+                    type: integer
+                    example: 90000001
+                  solar_system_id:
+                    type: integer
+                    example: 30000142
+                  state:
+                    type: string
+                    example: in_transit
+                  source:
+                    type: string
+                    example: eve_gamelog
+                  observed_at:
+                    type: string
+                    example: '2026-07-12T20:00:00.000000Z'
+                  applied:
+                    type: boolean
+                    example: true
+                  revision:
+                    type: integer
+                    example: 8
+        409:
+          description: 'Duplicate or stale observation.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'This observation duplicates one already received.'
+                properties:
+                  message:
+                    type: string
+                    example: 'This observation duplicates one already received.'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                character_id:
+                  type: integer
+                  description: 'Authenticated user-owned EVE character ID. The <code>id</code> of an existing record in the characters table.'
+                  example: 90000001
+                solar_system_id:
+                  type: integer
+                  description: 'Destination solar-system ID resolved from the local SDE. The <code>id</code> of an existing record in the solarsystems table.'
+                  example: 30000142
+                observed_at:
+                  type: string
+                  description: 'Timestamp from the EVE Gamelog line. Must be a valid date.'
+                  example: '2026-07-12T20:00:00Z'
+                state:
+                  type: string
+                  description: 'Normalized location state.'
+                  example: in_transit
+                  enum:
+                    - confirmed
+                    - in_transit
+                source_event_id:
+                  type: string
+                  description: 'SHA-256 identifier used for privacy-preserving deduplication. Must match the regex /^[a-f0-9]{64}$/.'
+                  example: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+              required:
+                - character_id
+                - solar_system_id
+                - observed_at
+                - state
+                - source_event_id
+  /api/regions:
+    get:
+      summary: 'Return all k-space regions for the region selector dropdown.'
+      operationId: returnAllKSpaceRegionsForTheRegionSelectorDropdown
+      description: 'Reads from the static JSON file so no DB seeding is required.'
+      parameters: []
+      responses:
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Internal Server Error'
+                  status: 500
+                properties:
+                  message:
+                    type: string
+                    example: 'Internal Server Error'
+                  status:
+                    type: integer
+                    example: 500
+      tags:
+        - Endpoints
+  /api/v1/broadcasting/auth:
+    get:
+      summary: 'Authenticate the request for channel access.'
+      operationId: authenticateTheRequestForChannelAccess
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred'
+                  status: 401
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred'
+                  status:
+                    type: integer
+                    example: 401
+      tags:
+        - Endpoints

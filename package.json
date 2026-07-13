@@ -1,0 +1,43 @@
+{
+  "name": "evemerc-desktop",
+  "version": "0.1.0",
+  "description": "Fleet-first EVE Online intelligence desktop client",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
+    "sync:api": "node --experimental-strip-types scripts/sync-api.ts",
+    "test": "vitest run",
+    "tauri": "tauri"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@lucide/svelte": "1.24.0",
+    "@tanstack/svelte-query": "5.90.2",
+    "@tauri-apps/api": "2.11.1",
+    "@tauri-apps/plugin-deep-link": "^2.4.7",
+    "@tauri-apps/plugin-opener": "2.5.4",
+    "@tauri-apps/plugin-store": "^2.4.1",
+    "date-fns": "4.4.0",
+    "dockview-core": "7.0.2",
+    "laravel-echo": "2.4.0",
+    "openapi-fetch": "0.17.0",
+    "pusher-js": "8.5.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "7.2.0",
+    "@tailwindcss/vite": "4.3.2",
+    "@tauri-apps/cli": "2.9.4",
+    "@types/node": "26.1.1",
+    "openapi-typescript": "7.13.0",
+    "svelte": "5.56.4",
+    "svelte-check": "4.3.6",
+    "tailwindcss": "4.3.2",
+    "typescript": "5.9.3",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
+  }
+}
